@@ -1,0 +1,1507 @@
+{
+  "source": {
+    "fdrFacts": "https://www.freedomdebtrelief.com/facts/",
+    "fdrNearMe": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/",
+    "achieveLicenses": "https://www.achieve.com/licenses",
+    "capturedAt": "2026-08-23"
+  },
+  "notes": {
+    "fdrDirect": [
+      "AL",
+      "AK",
+      "AR",
+      "AZ",
+      "CA",
+      "DE",
+      "FL",
+      "IA",
+      "ID",
+      "IN",
+      "KY",
+      "LA",
+      "MA",
+      "MD",
+      "MI",
+      "MN",
+      "MO",
+      "MS",
+      "MT",
+      "NC",
+      "NE",
+      "NM",
+      "NV",
+      "NY",
+      "OK",
+      "PA",
+      "SD",
+      "TN",
+      "TX",
+      "UT"
+    ],
+    "fdrPartner": [
+      "CT",
+      "GA",
+      "NH",
+      "NJ",
+      "IL",
+      "KS",
+      "ME",
+      "OH",
+      "SC",
+      "VA"
+    ],
+    "achieveHelocClaim": "Achieve has publicly stated HELOCs are available in 31 states.",
+    "personalLoanExclusionsPublished": [
+      "CO",
+      "CT",
+      "HI",
+      "IA",
+      "KS",
+      "ME",
+      "ND",
+      "VT",
+      "WA",
+      "WI",
+      "WV",
+      "WY"
+    ]
+  },
+  "states": [
+    {
+      "code": "AL",
+      "name": "Alabama",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/alabama/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Brokers License",
+          "number": "21684",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Consumer Credit License",
+          "number": "22669",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "AK",
+      "name": "Alaska",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/alaska/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": []
+    },
+    {
+      "code": "AZ",
+      "name": "Arizona",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/arizona/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Consumer Lender License",
+          "number": "1041206",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Consumer Lender License Other Trade Name #1",
+          "number": "1041298",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "0917704",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #1",
+          "number": "1038292",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Banker License",
+          "number": "1000964",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency",
+          "number": "949214",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency other Trade Name",
+          "number": "949350",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "AR",
+      "name": "Arkansas",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/arkansas/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "103602",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Combination Mortgage Banker-Broker-Servicer License",
+          "number": "118053",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Telephonic Seller",
+          "number": "625428",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency",
+          "number": "4742",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "CA",
+      "name": "California",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/california/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Financing Law - DFPI",
+          "number": "6053240",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "CO",
+      "name": "Colorado",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Company Registration",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Company Registration",
+          "number": "1810501",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "CT",
+      "name": "Connecticut",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/connecticut/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": []
+    },
+    {
+      "code": "DE",
+      "name": "Delaware",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/delaware/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Broker License",
+          "number": "012384",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "FL",
+      "name": "Florida",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/florida/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "MBR902",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender Servicer License",
+          "number": "MLD1777",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Finance Company",
+          "number": "CF9901070",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Collection Agency",
+          "number": "CCA9903166",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "GA",
+      "name": "Georgia",
+      "fdrSettlement": "partner",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker/Processor License/Registration",
+          "number": "31710",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License/Registration",
+          "number": "70100",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "HI",
+      "name": "Hawaii",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": []
+    },
+    {
+      "code": "ID",
+      "name": "Idaho",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/idaho/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Broker/Lender License",
+          "number": "MBL-2081810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency",
+          "number": "CCA-8837",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "IL",
+      "name": "Illinois",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/illinois/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Residential Mortgage License",
+          "number": "MB.6761031",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Illinois Residential Mortgage License",
+          "number": "MB.6761501",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "IN",
+      "name": "Indiana",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/indiana/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Loan Broker License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lending License",
+          "number": "53112",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "IA",
+      "name": "Iowa",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/iowa/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "licensed",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "2012-0024",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #3",
+          "number": "2022-0081",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #4",
+          "number": "2022-0099",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Banker License",
+          "number": "2019-0143",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Banker License \u2013 Other trade name #2",
+          "number": "2022-0082",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Banker License \u2013 Other trade name #3",
+          "number": "2022-0083",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Master Loan Company Registration",
+          "number": "88883349",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "KS",
+      "name": "Kansas",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/kansas/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "licensed",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Company License",
+          "number": "MC.0026303",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Supervised Loan License",
+          "number": "SL 0026844",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "UCCC notification",
+          "number": "NOT 0027012",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "KY",
+      "name": "Kentucky",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/kentucky/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Company License",
+          "number": "MC765561",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "LA",
+      "name": "Louisiana",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/louisiana/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Residential Mortgage Lending License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Lending License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency/Debt Collector",
+          "number": "412143571",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "ME",
+      "name": "Maine",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/maine/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Supervised Lender License (non-mortgage)",
+          "number": "SLM13394",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "MD",
+      "name": "Maryland",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/maryland/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Lender License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Loan/Collection Agency",
+          "number": "227977",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "MA",
+      "name": "Massachusetts",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/massachusetts/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Third Party Loan Servicer/Other Trade Name",
+          "number": "LS227977",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "MI",
+      "name": "Michigan",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/michigan/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "1st Mortgage Broker License",
+          "number": "FL0017433",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "2nd Mortgage Broker License",
+          "number": "SR0024750",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "1st Mortgage Broker/Lender/Servicer License",
+          "number": "FL0022696",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "2nd Mortgage Broker/Lender/Servicer Registrant",
+          "number": "SR0022697",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Regulatory Loan",
+          "number": "RL 0018006",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "MN",
+      "name": "Minnesota",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/minnesota/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Originator License",
+          "number": "MN-MO-181501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Originator License Other trade name #1",
+          "number": "MN-MO-1810501.1",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Originator License Other trade name #2",
+          "number": "MN-MO-1810501.2",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency",
+          "number": "40826298",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "MS",
+      "name": "Mississippi",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/mississippi/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": []
+    },
+    {
+      "code": "MO",
+      "name": "Missouri",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/missouri/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": []
+    },
+    {
+      "code": "MT",
+      "name": "Montana",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/montana/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Broker License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Servicer License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Loan",
+          "number": "227977",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "NE",
+      "name": "Nebraska",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/nebraska/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Banker License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Nebraska Mortgage Banker License \u2013 Other trade name #2",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Nebraska Mortgage Banker License \u2013 Other trade name #3",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Installment Loan Company",
+          "number": "227977",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "NV",
+      "name": "Nevada",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/nevada/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": []
+    },
+    {
+      "code": "NH",
+      "name": "New Hampshire",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/new-hampshire/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Small Loan Lender",
+          "number": "24084-SM",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "NJ",
+      "name": "New Jersey",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/new-jersey/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": true,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Residential Mortgage Broker License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Lender License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency Bond/ Debt Collection Agency",
+          "number": "41297541/15790",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Lender/Sales Finance",
+          "number": "2104890 C31",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "NM",
+      "name": "New Mexico",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/new-mexico/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Loan Company License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Loan Company License",
+          "number": "1810501",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "NY",
+      "name": "New York",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/new-york/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "City of Buffalo Collection Agency",
+          "number": "CAG21-10061590",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "City of New York Debt Collection Agency",
+          "number": "2098008-DCA",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "City of Yonkers Collection Agency",
+          "number": "10419",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "NC",
+      "name": "North Carolina",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/north-carolina/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License",
+          "number": "L-188683",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "ND",
+      "name": "North Dakota",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Money Broker License",
+          "number": "MB104282",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Lender License",
+          "number": "ML104369",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "OH",
+      "name": "Ohio",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/ohio/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Residential Mortgage Lending Act Certificate of Registration",
+          "number": "RM.804104.000",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Lending Act Certificate of Registration",
+          "number": "RM.804478.000",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "OK",
+      "name": "Oklahoma",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/oklahoma/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "MB002277",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #1",
+          "number": "MB012921",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #2",
+          "number": "MB014642",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License - Other Trade Name #",
+          "number": "MB014919",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender, Department of Consumer Credit",
+          "number": "ML012340",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License \u2013 Other trade name #1",
+          "number": "MLO14910",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License \u2013 Other trade name #2",
+          "number": "MLO14911",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Supervised Lender License",
+          "number": "SL008126/SL008907",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "OR",
+      "name": "Oregon",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Lending License",
+          "number": "ML-5012",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lending License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Finance",
+          "number": "227977",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "PA",
+      "name": "Pennsylvania",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/pennsylvania/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "35166",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Lender License",
+          "number": "73130",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Servicer License",
+          "number": "74354",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Discount Company",
+          "number": "51523",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "RI",
+      "name": "Rhode Island",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Loan Broker License",
+          "number": "20132876LB",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "SC",
+      "name": "South Carolina",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/south-carolina/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": []
+    },
+    {
+      "code": "SD",
+      "name": "South Dakota",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/south-dakota/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Money Lender",
+          "number": "227977 MYL",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "TN",
+      "name": "Tennessee",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/tennessee/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage License",
+          "number": "125439",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage License",
+          "number": "179168",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "TX",
+      "name": "Texas",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/texas/",
+      "achieveMortgage": true,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": false,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Company License",
+          "number": "138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Residential Mortgage Loan Servicer Registration",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Mortgage Company License",
+          "number": "1810501",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Regulated Lender License",
+          "number": "67797",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "UT",
+      "name": "Utah",
+      "fdrSettlement": "direct",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/utah/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "offered",
+      "achieveCollections": true,
+      "achieveDebtRelief": "direct",
+      "licenses": [
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Consumer Credit Notification (UCCC)",
+          "number": "NMLS # 1810501",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Collection Agency",
+          "number": "8722972-0131",
+          "kind": "collections"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "UCCC notification",
+          "number": "227977",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "VT",
+      "name": "Vermont",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": []
+    },
+    {
+      "code": "VA",
+      "name": "Virginia",
+      "fdrSettlement": "partner",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/virginia/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "partner",
+      "licenses": []
+    },
+    {
+      "code": "WA",
+      "name": "Washington",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "licensed",
+      "achieveCollections": true,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "MB-138464",
+          "kind": "mortgage"
+        },
+        {
+          "entity": "achieve-loans",
+          "nmls": "1810501",
+          "name": "Consumer Loan Company License",
+          "number": "CL-1810501",
+          "kind": "personal-loan"
+        },
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Business/Collection Agency License",
+          "number": "604187906",
+          "kind": "collections"
+        }
+      ]
+    },
+    {
+      "code": "WV",
+      "name": "West Virginia",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": []
+    },
+    {
+      "code": "WI",
+      "name": "Wisconsin",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": true,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve.com",
+          "nmls": "138464",
+          "name": "Mortgage Broker License",
+          "number": "138464BR",
+          "kind": "mortgage"
+        }
+      ]
+    },
+    {
+      "code": "WY",
+      "name": "Wyoming",
+      "fdrSettlement": "none",
+      "fdrNearMe": false,
+      "fdrUrl": null,
+      "achieveMortgage": false,
+      "achievePersonalLoan": "licensed",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": [
+        {
+          "entity": "achieve-personal-loans",
+          "nmls": "227977",
+          "name": "Consumer Lender License",
+          "number": "CL-4236",
+          "kind": "personal-loan"
+        }
+      ]
+    },
+    {
+      "code": "DC",
+      "name": "District of Columbia",
+      "fdrSettlement": "none",
+      "fdrNearMe": true,
+      "fdrUrl": "https://www.freedomdebtrelief.com/debt-consolidation-near-me/washington-dc/",
+      "achieveMortgage": false,
+      "achievePersonalLoan": "none",
+      "achieveCollections": false,
+      "achieveDebtRelief": "none",
+      "licenses": []
+    }
+  ]
+}

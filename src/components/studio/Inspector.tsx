@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
 import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
+import { FDR_LABEL, stateByCode, statesData, type StateRow } from "@/data/states";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -16,6 +17,7 @@ export function Inspector() {
   const layer = useStudio((s) => s.layer);
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const selectedState = useStudio((s) => s.selectedState);
   const selectIssue = useStudio((s) => s.selectIssue);
   const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
@@ -56,6 +58,9 @@ export function Inspector() {
       setPsiBusy(false);
     }
   }
+
+  const row = selectedState ? stateByCode(selectedState) : undefined;
+  if (row) return <StateInspector row={row} />;
 
   return (
     <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
@@ -221,6 +226,76 @@ export function Inspector() {
           </button>
         ))}
       </div>
+    </aside>
+  );
+}
+
+
+function StateInspector({ row }: { row: StateRow }) {
+  return (
+    <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
+      <header>
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">State coverage</p>
+        <h2 className="mt-1 font-display text-xl leading-tight text-fg">
+          {row.name} <span className="font-mono text-sm text-muted">{row.code}</span>
+        </h2>
+      </header>
+      <section className="space-y-2">
+        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
+          <span className="text-sm text-muted">FDR settlement</span>
+          <Badge tone={row.fdrSettlement === "direct" ? "ok" : row.fdrSettlement === "partner" ? "warn" : "neutral"}>
+            {FDR_LABEL[row.fdrSettlement]}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
+          <span className="text-sm text-muted">Achieve debt relief</span>
+          <Badge tone={row.achieveDebtRelief === "direct" ? "ok" : row.achieveDebtRelief === "partner" ? "warn" : "neutral"}>
+            {FDR_LABEL[row.achieveDebtRelief]}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
+          <span className="text-sm text-muted">Achieve HELOC / HEL license</span>
+          <Badge tone={row.achieveMortgage ? "ok" : "neutral"}>
+            {row.achieveMortgage ? "Licensed" : "No license"}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
+          <span className="text-sm text-muted">Achieve personal loan</span>
+          <Badge tone={row.achievePersonalLoan === "offered" ? "ok" : row.achievePersonalLoan === "licensed" ? "warn" : "neutral"}>
+            {row.achievePersonalLoan}
+          </Badge>
+        </div>
+      </section>
+      {row.fdrUrl ? (
+        <a href={row.fdrUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-fdr hover:underline">
+          FDR near-me page <ExternalLink className="size-3.5" />
+        </a>
+      ) : (
+        <p className="text-sm text-subtle">No FDR near-me landing for this state.</p>
+      )}
+      <section>
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Achieve licenses</h3>
+        {row.licenses.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">None listed on achieve.com/licenses.</p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {row.licenses.map((lic) => (
+              <li key={lic.entity + lic.name + lic.number} className="rounded-lg bg-raised p-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-fg">{lic.name}</span>
+                  <Badge>{lic.kind}</Badge>
+                </div>
+                <p className="mt-1 font-mono text-xs text-muted">
+                  {lic.entity} · NMLS {lic.nmls} · {lic.number}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <p className="text-[10px] text-subtle">
+        Snapshot {statesData.source.capturedAt}. License is not a guarantee the product is currently offered.
+      </p>
     </aside>
   );
 }

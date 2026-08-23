@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { BrandId, ProductId } from "@/lib/graph/types";
 
-export type StudioTab = "graph" | "validation" | "backlog" | "gate";
+export type StudioTab = "graph" | "validation" | "backlog" | "gate" | "states";
 
 type StudioState = {
   tab: StudioTab;
@@ -13,6 +13,7 @@ type StudioState = {
   selectedNodeId: string | null;
   selectedIssueId: string | null;
   selectedIssueIds: string[];
+  selectedState: string | null;
   query: string;
   setTab: (tab: StudioTab) => void;
   setExplode: (v: boolean) => void;
@@ -22,13 +23,14 @@ type StudioState = {
   setImpact: (v: "all" | "critical" | "high" | "medium" | "low") => void;
   selectNode: (id: string | null) => void;
   selectIssue: (id: string | null) => void;
+  selectState: (code: string | null) => void;
   toggleIssueSelect: (id: string) => void;
   clearIssueSelect: () => void;
   setQuery: (q: string) => void;
 };
 
 export const useStudio = create<StudioState>((set) => ({
-  tab: "graph",
+  tab: "states",
   explode: false,
   brand: "all",
   product: "all",
@@ -37,6 +39,7 @@ export const useStudio = create<StudioState>((set) => ({
   selectedNodeId: null,
   selectedIssueId: "S01",
   selectedIssueIds: [],
+  selectedState: null,
   query: "",
   setTab: (tab) => set({ tab }),
   setExplode: (explode) => set({ explode }),
@@ -46,16 +49,22 @@ export const useStudio = create<StudioState>((set) => ({
   setImpact: (impact) => set({ impact }),
   selectNode: (selectedNodeId) => {
     if (selectedNodeId?.startsWith("issue:")) {
-      set({ selectedNodeId, selectedIssueId: selectedNodeId.replace("issue:", "") });
+      set({
+        selectedNodeId,
+        selectedIssueId: selectedNodeId.replace("issue:", ""),
+        selectedState: null,
+      });
     } else {
-      set({ selectedNodeId });
+      set({ selectedNodeId, selectedState: null });
     }
   },
   selectIssue: (selectedIssueId) =>
     set({
       selectedIssueId,
       selectedNodeId: selectedIssueId ? `issue:${selectedIssueId}` : null,
+      selectedState: null,
     }),
+  selectState: (selectedState) => set({ selectedState, selectedNodeId: null }),
   toggleIssueSelect: (id) =>
     set((s) => ({
       selectedIssueIds: s.selectedIssueIds.includes(id)

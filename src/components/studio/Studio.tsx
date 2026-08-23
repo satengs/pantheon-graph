@@ -3,6 +3,7 @@ import {
   GitBranch,
   LayoutGrid,
   ListChecks,
+  MapPin,
   Shield,
   Search,
 } from "lucide-react";
@@ -16,10 +17,12 @@ import { Inspector } from "@/components/studio/Inspector";
 import { ValidationTable } from "@/components/studio/ValidationTable";
 import { Backlog } from "@/components/studio/Backlog";
 import { Gate } from "@/components/studio/Gate";
+import { StatesPanel } from "@/components/studio/StatesPanel";
 import { useStudio, type StudioTab } from "@/store/studio";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch }[] = [
   { id: "graph", label: "Graph", icon: GitBranch },
+  { id: "states", label: "States", icon: MapPin },
   { id: "validation", label: "Validation", icon: LayoutGrid },
   { id: "backlog", label: "Backlog", icon: ListChecks },
   { id: "gate", label: "Gate", icon: Shield },
@@ -167,7 +170,7 @@ export function Studio() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search issues"
+            placeholder="Search issues or states"
             suppressHydrationWarning
             className="h-9 w-full rounded-md bg-surface pl-8 pr-3 text-sm text-fg shadow-[var(--shadow-border)] placeholder:text-subtle"
           />
@@ -197,6 +200,7 @@ export function Studio() {
               <GraphCanvas />
             </div>
           ) : null}
+          {tab === "states" ? <StatesPanel /> : null}
           {tab === "validation" ? <ValidationTable /> : null}
           {tab === "backlog" ? <Backlog /> : null}
           {tab === "gate" ? <Gate /> : null}
