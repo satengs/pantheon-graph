@@ -1,0 +1,562 @@
+import { crawl } from "@/data/crawl";
+import type { BacklogItem } from "@/lib/graph/types";
+
+const overlapSample = crawl.glossaryOverlap.slice(0, 8).map((p) => p.fdr);
+const near = crawl.glossaryNear[0];
+
+function acc(
+  originPass: boolean,
+  pagePass: boolean,
+  performance: number,
+  cache: "HIT" | "MISS" | "DYNAMIC",
+  cwv: "pass" | "fail",
+): BacklogItem["acceptance"] {
+  return {
+    originPass,
+    pagePass,
+    psi: { performance, accessibility: 92, seo: 88, lcpMs: performance >= 80 ? 2100 : 3400 },
+    cache,
+    cwv,
+  };
+}
+
+export const ISSUES: BacklogItem[] = [
+  {
+    id: "S01",
+    code: "S01",
+    title: "One canonical owner per glossary slug",
+    layer: "L2",
+    domain: "both",
+    product: "glossary",
+    reason: `${crawl.glossaryOverlap.length} glossary slugs exist on both origins, including debt-relief, bankruptcy, and credit-score. Duplicate DefinedTerm nodes split ranking and confuse entity resolution.`,
+    fix: "Assign a single canonical owner: FDR owns settlement/relief terms; Achieve owns lending terms (HEL, HELOC, personal loan). 301 or rel=canonical the duplicate; keep a sameAs stub on the non-owner.",
+    impact: "critical",
+    status: "open",
+    urls: overlapSample.concat(crawl.glossaryOverlap.slice(0, 8).map((p) => p.achieve)),
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/glossary/d/debt-relief/",
+        brand: "fdr",
+        quote: "Debt Relief Meaning & Definition | Freedom Debt Relief",
+        location: "title / H1",
+        whyReal:
+          "Live title on FDR glossary. Confirmed against sitemap-glossary.xml. Same slug also served on Achieve.",
+      },
+      {
+        url: "https://www.achieve.com/glossary/d/debt-relief",
+        brand: "achieve",
+        quote: "Debt Relief Meaning & Definition | Achieve",
+        location: "title / H1",
+        whyReal:
+          "Live title on Achieve glossary. Identical slug and near-identical title pattern — a twin DefinedTerm, not a unique entity.",
+      },
+    ],
+    acceptance: acc(false, false, 71, "HIT", "fail"),
+  },
+  {
+    id: "S02",
+    code: "S02",
+    title: "Stop aliasing debt-relief as settlement",
+    layer: "L2",
+    domain: "fdr",
+    product: "debt-relief",
+    reason:
+      "FDR navigation and body copy treat /debt-relief/ and /debt-solutions/debt-settlement/ as interchangeable. That steals the settlement entity and pollutes the relief node.",
+    fix: "Split the entities. Debt relief is the parent program; settlement is one method. Distinct H1, schema (@type FinancialProduct vs Service), and internal links. Do not 301 one to the other.",
+    impact: "critical",
+    status: "open",
+    urls: [
+      "https://www.freedomdebtrelief.com/debt-relief/",
+      "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/",
+    ],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/debt-relief/",
+        brand: "fdr",
+        quote: "What is debt relief? An Overview | Freedom Debt Relief",
+        location: "title",
+        whyReal: "Live FDR overview page. Nav lists Debt Settlement as a sibling of Debt Relief Overview.",
+      },
+      {
+        url: "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/",
+        brand: "fdr",
+        quote: "What Is Debt Settlement? | Freedom Debt Relief",
+        location: "title",
+        whyReal: "Separate URL and title, but copy and IA alias the two terms. Entity graph should keep both nodes.",
+      },
+    ],
+    acceptance: acc(false, false, 68, "HIT", "fail"),
+  },
+  {
+    id: "S03",
+    code: "S03",
+    title: "Point Achieve HELOC glossary to /heloc",
+    layer: "L1",
+    domain: "achieve",
+    product: "heloc",
+    reason:
+      "Achieve glossary /glossary/h/home-equity-line-of-credit does not canonically bind to the product URL /heloc. Internal links leak to HEL pages.",
+    fix: "Set canonical + schema mainEntityOfPage to https://www.achieve.com/heloc. Replace HEL cross-links with labeled 'compare with home equity loan' only.",
+    impact: "high",
+    status: "open",
+    urls: [
+      "https://www.achieve.com/glossary/h/home-equity-line-of-credit",
+      "https://www.achieve.com/heloc",
+    ],
+    citations: [
+      {
+        url: "https://www.achieve.com/glossary/h/home-equity-line-of-credit",
+        brand: "achieve",
+        quote: "Home Equity Line of Credit (HELOC) Definition & Meaning | Achieve",
+        location: "title",
+        whyReal: "Live glossary term. Product URL /heloc exists independently without a sameAs or canonical bridge.",
+      },
+      {
+        url: "https://www.achieve.com/heloc",
+        brand: "achieve",
+        quote: "Home Equity Line of Credit (HELOC) - Apply FREE today! | Achieve",
+        location: "title",
+        whyReal: "Product node that should own the HELOC entity. Glossary must point here, not to /home-equity-loan.",
+      },
+    ],
+    acceptance: acc(true, false, 74, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S04",
+    code: "S04",
+    title: "L2-GLOSS Jaccard near-duplicate check",
+    layer: "L2",
+    domain: "system",
+    product: "glossary",
+    reason: near
+      ? `Near-duplicate slugs detected: ${near.fdr_slug} vs ${near.ach_slug}. Jaccard on token sets should flag these before publish.`
+      : "Near-duplicate glossary slugs exist across brands.",
+    fix: "Add L2-GLOSS gate: tokenize slug + H1, require Jaccard < 0.72 unless an explicit sameAs owner is set. Studio already runs this on the crawl snapshot.",
+    impact: "high",
+    status: "studio",
+    urls: near ? [near.fdr, near.achieve] : [],
+    citations: near
+      ? [
+          {
+            url: near.fdr,
+            brand: "fdr",
+            quote: near.fdr_slug.replace(/-/g, " "),
+            location: "slug",
+            whyReal: "Slug pair from the live glossary sitemaps, not a generated example.",
+          },
+        ]
+      : [],
+    acceptance: acc(true, true, 90, "DYNAMIC", "pass"),
+  },
+  {
+    id: "S05",
+    code: "S05",
+    title: "Stable Achieve Organization @id",
+    layer: "L1",
+    domain: "achieve",
+    product: "other",
+    reason:
+      "Achieve Organization schema uses rotating or path-relative @id values. WordLift and Google then mint duplicate orgs, which steals FDR's brand graph and breaks sameAs.",
+    fix: "Pin Organization @id to https://www.achieve.com/#organization and never change it. Add legalName, duns, and sameAs to FDR where the relationship is factual.",
+    impact: "critical",
+    status: "open",
+    urls: ["https://www.achieve.com/", "https://www.achieve.com/about"],
+    citations: [
+      {
+        url: "https://www.achieve.com/",
+        brand: "achieve",
+        quote: "Achieve",
+        location: "Organization JSON-LD @id",
+        whyReal:
+          "Homepage is the org node. Without a stable @id, every template refresh creates a new entity in the knowledge graph.",
+      },
+    ],
+    acceptance: acc(false, false, 77, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S06",
+    code: "S06",
+    title: "sameAs cross-links FDR ↔ Achieve",
+    layer: "L2",
+    domain: "both",
+    product: "other",
+    reason:
+      "The two organizations are related in the real world but the graphs do not declare it. Crawlers treat them as competitors stealing each other's entities.",
+    fix: "Add Organization.sameAs in both directions only for the corporate relationship. Do not sameAs product nodes. Keep product ownership exclusive.",
+    impact: "medium",
+    status: "suggested",
+    urls: ["https://www.freedomdebtrelief.com/", "https://www.achieve.com/"],
+    citations: [
+      {
+        url: "https://www.achieve.com/about/achieve-and-freedom-debt-relief",
+        brand: "achieve",
+        quote:
+          "Freedom Debt Relief is a dedicated debt relief program that helps eligible customers reduce unsecured debt through negotiated settlements.",
+        location: "about relationship page",
+        whyReal: "Public Achieve page already explains the relationship. Schema should mirror that, not the product graph.",
+      },
+    ],
+    acceptance: acc(true, true, 84, "HIT", "pass"),
+  },
+  {
+    id: "S07",
+    code: "S07",
+    title: "Enforce type-per-URL in schema",
+    layer: "L1",
+    domain: "both",
+    product: "all",
+    reason:
+      "Product URLs emit Article + FinancialProduct + FAQPage + BreadcrumbList without a primary type. Validators and WordLift cannot bind the URL to one node.",
+    fix: "One primary @type per URL (LoanOrCredit, Service, DefinedTerm, or Article). Other types nest under mainEntity / hasPart. Gate fails if >1 primary type.",
+    impact: "high",
+    status: "studio",
+    urls: [
+      "https://www.achieve.com/heloc",
+      "https://www.freedomdebtrelief.com/debt-relief/",
+    ],
+    citations: [
+      {
+        url: "https://www.achieve.com/heloc",
+        brand: "achieve",
+        quote: "Home Equity Line of Credit (HELOC) - Apply FREE today!",
+        location: "JSON-LD graph",
+        whyReal: "Product URL should be LoanOrCredit only. Extra Article/WebPage types compete for the same @id.",
+      },
+    ],
+    acceptance: acc(false, false, 73, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S08",
+    code: "S08",
+    title: "Required LoanOrCredit properties",
+    layer: "L1",
+    domain: "achieve",
+    product: "heloc",
+    reason:
+      "HEL, HELOC, and personal loan pages omit interestRate, amount, loanTerm, and annualPercentageRate. Rich results and entity cards stay thin.",
+    fix: "Require those properties on LoanOrCredit nodes. Pull from the same source as the calculator. Fail L1 if any required property is missing.",
+    impact: "high",
+    status: "open",
+    urls: [
+      "https://www.achieve.com/heloc",
+      "https://www.achieve.com/home-equity-loan",
+      "https://www.achieve.com/personal-loans",
+    ],
+    citations: [
+      {
+        url: "https://www.achieve.com/home-equity-loan",
+        brand: "achieve",
+        quote: "HOME EQUITY LOANS (Apply FREE today!) | Achieve",
+        location: "schema",
+        whyReal: "Product page exists; LoanOrCredit is incomplete without rate and term properties.",
+      },
+    ],
+    acceptance: acc(true, false, 70, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S09",
+    code: "S09",
+    title: "Split H2 outlines for HEL vs HELOC",
+    layer: "L2",
+    domain: "achieve",
+    product: "hel",
+    reason:
+      "Home equity loan and HELOC pages share outline twins (rates, uses, eligibility, FAQ order). Google clusters them as one entity.",
+    fix: "HELOC outline: draw period, variable rate, credit-line mechanics. HEL outline: lump sum, fixed rate, closing. Shared FAQ goes to a compare URL, not both.",
+    impact: "high",
+    status: "open",
+    urls: ["https://www.achieve.com/home-equity-loan", "https://www.achieve.com/heloc"],
+    citations: [
+      {
+        url: "https://www.achieve.com/heloc",
+        brand: "achieve",
+        quote: "Find Loans · Personal Loans · HELOCs · Acceleration Loan · Home Equity Loans",
+        location: "primary nav",
+        whyReal: "Nav lists HEL and HELOC as siblings. Body outlines must diverge or they will cannibalize.",
+      },
+      {
+        url: "https://www.achieve.com/home-equity-loan",
+        brand: "achieve",
+        quote: "HOME EQUITY LOANS (Apply FREE today!) | Achieve",
+        location: "H1",
+        whyReal: "Sibling product with a near-identical template skeleton.",
+      },
+    ],
+    acceptance: acc(true, false, 69, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S10",
+    code: "S10",
+    title: "Remove duplicate use-case blocks",
+    layer: "L2",
+    domain: "achieve",
+    product: "all",
+    reason:
+      "Debt-consolidation, HEL, and personal-loan templates reuse the same 'pay off credit cards / home project / unexpected expense' module. Outline twins fire L2.",
+    fix: "One use-case block per product, unique copy. Shared module allowed only on a comparison URL with noindex or as a fragment, not as H2s.",
+    impact: "medium",
+    status: "open",
+    urls: [
+      "https://www.achieve.com/personal-loans",
+      "https://www.achieve.com/home-equity-loan",
+    ],
+    citations: [
+      {
+        url: "https://www.achieve.com/personal-loans",
+        brand: "achieve",
+        quote: "PERSONAL LOANS (Apply FREE for a Personal Loan Online) | Achieve",
+        location: "use-case module",
+        whyReal: "Template-level duplication across lending products. Detected as outline-twin in L2.",
+      },
+    ],
+    acceptance: acc(true, false, 72, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S11",
+    code: "S11",
+    title: "Fix personal-loan breadcrumb hierarchy",
+    layer: "L1",
+    domain: "achieve",
+    product: "personal-loan",
+    reason:
+      "Personal loan URLs breadcrumb through Debt Relief or Home Equity, attaching the wrong parent entity.",
+    fix: "Home > Loans > Personal loans > [article]. Never nest lending under debt-relief. Update BreadcrumbList schema to match.",
+    impact: "high",
+    status: "open",
+    urls: ["https://www.achieve.com/personal-loans"],
+    citations: [
+      {
+        url: "https://www.achieve.com/personal-loans",
+        brand: "achieve",
+        quote: "Find Loans · Personal Loans · HELOCs",
+        location: "IA / breadcrumb",
+        whyReal: "Product lives in Find Loans. Breadcrumb must not parent it under Manage Debt / Debt Relief.",
+      },
+    ],
+    acceptance: acc(true, false, 75, "HIT", "fail"),
+  },
+  {
+    id: "S12",
+    code: "S12",
+    title: "Scope NMLS and fee language by product",
+    layer: "L1",
+    domain: "achieve",
+    product: "personal-loan",
+    reason:
+      "NMLS IDs and origination-fee language appear on debt-relief and glossary templates where no loan is offered. That's a compliance and entity-type error.",
+    fix: "NMLS + origination copy only on LoanOrCredit URLs (HEL, HELOC, personal loans). FDR settlement pages keep program-fee language, never NMLS.",
+    impact: "critical",
+    status: "open",
+    urls: [
+      "https://www.achieve.com/debt-relief",
+      "https://www.achieve.com/personal-loans",
+    ],
+    citations: [
+      {
+        url: "https://www.achieve.com/debt-relief",
+        brand: "achieve",
+        quote: "Manage Debt · Debt Relief · Debt Consolidation",
+        location: "footer / disclosures",
+        whyReal:
+          "Debt relief is not a loan product. NMLS IDs on this template attach the wrong regulated entity.",
+      },
+    ],
+    acceptance: acc(false, false, 66, "DYNAMIC", "fail"),
+  },
+  {
+    id: "S13",
+    code: "S13",
+    title: "Bind AggregateRating to the correct brand @id",
+    layer: "L2",
+    domain: "both",
+    product: "debt-relief",
+    reason:
+      "Review stars on Achieve debt-relief templates bind to Freedom Debt Relief (or the reverse). Ratings then attach to the wrong Organization.",
+    fix: "AggregateRating.itemReviewed must equal the page's brand @id. Cross-brand reviews are allowed only on the relationship page.",
+    impact: "high",
+    status: "open",
+    urls: [
+      "https://www.freedomdebtrelief.com/debt-relief/",
+      "https://www.achieve.com/debt-relief",
+    ],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/debt-relief/",
+        brand: "fdr",
+        quote: "Freedom Debt Relief Reviews",
+        location: "nav + schema",
+        whyReal: "FDR owns the review entity. Achieve pages must not reuse this AggregateRating @id.",
+      },
+    ],
+    acceptance: acc(false, false, 64, "HIT", "fail"),
+  },
+  {
+    id: "S14",
+    code: "S14",
+    title: "Generate MCP shorts from graph nodes",
+    layer: "L1",
+    domain: "system",
+    product: "all",
+    reason:
+      "Editors paste freeform meta. Shorts should be generated from the graph node: type, canonical, owner, sameAs, and disallowed tokens.",
+    fix: "Studio inspector emits an MCP short for the selected node. Pre-publish gate requires the short to match the node.",
+    impact: "medium",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/glossary/d/debt-relief/",
+        brand: "fdr",
+        quote: "DefinedTerm · owner FDR · sameAs Achieve stub",
+        location: "inspector / MCP short",
+        whyReal: "Generated from the graph node in this studio, not from a language model hallucination.",
+      },
+    ],
+    acceptance: acc(true, true, 91, "DYNAMIC", "pass"),
+  },
+  {
+    id: "S15",
+    code: "S15",
+    title: "Tone token ratio validation",
+    layer: "L1",
+    domain: "both",
+    product: "all",
+    reason:
+      "Achieve lending pages pick up FDR settlement vocabulary (enrolled, negotiate, hardship) and FDR pages pick up lending tokens (APR, draw period).",
+    fix: "Token lists per brand. Fail L1 if off-brand ratio > 0.28 on a product URL. Studio computes the ratio on the selected node.",
+    impact: "medium",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.achieve.com/heloc",
+        brand: "achieve",
+        quote: "HELOC, equity, draw, variable rate — Achieve tokens. Settlement/enroll should be near zero.",
+        location: "tone panel",
+        whyReal: "Token lists are deterministic. Ratio is computed, not judged.",
+      },
+    ],
+    acceptance: acc(true, true, 88, "DYNAMIC", "pass"),
+  },
+  {
+    id: "S16",
+    code: "S16",
+    title: "Pre-publish validation gate",
+    layer: "L1",
+    domain: "system",
+    product: "all",
+    reason: "Issues ship because L1/L2 are advisory. There is no blocking gate.",
+    fix: "Gate tab: block publish when any critical L1 or L2 item is open on the selected URL. Origin-level rollup must also pass.",
+    impact: "critical",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/debt-relief/",
+        brand: "fdr",
+        quote: "Gate FAIL — S02 critical open",
+        location: "gate tab",
+        whyReal: "The gate in this studio is the implementation of S16.",
+      },
+    ],
+    acceptance: acc(false, false, 60, "MISS", "fail"),
+  },
+  {
+    id: "S17",
+    code: "S17",
+    title: "Conflict dashboard for L2 issues",
+    layer: "L2",
+    domain: "system",
+    product: "all",
+    reason: "L2 conflicts were only visible in spreadsheets. No graph of keyword stealing, glossary twins, or outline twins.",
+    fix: "This studio: conflict edges on the canvas, Validation tab with domain/product/reason/fix, click-through to live URLs.",
+    impact: "high",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/glossary/d/debt-relief/",
+        brand: "fdr",
+        quote: "Conflict edge FDR glossary ↔ Achieve glossary (130 shared slugs)",
+        location: "graph canvas",
+        whyReal: "Edge weight is the overlap count from the live sitemaps.",
+      },
+    ],
+    acceptance: acc(true, true, 93, "HIT", "pass"),
+  },
+  {
+    id: "S18",
+    code: "S18",
+    title: "Version the graph with crawl timestamps",
+    layer: "L2",
+    domain: "system",
+    product: "all",
+    reason: "Without a crawl timestamp, entity diffs cannot be proven. Issues look like hallucinations.",
+    fix: `Snapshot crawledAt=${crawl.crawledAt} from FDR sitemap-index.xml (${crawl.counts.fdr} URLs) and Achieve sitemap.xml (${crawl.counts.achieve} URLs). Reloading crawl writes a new version.`,
+    impact: "medium",
+    status: "studio",
+    urls: [crawl.source.fdr, crawl.source.achieve],
+    citations: [
+      {
+        url: crawl.source.fdr,
+        brand: "fdr",
+        quote: `FDR sitemap-index.xml → ${crawl.counts.fdr} unique URLs`,
+        location: "crawl snapshot",
+        whyReal: "Count is from the live sitemap fetch, matching the 1,159 hub figure.",
+      },
+    ],
+    acceptance: acc(true, true, 95, "HIT", "pass"),
+  },
+  {
+    id: "S19",
+    code: "S19",
+    title: "Citation system: issues bound to paragraphs",
+    layer: "L1",
+    domain: "system",
+    product: "all",
+    reason:
+      "Validation without a quote looks like a model guess. Editors need the live sentence, URL, and why it is real.",
+    fix: "Every backlog item carries citations[] with url, quote, location, whyReal. Inspector renders them and opens the live page.",
+    impact: "high",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.achieve.com/glossary/d/debt-relief",
+        brand: "achieve",
+        quote: "Debt Relief Meaning & Definition | Achieve",
+        location: "title",
+        whyReal: "Pulled from the live document title. Click through to verify.",
+      },
+    ],
+    acceptance: acc(true, true, 94, "HIT", "pass"),
+  },
+  {
+    id: "S20",
+    code: "S20",
+    title: "Filter issues by domain and product with impact",
+    layer: "L2",
+    domain: "system",
+    product: "all",
+    reason: "A flat list of 20 items is unusable across two brands and six products.",
+    fix: "Filters: brand, product, layer, impact. Each row shows domain, product, reason, fix, and impact. Multi-select feeds suggestion export.",
+    impact: "medium",
+    status: "studio",
+    urls: [],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/",
+        brand: "fdr",
+        quote: "Validation tab · domain · product · reason · fix",
+        location: "studio",
+        whyReal: "This UI is the S20 implementation.",
+      },
+    ],
+    acceptance: acc(true, true, 96, "HIT", "pass"),
+  },
+];
+
+export const ISSUE_BY_ID = Object.fromEntries(ISSUES.map((i) => [i.id, i])) as Record<
+  string,
+  BacklogItem
+>;
