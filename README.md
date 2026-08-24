@@ -92,6 +92,18 @@ This app builds with Nitro’s **Vercel** preset (Node 22, TanStack Start). HTML
 2. Confirm the framework is **TanStack Start**, build command `npm run build`, Node **22**.
 3. Deploy. Production URL will be `pantheon-graph.vercel.app` (or the project name you choose).
 
+### Environment variables
+
+Set these on the Vercel project (Production, Preview, and Development). [`.env.example`](.env.example) is the catalog.
+
+| Name | Value | Why |
+| --- | --- | --- |
+| `VITE_AUTH_ENABLED` | `false` | Auth is off. If this is missing, the server would enable Better Auth and disagree with the client. |
+| `DATABASE_URL` | *(leave unset)* | No database. Setting this with auth off fails closed. |
+| `VITE_PUBLIC_HOSTNAME` | optional | Public host for PWA / OG, e.g. `pantheon-graph.vercel.app` |
+
+Do not add `BETTER_AUTH_*` or `GROK_AUTH_*` unless you later turn sign-in on. Vercel already injects `VERCEL`, `VERCEL_ENV`, and `VERCEL_URL`.
+
 Git pushes to `main` (or `master`) then trigger a new production deploy. Preview deploys run on other branches.
 
 Do not commit `.env` files. PageSpeed and sitemap fetches need no secrets. Live crawl / PageSpeed stay on the Node function (60s, streamed) so they are not capped by the Edge runtime.

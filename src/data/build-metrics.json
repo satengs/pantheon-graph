@@ -1,28 +1,28 @@
 {
-  "builtAt": "2026-08-24T17:51:55.923Z",
-  "totalMs": 2575,
+  "builtAt": "2026-08-24T18:17:37.219Z",
+  "totalMs": 2460,
   "phases": [
     {
       "name": "client",
-      "durationMs": 1000,
-      "bytes": 763901,
+      "durationMs": 975,
+      "bytes": 763902,
       "files": 3
     },
     {
       "name": "ssr",
-      "durationMs": 261,
-      "bytes": 381310,
+      "durationMs": 275,
+      "bytes": 381311,
       "files": 8
     },
     {
       "name": "nitro",
-      "durationMs": 321,
-      "bytes": 849126,
-      "files": 20
+      "durationMs": 327,
+      "bytes": 850386,
+      "files": 21
     }
   ],
   "output": {
-    "functionBytes": 849126,
-    "staticBytes": 1313280
+    "functionBytes": 850386,
+    "staticBytes": 1313366
   }
 }
