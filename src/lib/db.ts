@@ -105,7 +105,7 @@ function createNeonSql(): Promise<Sql> {
   return globalRef.__pgSqlPromise__;
 }
 
-async function readPgliteFile(name: string): Promise<Uint8Array> {
+async function readPgliteFile(name: string): Promise<Uint8Array<ArrayBuffer>> {
   const { readFile } = await import("node:fs/promises");
   const { join } = await import("node:path");
   const dirs = [
@@ -116,7 +116,10 @@ async function readPgliteFile(name: string): Promise<Uint8Array> {
   const errors: string[] = [];
   for (const dir of dirs) {
     try {
-      return new Uint8Array(await readFile(join(dir, name)));
+      const buf = await readFile(join(dir, name));
+      const copy = new Uint8Array(buf.byteLength);
+      copy.set(buf);
+      return copy;
     } catch (err) {
       errors.push(`${join(dir, name)}: ${err instanceof Error ? err.message : String(err)}`);
     }
