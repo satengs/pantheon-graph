@@ -45,11 +45,12 @@ function Login() {
             }}
           >
             <label className="block text-xs text-muted">
-              Admin
+              Username
               <input
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
                 autoComplete="username"
+                name="username"
                 className="mt-1 h-10 w-full rounded-md bg-bg px-3 text-sm text-fg shadow-[var(--shadow-border)]"
               />
             </label>

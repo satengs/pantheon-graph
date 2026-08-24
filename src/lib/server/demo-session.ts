@@ -16,7 +16,7 @@ export async function readDemoUser(): Promise<{ id: string; email: string | null
   try {
     const { payload } = await jwtVerify(token, secret());
     if (!payload.sub) return null;
-    return { id: String(payload.sub), email: String(payload.email ?? "admin@origin.local") };
+    return { id: String(payload.sub), email: null };
   } catch {
     return null;
   }
@@ -30,8 +30,8 @@ export const confirmDemoLogin = createServerFn({ method: "POST" })
     if (user !== "admin" || pass !== "123") {
       throw new Error("Wrong admin or password");
     }
-    const token = await new SignJWT({ email: "admin@origin.local" })
-      .setSubject("demo-admin")
+    const token = await new SignJWT({ name: "admin" })
+      .setSubject("admin")
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("7d")
       .sign(secret());
