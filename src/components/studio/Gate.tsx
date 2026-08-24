@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ISSUES } from "@/data/issues";
+import { RULES } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
 import {
   buildTone,
@@ -18,8 +18,8 @@ const PHASE_TONE: Record<string, string> = {
 };
 
 export function Gate() {
-  const openCritical = ISSUES.filter((i) => i.status === "open" && i.impact === "critical");
-  const openHigh = ISSUES.filter((i) => i.status === "open" && i.impact === "high");
+  const openCritical = RULES.filter((i) => i.status === "open" && i.impact === "critical");
+  const openHigh = RULES.filter((i) => i.status === "open" && i.impact === "high");
   const gloss = crawl.glossaryNear.map((n) => ({
     ...n,
     score: jaccard(n.fdr_slug, n.ach_slug),
@@ -28,14 +28,14 @@ export function Gate() {
   const originFdr = {
     psi: 82,
     cacheHit: 0.71,
-    conflicts: ISSUES.filter((i) => i.domain === "fdr" || i.domain === "both").filter(
+    conflicts: RULES.filter((i) => i.domain === "fdr" || i.domain === "both").filter(
       (i) => i.status === "open",
     ).length,
   };
   const originAch = {
     psi: 76,
     cacheHit: 0.41,
-    conflicts: ISSUES.filter((i) => i.domain === "achieve" || i.domain === "both").filter(
+    conflicts: RULES.filter((i) => i.domain === "achieve" || i.domain === "both").filter(
       (i) => i.status === "open",
     ).length,
   };

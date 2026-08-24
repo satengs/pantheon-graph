@@ -1,5 +1,5 @@
 import { crawl, pageUrl } from "@/data/crawl";
-import { ISSUES } from "@/data/issues";
+import { RULES } from "@/data/rules-seed";
 import type {
   BrandId,
   CrawlPage,
@@ -79,7 +79,7 @@ export function toneRatio(text: string, brand: BrandId): { ratio: number; off: n
 }
 
 export function mcpShort(node: GraphNode): string {
-  const issue = node.issueId ? ISSUES.find((i) => i.id === node.issueId) : undefined;
+  const issue = node.issueId ? RULES.find((i) => i.id === node.issueId) : undefined;
   const owner =
     node.brand && node.product && OWNER[node.product] === node.brand
       ? "canonical-owner"
@@ -211,7 +211,7 @@ export function buildGraph(opts: {
     });
   }
 
-  const layerIssues = ISSUES.filter((i) => opts.layer === "all" || i.layer === opts.layer);
+  const layerIssues = RULES.filter((i) => opts.layer === "all" || i.layer === opts.layer);
   for (const issue of layerIssues) {
     if (opts.brand !== "all" && issue.domain !== "both" && issue.domain !== "system" && issue.domain !== opts.brand) {
       continue;

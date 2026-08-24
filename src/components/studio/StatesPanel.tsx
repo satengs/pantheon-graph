@@ -12,6 +12,8 @@ import {
   type StateRow,
 } from "@/data/states";
 import { useStudio } from "@/store/studio";
+import { cmp, filterStates } from "@/lib/studio/query";
+import { Link } from "@tanstack/react-router";
 
 type CoverageFilter =
   | "all"
@@ -87,29 +89,21 @@ export function StatesPanel() {
   const query = useStudio((s) => s.query);
   const selectedState = useStudio((s) => s.selectedState);
   const selectState = useStudio((s) => s.selectState);
+  const sortKey = useStudio((s) => s.sortKey);
+  const sortDir = useStudio((s) => s.sortDir);
+  const setSort = useStudio((s) => s.setSort);
   const [filter, setFilter] = useState<CoverageFilter>("all");
 
   const rows = useMemo(() => {
-    return statesData.states.filter((s) => {
-      if (query.trim()) {
-        const q = query.toLowerCase();
-        if (!`${s.code} ${s.name}`.toLowerCase().includes(q)) return false;
-      }
-      if (product === "settlement" || product === "debt-relief") {
-        if (brand === "fdr" && s.fdrSettlement === "none") return false;
-        if (brand === "achieve" && s.achieveDebtRelief === "none") return false;
-      }
-      if (product === "heloc" || product === "hel") {
-        if (brand !== "fdr" && s.achieveHeloc === "none") return false;
-      }
-      if (product === "personal-loan") {
-        if (brand !== "fdr" && s.achievePersonalLoan === "none") return false;
-      }
-      if (product === "consolidation" && brand !== "achieve" && !s.fdrNearMe) return false;
-      if (filter !== "all" && coverage(s, filter) === "none") return false;
-      return true;
+    const base = filterStates(statesData.states, { brand, product, query });
+    const covered = base.filter((s) => (filter === "all" ? true : coverage(s, filter) !== "none"));
+    return covered.slice().sort((a, b) => {
+      if (sortKey === "name" || sortKey === "code") return cmp(a[sortKey], b[sortKey], sortDir);
+      const av = String((a as Record<string, unknown>)[sortKey] ?? "");
+      const bv = String((b as Record<string, unknown>)[sortKey] ?? "");
+      return cmp(av, bv, sortDir);
     });
-  }, [brand, product, query, filter]);
+  }, [brand, product, query, filter, sortKey, sortDir]);
 
   const fdrDirect = statesData.states.filter((s) => s.fdrSettlement === "direct").length;
   const fdrPartner = statesData.states.filter((s) => s.fdrSettlement === "partner").length;
@@ -182,6 +176,9 @@ export function StatesPanel() {
         })}
       </div>
 
+      <p className="border-b border-border px-3 py-2 text-xs text-muted">
+        Showing {rows.length} of {statesData.states.length} states
+      </p>
       <div className="min-w-0 overflow-x-auto border-b border-border p-3">
         <div className="mx-auto grid w-max grid-cols-11 gap-0.5 sm:gap-1">
           {US_LAYOUT.flatMap((row, ri) =>
@@ -191,6 +188,7 @@ export function StatesPanel() {
               }
               const state = statesData.states.find((s) => s.code === code)!;
               const on = selectedState === code;
+              const inList = rows.some((r) => r.code === code);
               const cov = coverage(state, filter);
               return (
                 <button
@@ -198,7 +196,7 @@ export function StatesPanel() {
                   type="button"
                   onClick={() => selectState(code)}
                   title={state.name}
-                  className={`size-7 rounded-sm font-mono text-[11px] transition-colors duration-[var(--motion-quick)] sm:size-8 ${chipClass(on, cov)}`}
+                  className={`size-7 rounded-sm font-mono text-[11px] transition-colors duration-[var(--motion-quick)] sm:size-8 ${chipClass(on, cov)} ${inList ? "" : "opacity-30"}`}
                 >
                   {code}
                 </button>
@@ -216,13 +214,24 @@ export function StatesPanel() {
         <table className="w-full min-w-[920px] border-collapse text-left text-sm">
           <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wide text-subtle">
             <tr>
-              <th className="px-3 py-2 font-medium">State</th>
-              <th className="px-2 py-2 font-medium">FDR settlement</th>
-              <th className="px-2 py-2 font-medium">FDR local pages</th>
-              <th className="px-2 py-2 font-medium">Achieve HELOC / HEL</th>
-              <th className="px-2 py-2 font-medium">Achieve personal loan</th>
-              <th className="px-2 py-2 font-medium">Achieve debt relief</th>
-              <th className="px-2 py-2 font-medium">Collections</th>
+              {(
+                [
+                  ["name", "State"],
+                  ["fdrSettlement", "FDR settlement"],
+                  ["fdrCityPages", "FDR local pages"],
+                  ["achieveHeloc", "Achieve HELOC / HEL"],
+                  ["achievePersonalLoan", "Achieve personal loan"],
+                  ["achieveDebtRelief", "Achieve debt relief"],
+                  ["achieveCollections", "Collections"],
+                ] as const
+              ).map(([key, label]) => (
+                <th key={key} className="px-2 py-2 font-medium first:px-3">
+                  <button type="button" onClick={() => setSort(key)}>
+                    {label}
+                    {sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                  </button>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -277,6 +286,18 @@ export function StatesPanel() {
             ))}
           </tbody>
         </table>
+        {rows.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-sm text-muted">No states match brand / product / search.</p>
+            <Link
+              to="/empty"
+              search={{ q: `${brand}/${product}` }}
+              className="mt-2 inline-block text-sm text-fdr hover:underline"
+            >
+              Open empty-data page
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );

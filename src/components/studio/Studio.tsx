@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GitBranch,
   LayoutGrid,
   ListChecks,
   MapPin,
+  Scale,
+  Settings2,
   Shield,
   Search,
 } from "lucide-react";
 import { crawl } from "@/data/crawl";
-import { ISSUES } from "@/data/issues";
+import { RULES } from "@/data/rules-seed";
 import { PRODUCT_LABEL, type ProductId } from "@/lib/graph/types";
 import { recrawl } from "@/lib/server/ops";
 import { Button } from "@/components/ui/button";
@@ -16,16 +18,25 @@ import { GraphCanvas } from "@/components/studio/GraphCanvas";
 import { Inspector } from "@/components/studio/Inspector";
 import { ValidationTable } from "@/components/studio/ValidationTable";
 import { Backlog } from "@/components/studio/Backlog";
+import { Rules } from "@/components/studio/Rules";
+import { ConfigPanel } from "@/components/studio/ConfigPanel";
 import { Gate } from "@/components/studio/Gate";
 import { StatesPanel } from "@/components/studio/StatesPanel";
+import { HSplit, VSplit } from "@/components/studio/SplitPane";
 import { useStudio, type StudioTab } from "@/store/studio";
+import { UserButton } from "@/lib/auth/gates";
+import { filterIssues, filterStates } from "@/lib/studio/query";
+import { statesData } from "@/data/states";
+import { loadNote, saveNote } from "@/lib/server/studio-db";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch }[] = [
   { id: "graph", label: "Graph", icon: GitBranch },
   { id: "states", label: "States", icon: MapPin },
   { id: "validation", label: "Validation", icon: LayoutGrid },
+  { id: "rules", label: "Rules", icon: Scale },
   { id: "backlog", label: "Backlog", icon: ListChecks },
   { id: "gate", label: "Gate", icon: Shield },
+  { id: "config", label: "Config", icon: Settings2 },
 ];
 
 const PRODUCTS: Array<"all" | ProductId> = [
@@ -54,9 +65,20 @@ export function Studio() {
   const setImpact = useStudio((s) => s.setImpact);
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
+  const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const [crawlMsg, setCrawlMsg] = useState<string | null>(null);
   const [crawling, setCrawling] = useState(false);
-  const openCount = ISSUES.filter((i) => i.status === "open").length;
+  const [draft, setDraft] = useState("");
+  const openCount = RULES.filter((i) => i.status === "open").length;
+  const issueHits = filterIssues(RULES, { brand, product, layer, impact, query }).length;
+  const stateHits = filterStates(statesData.states, { brand, product, query }).length;
+
+  useEffect(() => {
+    const key = selectedIssueId ?? tab;
+    void loadNote({ data: { pageKey: key } })
+      .then((r) => setDraft(r.body))
+      .catch(() => setDraft(""));
+  }, [selectedIssueId, tab]);
 
   async function onCrawl() {
     setCrawling(true);
@@ -73,6 +95,22 @@ export function Studio() {
     }
   }
 
+  const main = (
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {tab === "graph" ? (
+        <div className="min-h-0 flex-1 p-3">
+          <GraphCanvas />
+        </div>
+      ) : null}
+      {tab === "states" ? <StatesPanel /> : null}
+      {tab === "validation" ? <ValidationTable /> : null}
+      {tab === "rules" ? <Rules /> : null}
+      {tab === "backlog" ? <Backlog /> : null}
+      {tab === "gate" ? <Gate /> : null}
+      {tab === "config" ? <ConfigPanel /> : null}
+    </section>
+  );
+
   return (
     <div className="flex h-dvh min-w-0 flex-col overflow-x-hidden bg-bg text-fg">
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
@@ -80,7 +118,7 @@ export function Studio() {
           <p className="font-display text-2xl leading-none tracking-tight">Origin</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-subtle">Content Graph Studio</p>
         </div>
-        <nav className="flex rounded-lg bg-surface p-1" aria-label="Primary">
+        <nav className="flex flex-wrap rounded-lg bg-surface p-1" aria-label="Primary">
           {TABS.map((t) => {
             const Icon = t.icon;
             const on = tab === t.id;
@@ -100,15 +138,12 @@ export function Studio() {
           })}
         </nav>
         <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span className="font-mono tabular-nums">
-            FDR {crawl.counts.fdr.toLocaleString()}
-          </span>
+          <span className="font-mono tabular-nums">FDR {crawl.counts.fdr.toLocaleString()}</span>
           <span className="text-subtle">·</span>
-          <span className="font-mono tabular-nums">
-            Achieve {crawl.counts.achieve.toLocaleString()}
-          </span>
+          <span className="font-mono tabular-nums">Achieve {crawl.counts.achieve.toLocaleString()}</span>
           <span className="text-subtle">·</span>
           <span className="font-mono tabular-nums">{openCount} open</span>
+          <UserButton />
         </div>
       </header>
 
@@ -189,24 +224,45 @@ export function Studio() {
           {crawling ? "Crawling…" : "Live crawl"}
         </Button>
       </div>
-      {crawlMsg ? (
-        <p className="border-b border-border px-4 py-1.5 font-mono text-[11px] text-muted">{crawlMsg}</p>
-      ) : null}
+      <p className="border-b border-border px-4 py-1.5 font-mono text-[11px] text-muted">
+        Filters live · {issueHits} rules · {stateHits} states
+        {crawlMsg ? ` · ${crawlMsg}` : ""}
+      </p>
 
-      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="flex min-h-0 min-w-0 flex-col border-b border-border lg:border-b-0 lg:border-r">
-          {tab === "graph" ? (
-            <div className="min-h-0 flex-1 p-3">
-              <GraphCanvas />
-            </div>
-          ) : null}
-          {tab === "states" ? <StatesPanel /> : null}
-          {tab === "validation" ? <ValidationTable /> : null}
-          {tab === "backlog" ? <Backlog /> : null}
-          {tab === "gate" ? <Gate /> : null}
-        </section>
-        <Inspector />
-      </div>
+      <HSplit
+        storageKey="origin.inspectorW"
+        left={
+          <VSplit
+            storageKey="origin.writeH"
+            top={main}
+            bottom={
+              <div className="flex h-full flex-col bg-surface p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-wide text-subtle">
+                    Write · {selectedIssueId ?? tab}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      void saveNote({ data: { pageKey: selectedIssueId ?? tab, body: draft } })
+                    }
+                  >
+                    Save
+                  </Button>
+                </div>
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="Draft the page copy or fix notes for this selection"
+                  className="min-h-0 flex-1 resize-none rounded-md bg-bg p-2 text-sm text-fg shadow-[var(--shadow-border)]"
+                />
+              </div>
+            }
+          />
+        }
+        right={<Inspector />}
+      />
     </div>
   );
 }

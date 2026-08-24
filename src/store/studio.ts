@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { BrandId, ProductId } from "@/lib/graph/types";
 
-export type StudioTab = "graph" | "validation" | "backlog" | "gate" | "states";
+export type StudioTab = "graph" | "validation" | "backlog" | "rules" | "gate" | "states" | "config";
 
 type StudioState = {
   tab: StudioTab;
@@ -14,7 +14,10 @@ type StudioState = {
   selectedIssueId: string | null;
   selectedIssueIds: string[];
   selectedState: string | null;
+  hoveredIssueId: string | null;
   query: string;
+  sortKey: string;
+  sortDir: "asc" | "desc";
   setTab: (tab: StudioTab) => void;
   setExplode: (v: boolean) => void;
   setBrand: (v: "all" | BrandId) => void;
@@ -24,12 +27,14 @@ type StudioState = {
   selectNode: (id: string | null) => void;
   selectIssue: (id: string | null) => void;
   selectState: (code: string | null) => void;
+  hoverIssue: (id: string | null) => void;
   toggleIssueSelect: (id: string) => void;
   clearIssueSelect: () => void;
   setQuery: (q: string) => void;
+  setSort: (key: string) => void;
 };
 
-export const useStudio = create<StudioState>((set) => ({
+export const useStudio = create<StudioState>((set, get) => ({
   tab: "states",
   explode: false,
   brand: "all",
@@ -40,11 +45,14 @@ export const useStudio = create<StudioState>((set) => ({
   selectedIssueId: "S01",
   selectedIssueIds: [],
   selectedState: null,
+  hoveredIssueId: null,
   query: "",
+  sortKey: "code",
+  sortDir: "asc",
   setTab: (tab) => set({ tab }),
   setExplode: (explode) => set({ explode }),
-  setBrand: (brand) => set({ brand }),
-  setProduct: (product) => set({ product }),
+  setBrand: (brand) => set({ brand, selectedState: null }),
+  setProduct: (product) => set({ product, selectedState: null }),
   setLayer: (layer) => set({ layer }),
   setImpact: (impact) => set({ impact }),
   selectNode: (selectedNodeId) => {
@@ -65,6 +73,7 @@ export const useStudio = create<StudioState>((set) => ({
       selectedState: null,
     }),
   selectState: (selectedState) => set({ selectedState, selectedNodeId: null }),
+  hoverIssue: (hoveredIssueId) => set({ hoveredIssueId }),
   toggleIssueSelect: (id) =>
     set((s) => ({
       selectedIssueIds: s.selectedIssueIds.includes(id)
@@ -73,4 +82,9 @@ export const useStudio = create<StudioState>((set) => ({
     })),
   clearIssueSelect: () => set({ selectedIssueIds: [] }),
   setQuery: (query) => set({ query }),
+  setSort: (key) => {
+    const cur = get();
+    if (cur.sortKey === key) set({ sortDir: cur.sortDir === "asc" ? "desc" : "asc" });
+    else set({ sortKey: key, sortDir: "asc" });
+  },
 }));

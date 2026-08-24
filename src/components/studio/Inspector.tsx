@@ -1,6 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { ExternalLink, Copy, Check } from "lucide-react";
 import { useMemo, useState } from "react";
-import { ISSUES } from "@/data/issues";
+import { RULES } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
 import { buildGraph, mcpShort, toneRatio } from "@/lib/graph/model";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ export function Inspector() {
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectedState = useStudio((s) => s.selectedState);
   const tab = useStudio((s) => s.tab);
+  const hoveredIssueId = useStudio((s) => s.hoveredIssueId);
   const selectIssue = useStudio((s) => s.selectIssue);
   const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
@@ -29,7 +31,8 @@ export function Inspector() {
     [explode, brand, product, layer],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
-  const issue = ISSUES.find((i) => i.id === (node?.issueId ?? selectedIssueId)) ?? ISSUES[0]!;
+  const issue =
+    RULES.find((i) => i.id === (hoveredIssueId ?? node?.issueId ?? selectedIssueId)) ?? RULES[0]!;
   const short = node ? mcpShort(node) : mcpShort({
     id: `issue:${issue.id}`,
     label: `${issue.code} ${issue.title}`,
@@ -67,9 +70,11 @@ export function Inspector() {
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
-        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">Inspector</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">
+          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "View the issue"}
+        </p>
         <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
-          {node ? node.label.replace("\n", " ") : issue.title}
+          {issue.code} · {issue.title}
         </h2>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone={issue.layer === "L2" ? "warn" : "neutral"}>{issue.layer}</Badge>
@@ -87,16 +92,29 @@ export function Inspector() {
         </div>
       </header>
 
-      {node?.url ? (
-        <a
-          href={node.url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-fdr hover:underline"
-        >
-          Open live page <ExternalLink className="size-3.5" />
-        </a>
-      ) : null}
+      {issue.urls[0] ? (
+        <div className="overflow-hidden rounded-lg bg-raised">
+          <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="block">
+            <img
+              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
+              alt=""
+              className="h-36 w-full object-cover object-top"
+            />
+          </a>
+          <a
+            href={issue.urls[0]}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-fdr hover:underline"
+          >
+            Open live page <ExternalLink className="size-3.5" />
+          </a>
+        </div>
+      ) : (
+        <Link to="/empty" search={{ q: issue.code }} className="text-sm text-fdr hover:underline">
+          No live URL — open empty-data page
+        </Link>
+      )}
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Reason</h3>
@@ -215,7 +233,7 @@ export function Inspector() {
         Graph version {crawl.crawledAt} · {crawl.counts.fdr} FDR · {crawl.counts.achieve} Achieve
       </p>
       <div className="flex flex-wrap gap-1">
-        {ISSUES.map((i) => (
+        {RULES.map((i) => (
           <button
             key={i.id}
             type="button"
