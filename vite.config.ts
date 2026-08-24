@@ -10,6 +10,8 @@ import { nitro } from "nitro/vite";
 import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 // @ts-expect-error JS plugin alongside the TS vite config
 import { appEnvPlugin } from "./scripts/app-env-plugin.mjs";
+// @ts-expect-error JS plugin alongside the TS vite config
+import { buildMetricsPlugin } from "./scripts/build-metrics-plugin.mjs";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
 
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
@@ -175,6 +177,7 @@ export default defineConfig(({ command, isPreview }) => ({
     tanstackStart(),
     ...(command === "build" || isPreview
       ? [
+          ...(command === "build" ? [buildMetricsPlugin()] : []),
           nitro({
             preset: "vercel",
             // Auto-registers server/middleware/* (the PWA install page +
@@ -192,6 +195,11 @@ export default defineConfig(({ command, isPreview }) => ({
                 },
                 headers: {
                   "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+                },
+              },
+              "/data/build-metrics.json": {
+                headers: {
+                  "cache-control": "public, s-maxage=60, stale-while-revalidate=3600",
                 },
               },
               "/data/**": {

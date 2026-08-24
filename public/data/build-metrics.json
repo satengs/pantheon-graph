@@ -1,0 +1,28 @@
+{
+  "builtAt": "2026-08-24T17:51:55.923Z",
+  "totalMs": 2575,
+  "phases": [
+    {
+      "name": "client",
+      "durationMs": 1000,
+      "bytes": 763901,
+      "files": 3
+    },
+    {
+      "name": "ssr",
+      "durationMs": 261,
+      "bytes": 381310,
+      "files": 8
+    },
+    {
+      "name": "nitro",
+      "durationMs": 321,
+      "bytes": 849126,
+      "files": 20
+    }
+  ],
+  "output": {
+    "functionBytes": 849126,
+    "staticBytes": 1313280
+  }
+}
