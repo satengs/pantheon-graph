@@ -33,6 +33,7 @@ export const DEFAULT_BRAND_CONFIG: Record<"fdr" | "achieve", Record<string, unkn
     schemaOrg: "https://www.freedomdebtrelief.com/#organization",
     toneAllow: ["settlement", "enrolled", "negotiate", "hardship", "program"],
     toneDeny: ["APR", "draw period", "HELOC"],
+    analyzeEndpoint: "",
   },
   achieve: {
     host: "www.achieve.com",

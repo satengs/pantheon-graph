@@ -5,6 +5,7 @@ import { authMiddleware } from "@/lib/auth/middleware";
 import { RULES, ruleStatement, DEFAULT_BRAND_CONFIG } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
 import { statesData } from "@/data/states";
+import { analyzeHtml, SEED_HTML } from "@/lib/html/semantic";
 
 const ruleInput = z.object({
   id: z.string().min(1).optional(),
@@ -71,6 +72,19 @@ async function seedCatalog(userId: string) {
 async function seedIfEmpty(userId: string) {
   const sql = await getSql();
   await seedCatalog(userId);
+  const foundN = await sql<{ n: number }>`select count(*)::int as n from studio_findings where user_id = ${userId}`;
+  if ((foundN[0]?.n ?? 0) === 0) {
+    for (const [url, html] of Object.entries(SEED_HTML)) {
+      for (const f of analyzeHtml(html, url)) {
+        const id = `${userId}:${f.code}:${encodeURIComponent(f.url)}`;
+        await sql`
+          insert into studio_findings (id, user_id, code, title, lane, url, why, found, suggested)
+          values (${id}, ${userId}, ${f.code}, ${f.title}, ${f.lane}, ${f.url}, ${f.why}, ${f.found}, ${f.suggested})
+          on conflict (id) do nothing
+        `;
+      }
+    }
+  }
   const existing = await sql<{ n: number }>`select count(*)::int as n from studio_rules where user_id = ${userId}`;
   if ((existing[0]?.n ?? 0) > 0) return;
   for (const r of RULES) {
@@ -140,12 +154,23 @@ export const listStudio = createServerFn({ method: "GET" })
       rows: number;
       created_at: string;
     }>`select id, kind, label, bytes, rows, created_at from studio_history where user_id = ${userId} order by created_at desc limit 40`;
+    const findings = await sql<{
+      id: string;
+      code: string;
+      title: string;
+      lane: string;
+      url: string;
+      why: string;
+      found: string;
+      suggested: string;
+    }>`select id, code, title, lane, url, why, found, suggested from studio_findings where user_id = ${userId} order by code, title`;
     return {
       rules,
       tasks,
       configs,
       catalog,
       history,
+      findings,
       store: dbSource,
       counts: {
         rules: ruleN[0]?.n ?? 0,

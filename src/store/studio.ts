@@ -15,6 +15,7 @@ type StudioState = {
   selectedIssueIds: string[];
   selectedState: string | null;
   hoveredIssueId: string | null;
+  selectedFindingId: string | null;
   query: string;
   sortKey: string;
   sortDir: "asc" | "desc";
@@ -28,6 +29,7 @@ type StudioState = {
   selectIssue: (id: string | null) => void;
   selectState: (code: string | null) => void;
   hoverIssue: (id: string | null) => void;
+  selectFinding: (id: string | null) => void;
   toggleIssueSelect: (id: string) => void;
   clearIssueSelect: () => void;
   setQuery: (q: string) => void;
@@ -46,6 +48,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   selectedIssueIds: [],
   selectedState: null,
   hoveredIssueId: null,
+  selectedFindingId: null,
   query: "",
   sortKey: "code",
   sortDir: "asc",
@@ -74,6 +77,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     }),
   selectState: (selectedState) => set({ selectedState, selectedNodeId: null }),
   hoverIssue: (hoveredIssueId) => set({ hoveredIssueId }),
+  selectFinding: (selectedFindingId) => set({ selectedFindingId, selectedState: null }),
   toggleIssueSelect: (id) =>
     set((s) => ({
       selectedIssueIds: s.selectedIssueIds.includes(id)

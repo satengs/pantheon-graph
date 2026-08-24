@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, Copy, Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RULES } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
 import { buildGraph, mcpShort, toneRatio } from "@/lib/graph/model";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
 import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
+import { listStudio } from "@/lib/server/studio-db";
+import { analyzePage } from "@/lib/server/analyze-page";
 import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone, type StateRow } from "@/data/states";
 
 export function Inspector() {
@@ -21,10 +23,15 @@ export function Inspector() {
   const selectedState = useStudio((s) => s.selectedState);
   const tab = useStudio((s) => s.tab);
   const hoveredIssueId = useStudio((s) => s.hoveredIssueId);
+  const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const selectIssue = useStudio((s) => s.selectIssue);
   const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
+  const [findings, setFindings] = useState<
+    Array<{ id: string; code: string; title: string; url: string; why: string; found: string; suggested: string }>
+  >([]);
+  const [analyzeBusy, setAnalyzeBusy] = useState(false);
 
   const graph = useMemo(
     () => buildGraph({ explode, brand, product, layer }),
@@ -42,6 +49,13 @@ export function Inspector() {
   const toneText = `${issue.title} ${issue.reason} ${issue.fix}`;
   const toneBrand = issue.domain === "achieve" ? "achieve" : "fdr";
   const tone = toneRatio(toneText, toneBrand);
+  const finding = findings.find((f) => f.id === selectedFindingId) ?? findings.find((f) => f.url === issue.urls[0]);
+
+  useEffect(() => {
+    void listStudio()
+      .then((d) => setFindings(d.findings))
+      .catch(() => setFindings([]));
+  }, [selectedFindingId, selectedIssueId]);
 
   async function copyShort() {
     await navigator.clipboard.writeText(short);
@@ -74,7 +88,7 @@ export function Inspector() {
           {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "View the issue"}
         </p>
         <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
-          {issue.code} · {issue.title}
+          {finding && selectedFindingId ? finding.title : `${issue.code} · ${issue.title}`}
         </h2>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone={issue.layer === "L2" ? "warn" : "neutral"}>{issue.layer}</Badge>
@@ -121,6 +135,55 @@ export function Inspector() {
         <p className="mt-1 text-sm leading-relaxed text-muted text-pretty">{issue.reason}</p>
         <h3 className="mt-3 text-[11px] font-medium uppercase tracking-wide text-subtle">Fix</h3>
         <p className="mt-1 text-sm leading-relaxed text-fg text-pretty">{issue.fix}</p>
+      </section>
+
+      <section className="rounded-lg bg-raised p-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">HTML outline</h3>
+          {issue.urls[0] ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={analyzeBusy}
+              onClick={() => {
+                setAnalyzeBusy(true);
+                void analyzePage({ data: { url: issue.urls[0]! } })
+                  .then((res) => {
+                    const mapped = res.findings.map((f) => ({
+                      id: f.id,
+                      code: f.code,
+                      title: f.title,
+                      url: f.url,
+                      why: f.why,
+                      found: f.found,
+                      suggested: f.suggested,
+                    }));
+                    setFindings((prev) => mapped.concat(prev.filter((p) => p.url !== issue.urls[0])));
+                  })
+                  .finally(() => setAnalyzeBusy(false));
+              }}
+            >
+              {analyzeBusy ? "Reading…" : "Re-read page"}
+            </Button>
+          ) : null}
+        </div>
+        {finding ? (
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-muted">{finding.why}</p>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-subtle">Wrong</p>
+              <pre className="mt-1 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] text-danger">{finding.found}</pre>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-subtle">Suggested</p>
+              <pre className="mt-1 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] text-ok">{finding.suggested}</pre>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-muted">
+            Run outline on this URL from Backlog. Logic is local (headings, FAQ, related, footer vs main). Optional HTTPS workflow URL can be stored in FDR JSON as analyzeEndpoint.
+          </p>
+        )}
       </section>
 
       <section className="rounded-lg bg-raised p-3">
