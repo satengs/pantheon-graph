@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Maximize2, Minimize2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { RULES } from "@/data/rules-seed";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,8 @@ export function ValidationTable() {
   const sortKey = useStudio((s) => s.sortKey);
   const sortDir = useStudio((s) => s.sortDir);
   const setSort = useStudio((s) => s.setSort);
+  const maximized = useStudio((s) => s.maximized);
+  const setMaximized = useStudio((s) => s.setMaximized);
 
   const rows = filterIssues(RULES, { brand, product, layer, impact, query }).slice().sort((a, b) => {
     const key = sortKey as keyof BacklogItem;
@@ -40,9 +42,13 @@ export function ValidationTable() {
   });
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <p className="border-b border-border px-3 py-2 text-xs text-muted">
-        Showing {rows.length} of {RULES.length} rules
+    <div className={`min-h-0 flex-1 overflow-auto ${maximized === "validation" ? "fixed inset-0 z-50 bg-bg" : ""}`}>
+      <p className="flex items-center justify-between border-b border-border px-3 py-2 text-xs text-muted">
+        <span>Showing {rows.length} of {RULES.length} validation points · click a header to sort</span>
+        <button type="button" className="inline-flex items-center gap-1 text-fg" onClick={() => setMaximized(maximized === "validation" ? null : "validation")}>
+          {maximized === "validation" ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+          {maximized === "validation" ? "Exit" : "Full screen"}
+        </button>
       </p>
       <table className="w-full min-w-[720px] border-collapse text-left text-sm">
         <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wide text-subtle">

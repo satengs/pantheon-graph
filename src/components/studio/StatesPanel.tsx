@@ -93,6 +93,10 @@ export function StatesPanel() {
   const sortDir = useStudio((s) => s.sortDir);
   const setSort = useStudio((s) => s.setSort);
   const [filter, setFilter] = useState<CoverageFilter>("all");
+  const [showSummary, setShowSummary] = useState(true);
+  const [showMap, setShowMap] = useState(true);
+  const maximized = useStudio((s) => s.maximized);
+  const setMaximized = useStudio((s) => s.setMaximized);
 
   const rows = useMemo(() => {
     const base = filterStates(statesData.states, { brand, product, query });
@@ -116,7 +120,23 @@ export function StatesPanel() {
   const achCol = statesData.states.filter((s) => s.achieveCollections).length;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div className={`flex min-w-0 flex-1 flex-col ${maximized === "states" ? "fixed inset-0 z-50 bg-bg" : ""}`}>
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+        <button type="button" className="h-8 rounded-md bg-raised px-2.5 text-xs text-muted" onClick={() => setShowSummary((v) => !v)}>
+          {showSummary ? "Hide summary" : "Show summary"}
+        </button>
+        <button type="button" className="h-8 rounded-md bg-raised px-2.5 text-xs text-muted" onClick={() => setShowMap((v) => !v)}>
+          {showMap ? "Hide map" : "Show map"}
+        </button>
+        <button
+          type="button"
+          className="ml-auto h-8 rounded-md bg-accent px-2.5 text-xs text-accent-fg"
+          onClick={() => setMaximized(maximized === "states" ? null : "states")}
+        >
+          {maximized === "states" ? "Exit full screen" : "Full screen table"}
+        </button>
+      </div>
+      {showSummary ? (
       <div className="grid gap-2 border-b border-border p-3 lg:grid-cols-3">
         <BrandCard
           brand="Freedom Debt Relief"
@@ -157,6 +177,7 @@ export function StatesPanel() {
           (NMLS 138464 / 1810501 / 227977). License is not a guarantee the product is currently offered.
         </div>
       </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
         {FILTERS.map((f) => {
@@ -179,6 +200,7 @@ export function StatesPanel() {
       <p className="border-b border-border px-3 py-2 text-xs text-muted">
         Showing {rows.length} of {statesData.states.length} states
       </p>
+      {showMap ? (
       <div className="min-w-0 overflow-x-auto border-b border-border p-3">
         <div className="mx-auto grid w-max grid-cols-11 gap-0.5 sm:gap-1">
           {US_LAYOUT.flatMap((row, ri) =>
@@ -209,8 +231,9 @@ export function StatesPanel() {
           partner / licensed · click a state
         </p>
       </div>
+      ) : null}
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+      <div className="min-w-0 overflow-x-auto">
         <table className="w-full min-w-[920px] border-collapse text-left text-sm">
           <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wide text-subtle">
             <tr>

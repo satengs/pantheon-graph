@@ -49,7 +49,7 @@ export function HSplit({
   }, [onMove, onUp]);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-[70vh] min-w-0 flex-1 flex-col lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">{left}</div>
       <button
         type="button"
@@ -115,7 +115,7 @@ export function VSplit({
 
   return (
     <div ref={box} className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">{top}</div>
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto">{top}</div>
       <button
         type="button"
         aria-label="Resize write pane"

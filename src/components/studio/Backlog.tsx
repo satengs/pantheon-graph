@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
-import { listStudio } from "@/lib/server/studio-db";
+import { listStudio, upsertTask } from "@/lib/server/studio-db";
 import { analyzePage } from "@/lib/server/analyze-page";
 import { filterIssues } from "@/lib/studio/query";
-import { LANES, ruleInLane, type BacklogLane } from "@/lib/studio/lanes";
+import { ISSUE_ALIAS } from "@/lib/graph/aliases";
 import { RULES } from "@/data/rules-seed";
 
 type Finding = {
@@ -29,34 +29,52 @@ export function Backlog() {
   const selectFinding = useStudio((s) => s.selectFinding);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const hoverIssue = useStudio((s) => s.hoverIssue);
-  const [lane, setLane] = useState<BacklogLane>("issue");
+  const sortKey = useStudio((s) => s.sortKey);
+  const sortDir = useStudio((s) => s.sortDir);
+  const setSort = useStudio((s) => s.setSort);
   const [findings, setFindings] = useState<Finding[]>([]);
-  const [endpoint, setEndpoint] = useState("");
+  const [title, setTitle] = useState("");
   const [url, setUrl] = useState("https://www.freedomdebtrelief.com/debt-relief/");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const filteredRules = useMemo(
-    () => filterIssues(RULES, { brand, product, layer, impact, query }).filter((r) => ruleInLane(r, lane)),
-    [brand, product, layer, impact, query, lane],
-  );
+  const points = useMemo(() => {
+    const rules = filterIssues(RULES, { brand, product, layer, impact, query }).map((r) => ({
+      id: r.id,
+      code: r.code,
+      title: r.title,
+      alias: ISSUE_ALIAS[r.code] ?? r.code,
+      kind: "rule" as const,
+      why: r.reason,
+      impact: r.impact,
+    }));
+    const q = query.trim().toLowerCase();
+    const html = findings
+      .filter((f) => !q || `${f.title} ${f.why} ${f.url}`.toLowerCase().includes(q))
+      .map((f) => ({
+        id: f.id,
+        code: f.code,
+        title: f.title,
+        alias: f.code,
+        kind: "html" as const,
+        why: f.why,
+        impact: "high" as const,
+      }));
+    const all = [...html, ...rules];
+    return all.sort((a, b) => {
+      const av = String((a as Record<string, string>)[sortKey] ?? a.code);
+      const bv = String((b as Record<string, string>)[sortKey] ?? b.code);
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }, [brand, product, layer, impact, query, findings, sortKey, sortDir]);
 
   async function reload() {
     try {
       const data = await listStudio();
       setFindings(data.findings);
-      const sys = data.configs.find((c) => c.brand === "fdr");
-      if (sys) {
-        try {
-          const j = JSON.parse(sys.json) as { analyzeEndpoint?: string };
-          if (j.analyzeEndpoint) setEndpoint(j.analyzeEndpoint);
-        } catch {
-          /* ignore */
-        }
-      }
       setErr(null);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Could not load backlog");
+      setErr(e instanceof Error ? e.message : "Could not load issues");
     }
   }
 
@@ -64,109 +82,97 @@ export function Backlog() {
     void reload();
   }, []);
 
-  const q = query.trim().toLowerCase();
-  const laneFindings = findings.filter((f) => {
-    if (lane === "issue") return f.lane === "issue" || f.code === "H1" || f.code === "SKIP" || f.code === "FAQ" || f.code === "REL" || f.code === "FOOT" || f.code === "MAIN";
-    return f.lane === lane;
-  }).filter((f) => !q || `${f.title} ${f.why} ${f.url}`.toLowerCase().includes(q));
-
-  const counts = {
-    fdr: findings.filter((f) => f.lane === "fdr").length + RULES.filter((r) => ruleInLane(r, "fdr")).length,
-    achieve: findings.filter((f) => f.lane === "achieve").length + RULES.filter((r) => ruleInLane(r, "achieve")).length,
-    issue: findings.filter((f) => f.lane === "issue").length + RULES.filter((r) => ruleInLane(r, "issue")).length,
-    performance: findings.filter((f) => f.lane === "performance").length + RULES.filter((r) => ruleInLane(r, "performance")).length,
-  };
-
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex flex-wrap gap-1.5 border-b border-border px-4 py-2">
-        {LANES.map((l) => (
-          <button
-            key={l.id}
-            type="button"
-            onClick={() => setLane(l.id)}
-            className={`h-9 rounded-md px-3 text-sm ${lane === l.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
-          >
-            {l.label} {counts[l.id]}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-end gap-2 border-b border-border px-4 py-2">
-        <label className="min-w-[200px] flex-1 text-xs text-muted">
-          Analyze live URL
-          <input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="mt-1 h-9 w-full rounded-md bg-surface px-3 text-sm text-fg shadow-[var(--shadow-border)]"
-          />
-        </label>
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">
+      <p className="text-sm text-muted">
+        Validation points for the websites — HTML outline mistakes and content rules. Click one to view the issue.
+      </p>
+      {err ? <p className="mt-2 text-sm text-danger">{err}</p> : null}
+      <form
+        className="mt-3 flex flex-wrap gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!title.trim()) return;
+          void upsertTask({ data: { title: title.trim() } }).then(() => {
+            setTitle("");
+            void reload();
+          });
+        }}
+      >
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Add a validation point"
+          className="h-9 min-w-[200px] flex-1 rounded-md bg-surface px-3 text-sm shadow-[var(--shadow-border)]"
+        />
+        <Button type="submit" size="sm">
+          Add
+        </Button>
+      </form>
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="h-9 min-w-[220px] flex-1 rounded-md bg-surface px-3 text-sm shadow-[var(--shadow-border)]"
+        />
         <Button
           size="sm"
           disabled={busy}
           onClick={() => {
             setBusy(true);
-            void analyzePage({ data: { url, endpoint: endpoint || undefined } })
+            void analyzePage({ data: { url } })
               .then((res) => {
-                setLane("issue");
                 void reload();
                 if (res.findings[0]) selectFinding(res.findings[0].id);
-                setErr(null);
               })
               .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Analyze failed"))
               .finally(() => setBusy(false));
           }}
         >
-          {busy ? "Analyzing…" : "Run outline"}
+          {busy ? "Reading…" : "Run outline"}
         </Button>
       </div>
-      {err ? <p className="px-4 py-2 text-sm text-danger">{err}</p> : null}
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <p className="mb-3 text-sm text-muted">
-          Product work only — FDR, Achieve, semantic HTML issues, and performance. Counts grow when you run outline on a live page.
-        </p>
-        {laneFindings.length > 0 ? (
-          <ul className="mb-4 grid gap-2 md:grid-cols-2">
-            {laneFindings.map((f) => (
-              <li key={f.id}>
-                <button
-                  type="button"
-                  onClick={() => selectFinding(f.id)}
-                  className={`flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left shadow-[var(--shadow-border)] ${
-                    selectedFindingId === f.id ? "bg-raised" : "bg-bg"
-                  }`}
-                >
-                  <span className="font-mono text-[10px] text-subtle">{f.code}</span>
-                  <span className="font-medium text-fg">{f.title}</span>
-                  <span className="line-clamp-2 text-xs text-muted">{f.why}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <ul className="grid gap-2 md:grid-cols-2">
-          {filteredRules.map((r) => (
-            <li key={r.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  selectFinding(null);
-                  selectIssue(r.id);
-                }}
-                onMouseEnter={() => hoverIssue(r.id)}
-                onMouseLeave={() => hoverIssue(null)}
-                className="flex w-full flex-col items-start gap-1 rounded-xl bg-bg p-3 text-left shadow-[var(--shadow-border)] hover:bg-raised/70"
-              >
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span className="font-mono text-xs">{r.code}</span>
-                  <Badge tone={r.impact === "critical" ? "danger" : "warn"}>{r.impact}</Badge>
-                </div>
-                <span className="font-medium">{r.title}</span>
-                <span className="line-clamp-2 text-xs text-muted">{r.fix}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="mt-3 flex gap-2 text-xs text-muted">
+        <button type="button" onClick={() => setSort("code")}>
+          Sort id {sortKey === "code" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+        </button>
+        <button type="button" onClick={() => setSort("title")}>
+          Sort name {sortKey === "title" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+        </button>
+        <button type="button" onClick={() => setSort("alias")}>
+          Sort alias {sortKey === "alias" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+        </button>
       </div>
+      <ul className="mt-3 grid gap-2 md:grid-cols-2">
+        {points.map((p) => (
+          <li key={p.id}>
+            <button
+              type="button"
+              onClick={() => {
+                if (p.kind === "html") selectFinding(p.id);
+                else {
+                  selectFinding(null);
+                  selectIssue(p.id);
+                }
+              }}
+              onMouseEnter={() => p.kind === "rule" && hoverIssue(p.id)}
+              onMouseLeave={() => hoverIssue(null)}
+              className={`flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left shadow-[var(--shadow-border)] ${
+                selectedFindingId === p.id ? "bg-raised" : "bg-bg hover:bg-raised/70"
+              }`}
+            >
+              <div className="flex w-full items-center justify-between gap-2">
+                <span className="font-mono text-xs text-subtle">
+                  {p.code} · {p.alias}
+                </span>
+                <Badge tone={p.impact === "critical" ? "danger" : "warn"}>{p.kind === "html" ? "HTML" : "rule"}</Badge>
+              </div>
+              <span className="font-medium text-fg">{p.title}</span>
+              <span className="line-clamp-2 text-xs text-muted">{p.why}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import type { BrandId, ProductId } from "@/lib/graph/types";
 
-export type StudioTab = "graph" | "validation" | "backlog" | "rules" | "gate" | "states" | "config";
+export type StudioTab = "graph" | "validation" | "issues" | "rules" | "gate" | "states" | "config";
+export type GraphLayout = "tree" | "circle" | "breadthfirst" | "grid";
+export type Maximized = null | "graph" | "states" | "validation";
 
 type StudioState = {
   tab: StudioTab;
@@ -19,6 +21,8 @@ type StudioState = {
   query: string;
   sortKey: string;
   sortDir: "asc" | "desc";
+  graphLayout: GraphLayout;
+  maximized: Maximized;
   setTab: (tab: StudioTab) => void;
   setExplode: (v: boolean) => void;
   setBrand: (v: "all" | BrandId) => void;
@@ -34,6 +38,8 @@ type StudioState = {
   clearIssueSelect: () => void;
   setQuery: (q: string) => void;
   setSort: (key: string) => void;
+  setGraphLayout: (v: GraphLayout) => void;
+  setMaximized: (v: Maximized) => void;
 };
 
 export const useStudio = create<StudioState>((set, get) => ({
@@ -52,6 +58,8 @@ export const useStudio = create<StudioState>((set, get) => ({
   query: "",
   sortKey: "code",
   sortDir: "asc",
+  graphLayout: "tree",
+  maximized: null,
   setTab: (tab) => set({ tab }),
   setExplode: (explode) => set({ explode }),
   setBrand: (brand) => set({ brand, selectedState: null }),
@@ -91,4 +99,6 @@ export const useStudio = create<StudioState>((set, get) => ({
     if (cur.sortKey === key) set({ sortDir: cur.sortDir === "asc" ? "desc" : "asc" });
     else set({ sortKey: key, sortDir: "asc" });
   },
+  setGraphLayout: (graphLayout) => set({ graphLayout }),
+  setMaximized: (maximized) => set({ maximized }),
 }));

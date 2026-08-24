@@ -29,14 +29,14 @@ import { filterIssues, filterStates } from "@/lib/studio/query";
 import { statesData } from "@/data/states";
 import { loadNote, saveNote } from "@/lib/server/studio-db";
 
-const TABS: { id: StudioTab; label: string; icon: typeof GitBranch }[] = [
-  { id: "graph", label: "Graph", icon: GitBranch },
-  { id: "states", label: "States", icon: MapPin },
-  { id: "validation", label: "Validation", icon: LayoutGrid },
-  { id: "rules", label: "Rules", icon: Scale },
-  { id: "backlog", label: "Backlog", icon: ListChecks },
-  { id: "gate", label: "Gate", icon: Shield },
-  { id: "config", label: "Config", icon: Settings2 },
+const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
+  { id: "graph", label: "Graph", icon: GitBranch, hint: "Brands and products. Issues live on the edges." },
+  { id: "states", label: "States", icon: MapPin, hint: "Where each product is offered or licensed." },
+  { id: "validation", label: "Validation", icon: LayoutGrid, hint: "Table of website validation points." },
+  { id: "rules", label: "Rules", icon: Scale, hint: "The checks the gate runs." },
+  { id: "issues", label: "Issues", icon: ListChecks, hint: "Website validation points to fix." },
+  { id: "gate", label: "Gate", icon: Shield, hint: "Pass or fail before publish." },
+  { id: "config", label: "Config", icon: Settings2, hint: "Where data lives and brand JSON." },
 ];
 
 const PRODUCTS: Array<"all" | ProductId> = [
@@ -66,6 +66,8 @@ export function Studio() {
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const maximized = useStudio((s) => s.maximized);
+  const setMaximized = useStudio((s) => s.setMaximized);
   const [crawlMsg, setCrawlMsg] = useState<string | null>(null);
   const [crawling, setCrawling] = useState(false);
   const [draft, setDraft] = useState("");
@@ -105,15 +107,15 @@ export function Studio() {
       {tab === "states" ? <StatesPanel /> : null}
       {tab === "validation" ? <ValidationTable /> : null}
       {tab === "rules" ? <Rules /> : null}
-      {tab === "backlog" ? <Backlog /> : null}
+      {tab === "issues" ? <Backlog /> : null}
       {tab === "gate" ? <Gate /> : null}
       {tab === "config" ? <ConfigPanel /> : null}
     </section>
   );
 
   return (
-    <div className="flex h-dvh min-w-0 flex-col overflow-x-hidden bg-bg text-fg">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+    <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-bg text-fg">
+      <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-border bg-bg px-4 py-3">
         <div className="mr-2">
           <p className="font-display text-2xl leading-none tracking-tight">Origin</p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-subtle">Content Graph Studio</p>
@@ -127,8 +129,9 @@ export function Studio() {
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
+                title={t.hint}
                 className={`inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm ${
-                  on ? "bg-raised text-fg" : "text-muted hover:text-fg"
+                  on ? "bg-accent text-accent-fg" : "text-muted hover:bg-raised hover:text-fg"
                 }`}
               >
                 <Icon className="size-3.5" />
@@ -147,8 +150,8 @@ export function Studio() {
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <label className="flex items-center gap-2 text-xs text-muted">
+      <div className="sticky top-[57px] z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
+        <label className="flex items-center gap-2 text-xs text-muted" title="Which origin to show. Updates every list and the graph.">
           <span>Brand</span>
           <select
             value={brand}
@@ -160,7 +163,7 @@ export function Studio() {
             <option value="achieve">Achieve</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label className="flex items-center gap-2 text-xs text-muted" title="Product family on the site: debt relief, HELOC, glossary, and so on.">
           <span>Product</span>
           <select
             value={product}
@@ -174,19 +177,22 @@ export function Studio() {
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label
+          className="flex items-center gap-2 text-xs text-muted"
+          title="L1 is this page: headings, schema, copy. L2 is across brands: same slug, same ask, corporate sameAs."
+        >
           <span>Layer</span>
           <select
             value={layer}
             onChange={(e) => setLayer(e.target.value as typeof layer)}
             className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
-            <option value="all">L1 + L2</option>
-            <option value="L1">L1 page</option>
-            <option value="L2">L2 cross-brand</option>
+            <option value="all">All — page and cross-brand</option>
+            <option value="L1">L1 — this page (HTML, schema, copy)</option>
+            <option value="L2">L2 — across brands (entity, slug, same ask)</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label className="flex items-center gap-2 text-xs text-muted" title="How badly the issue hurts ranking or compliance.">
           <span>Impact</span>
           <select
             value={impact}
@@ -220,6 +226,15 @@ export function Studio() {
           />
           Explode pages
         </label>
+        {(tab === "graph" || tab === "states" || tab === "validation") && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setMaximized(maximized ? null : tab === "graph" ? "graph" : tab === "states" ? "states" : "validation")}
+          >
+            {maximized ? "Exit full screen" : "Full screen"}
+          </Button>
+        )}
         <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
           {crawling ? "Crawling…" : "Live crawl"}
         </Button>

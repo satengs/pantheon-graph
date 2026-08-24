@@ -1,5 +1,6 @@
 import { crawl, pageUrl } from "@/data/crawl";
 import { RULES } from "@/data/rules-seed";
+import { edgeTag } from "@/lib/graph/aliases";
 import type {
   BrandId,
   CrawlPage,
@@ -155,7 +156,7 @@ export function buildGraph(opts: {
         source: `brand:${b}`,
         target: id,
         kind: "owns",
-        label: `${n}`,
+        label: "owns",
       });
     }
   }
@@ -171,7 +172,7 @@ export function buildGraph(opts: {
         source: "hub:fdr:glossary",
         target: "hub:achieve:glossary",
         kind: "conflict",
-        label: `${pairs} slug twins`,
+        label: edgeTag("S01"),
         issueId: "S01",
       });
     }
@@ -184,7 +185,7 @@ export function buildGraph(opts: {
         source: "hub:fdr:debt-relief",
         target: "hub:achieve:debt-relief",
         kind: "conflict",
-        label: "keyword ownership",
+        label: edgeTag("S02"),
         issueId: "S02",
       });
     }
@@ -197,7 +198,7 @@ export function buildGraph(opts: {
         source: "hub:achieve:hel",
         target: "hub:achieve:heloc",
         kind: "conflict",
-        label: "outline twins",
+        label: edgeTag("S09"),
         issueId: "S09",
       });
     }
@@ -206,46 +207,29 @@ export function buildGraph(opts: {
       source: "brand:fdr",
       target: "brand:achieve",
       kind: "sameAs",
-      label: "corporate sameAs",
+      label: edgeTag("S06"),
       issueId: "S06",
     });
+    if (
+      nodes.some((n) => n.id === "hub:fdr:debt-relief") &&
+      nodes.some((n) => n.id === "hub:fdr:settlement")
+    ) {
+      addE({
+        id: "conflict:relief-settlement",
+        source: "hub:fdr:debt-relief",
+        target: "hub:fdr:settlement",
+        kind: "conflict",
+        label: edgeTag("S02"),
+        issueId: "S02",
+      });
+    }
   }
 
-  const layerIssues = RULES.filter((i) => opts.layer === "all" || i.layer === opts.layer);
-  for (const issue of layerIssues) {
-    if (opts.brand !== "all" && issue.domain !== "both" && issue.domain !== "system" && issue.domain !== opts.brand) {
-      continue;
-    }
-    if (opts.product !== "all" && issue.product !== "all" && issue.product !== opts.product) {
-      continue;
-    }
-    addN({
-      id: `issue:${issue.id}`,
-      label: issue.code,
-      kind: "issue",
-      issueId: issue.id,
-      product: issue.product === "all" ? undefined : issue.product,
-      brand: issue.domain === "fdr" || issue.domain === "achieve" ? issue.domain : undefined,
-    });
-    const targets: string[] = [];
-    if (issue.domain === "fdr" || issue.domain === "both") {
-      if (issue.product !== "all") targets.push(hubId("fdr", issue.product));
-      else targets.push("brand:fdr");
-    }
-    if (issue.domain === "achieve" || issue.domain === "both") {
-      if (issue.product !== "all") targets.push(hubId("achieve", issue.product));
-      else targets.push("brand:achieve");
-    }
-    if (issue.domain === "system") targets.push(...brands.map((b) => `brand:${b}`));
-    for (const t of targets) {
-      if (!nodes.some((n) => n.id === t)) continue;
-      addE({
-        id: `cites:${issue.id}:${t}`,
-        source: `issue:${issue.id}`,
-        target: t,
-        kind: "cites",
-        issueId: issue.id,
-      });
+  const showL2 = opts.layer === "all" || opts.layer === "L2";
+  if (!showL2) {
+    const drop = new Set(edges.filter((e) => e.kind === "conflict" || e.kind === "sameAs").map((e) => e.id));
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (drop.has(edges[i]!.id)) edges.splice(i, 1);
     }
   }
 
@@ -271,6 +255,7 @@ export function buildGraph(opts: {
           source: hub.id,
           target: id,
           kind: "owns",
+          label: "page",
         });
       });
     }
