@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { authEnabled } from "@/lib/auth/client";
-import { confirmDemoLogin } from "@/lib/server/demo-session";
-import { Button } from "@/components/ui/button";
 import { confirmDemoLogin } from "@/lib/server/demo-session";
 import { Button } from "@/components/ui/button";
 
