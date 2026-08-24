@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/auth/middleware";
+import { recordLiveCrawl } from "@/lib/server/studio-db";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
 const MAP_CONCURRENCY = 8;
@@ -38,7 +40,9 @@ function collectPages(xml: string, into: Set<string>) {
   }
 }
 
-export const recrawl = createServerFn({ method: "POST" }).handler(async () => {
+export const recrawl = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
   const [fdrIndex, achIndex] = await Promise.all([
     fetchText("https://www.freedomdebtrelief.com/sitemap-index.xml"),
     fetchText("https://www.achieve.com/sitemap.xml"),
@@ -53,10 +57,15 @@ export const recrawl = createServerFn({ method: "POST" }).handler(async () => {
   ]);
   for (const xml of fdrXmls) collectPages(xml, fdr);
   for (const xml of achXmls) collectPages(xml, achieve);
-  return {
-    crawledAt: new Date().toISOString(),
-    counts: { fdr: fdr.size, achieve: achieve.size },
-  };
+  const crawledAt = new Date().toISOString();
+  const counts = { fdr: fdr.size, achieve: achieve.size };
+  await recordLiveCrawl(context.userId, {
+    crawledAt,
+    counts,
+    fdr: [...fdr],
+    achieve: [...achieve],
+  });
+  return { crawledAt, counts };
 });
 
 export const runPsi = createServerFn({ method: "POST" })

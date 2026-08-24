@@ -14,7 +14,10 @@ export function ConfigPanel() {
   const [msg, setMsg] = useState<string | null>(null);
   const [store, setStore] = useState<string>("postgres");
   const [catalog, setCatalog] = useState<Array<{ kind: string; bytes: number; rows: number; updated_at: string }>>([]);
-  const [counts, setCounts] = useState({ rules: 0, tasks: 0, notes: 0 });
+  const [counts, setCounts] = useState({ rules: 0, tasks: 0, notes: 0, versions: 0 });
+  const [history, setHistory] = useState<
+    Array<{ id: string; kind: string; label: string; bytes: number; rows: number; created_at: string }>
+  >([]);
 
   useEffect(() => {
     void listStudio()
@@ -22,6 +25,7 @@ export function ConfigPanel() {
         setStore(data.store);
         setCatalog(data.catalog);
         setCounts(data.counts);
+        setHistory(data.history);
         for (const c of data.configs) {
           if (c.brand === "fdr") setFdr(c.json);
           if (c.brand === "achieve") setAchieve(c.json);
@@ -76,7 +80,25 @@ export function ConfigPanel() {
         </dl>
         <p className="mt-3 text-xs text-subtle">
           Auth sessions use Better Auth tables in the same database. JSON files in the repo are the seed snapshot only.
+          Live crawl and every rule or brand JSON save appends a new row to <span className="font-mono">studio_history</span> — nothing is overwritten.
         </p>
+      </section>
+      <section className="rounded-xl bg-raised p-4">
+        <h3 className="text-sm font-medium text-fg">History ({counts.versions} recent)</h3>
+        {history.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">No versions yet. Sign in, then open Config or run Live crawl.</p>
+        ) : (
+          <ol className="mt-3 space-y-2">
+            {history.map((h) => (
+              <li key={h.id} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-bg px-3 py-2 text-sm">
+                <span className="text-fg">{h.label}</span>
+                <span className="font-mono text-xs text-subtle">
+                  {h.kind} · {h.rows.toLocaleString()} rows · {kb(h.bytes)} · {String(h.created_at).slice(0, 19)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
       {msg ? <p className="text-sm text-muted">{msg}</p> : null}
       <BrandJson

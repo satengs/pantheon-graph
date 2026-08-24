@@ -17,35 +17,54 @@ const ruleInput = z.object({
   checkJson: z.string().optional(),
 });
 
+async function appendHistory(
+  userId: string,
+  kind: string,
+  label: string,
+  json: string,
+  rows: number,
+) {
+  const sql = await getSql();
+  const id = `${userId}:${kind}:${crypto.randomUUID()}`;
+  await sql`
+    insert into studio_history (id, user_id, kind, label, bytes, rows, json)
+    values (${id}, ${userId}, ${kind}, ${label}, ${json.length}, ${rows}, ${json})
+  `;
+  return id;
+}
+
+async function upsertCatalogHead(
+  userId: string,
+  kind: string,
+  json: string,
+  rows: number,
+) {
+  const sql = await getSql();
+  const id = `${userId}:${kind}`;
+  await sql`
+    insert into studio_catalog (id, user_id, kind, bytes, rows, json, updated_at)
+    values (${id}, ${userId}, ${kind}, ${json.length}, ${rows}, ${json}, now())
+    on conflict (id) do update set
+      bytes = excluded.bytes,
+      rows = excluded.rows,
+      json = excluded.json,
+      updated_at = now()
+  `;
+}
+
 async function seedCatalog(userId: string) {
   const sql = await getSql();
-  const crawlJson = JSON.stringify(crawl);
-  const statesJson = JSON.stringify(statesData);
   const blobs = [
-    {
-      kind: "crawl",
-      json: crawlJson,
-      rows: crawl.pages.length,
-      bytes: crawlJson.length,
-    },
-    {
-      kind: "states",
-      json: statesJson,
-      rows: statesData.states.length,
-      bytes: statesJson.length,
-    },
+    { kind: "crawl", json: JSON.stringify(crawl), rows: crawl.pages.length, label: `Seed crawl ${crawl.crawledAt}` },
+    { kind: "states", json: JSON.stringify(statesData), rows: statesData.states.length, label: "Seed state coverage" },
   ];
   for (const b of blobs) {
-    const id = `${userId}:${b.kind}`;
-    await sql`
-      insert into studio_catalog (id, user_id, kind, bytes, rows, json, updated_at)
-      values (${id}, ${userId}, ${b.kind}, ${b.bytes}, ${b.rows}, ${b.json}, now())
-      on conflict (id) do update set
-        bytes = excluded.bytes,
-        rows = excluded.rows,
-        json = excluded.json,
-        updated_at = now()
+    const have = await sql<{ n: number }>`
+      select count(*)::int as n from studio_history where user_id = ${userId} and kind = ${b.kind}
     `;
+    if ((have[0]?.n ?? 0) > 0) continue;
+    await upsertCatalogHead(userId, b.kind, b.json, b.rows);
+    await appendHistory(userId, b.kind, b.label, b.json, b.rows);
   }
 }
 
@@ -113,16 +132,26 @@ export const listStudio = createServerFn({ method: "GET" })
     const ruleN = await sql<{ n: number }>`select count(*)::int as n from studio_rules where user_id = ${userId}`;
     const taskN = await sql<{ n: number }>`select count(*)::int as n from studio_tasks where user_id = ${userId}`;
     const noteN = await sql<{ n: number }>`select count(*)::int as n from studio_notes where user_id = ${userId}`;
+    const history = await sql<{
+      id: string;
+      kind: string;
+      label: string;
+      bytes: number;
+      rows: number;
+      created_at: string;
+    }>`select id, kind, label, bytes, rows, created_at from studio_history where user_id = ${userId} order by created_at desc limit 40`;
     return {
       rules,
       tasks,
       configs,
       catalog,
+      history,
       store: dbSource,
       counts: {
         rules: ruleN[0]?.n ?? 0,
         tasks: taskN[0]?.n ?? 0,
         notes: noteN[0]?.n ?? 0,
+        versions: history.length,
       },
     };
   });
@@ -145,6 +174,13 @@ export const upsertRule = createServerFn({ method: "POST" })
         statement = excluded.statement,
         check_json = excluded.check_json
     `;
+    await appendHistory(
+      context.userId,
+      "rule",
+      `${data.code} ${data.title}`,
+      JSON.stringify(data),
+      1,
+    );
     return { id };
   });
 
@@ -204,6 +240,13 @@ export const saveConfig = createServerFn({ method: "POST" })
       values (${id}, ${context.userId}, ${data.brand}, ${data.json}, now())
       on conflict (id) do update set json = excluded.json, updated_at = now()
     `;
+    await appendHistory(
+      context.userId,
+      "config",
+      `${data.brand} JSON`,
+      data.json,
+      1,
+    );
     return { ok: true };
   });
 
@@ -231,3 +274,24 @@ export const loadNote = createServerFn({ method: "GET" })
     `;
     return { body: rows[0]?.body ?? "" };
   });
+
+export async function recordLiveCrawl(
+  userId: string,
+  payload: {
+    crawledAt: string;
+    counts: { fdr: number; achieve: number };
+    fdr: string[];
+    achieve: string[];
+  },
+) {
+  const json = JSON.stringify(payload);
+  const rows = payload.fdr.length + payload.achieve.length;
+  await upsertCatalogHead(userId, "crawl", json, rows);
+  await appendHistory(
+    userId,
+    "crawl",
+    `Live crawl ${payload.crawledAt.slice(0, 19)} · FDR ${payload.counts.fdr} · Achieve ${payload.counts.achieve}`,
+    json,
+    rows,
+  );
+}
