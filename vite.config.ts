@@ -221,6 +221,12 @@ export default defineConfig(({ command, isPreview }) => ({
                 supportsResponseStreaming: true,
               },
             },
+            hooks: {
+              async compiled() {
+                const { copyPgliteAssets } = await import("./scripts/copy-pglite-assets.mjs");
+                copyPgliteAssets();
+              },
+            },
           }),
         ]
       : []),
