@@ -81,11 +81,16 @@ npm run typecheck
 
 ## Git
 
-This repo is ready to push:
+Remote: [github.com/satengs/pantheon-graph](https://github.com/satengs/pantheon-graph)
 
-1. Create an empty GitHub repository.
-2. `git init` (if needed), `git add .`, `git commit -m "Origin content graph studio"`
-3. `git remote add origin git@github.com:<you>/origin.git`
-4. `git push -u origin main`
+## Deploy (Vercel)
 
-Do not commit `.env` files. PageSpeed and sitemap fetches need no secrets.
+This app builds with Nitro’s **Vercel** preset (Node 22, TanStack Start). Import the GitHub repo — no env vars are required (auth and database are off).
+
+1. Open [vercel.com/new](https://vercel.com/new) and import **satengs/pantheon-graph**.
+2. Confirm the framework is **TanStack Start**, build command `npm run build`, Node **22**.
+3. Deploy. Production URL will be `pantheon-graph.vercel.app` (or the project name you choose).
+
+Git pushes to `main` (or `master`) then trigger a new production deploy. Preview deploys run on other branches.
+
+Do not commit `.env` files. PageSpeed and sitemap fetches need no secrets. Live crawl / PageSpeed server calls are allowed 60s on Vercel.

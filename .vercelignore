@@ -1,0 +1,6 @@
+.grok
+screenshots
+artifacts
+*.log
+coverage
+.git
