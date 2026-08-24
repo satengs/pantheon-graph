@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getSql } from "@/lib/db";
+import { getSql, dbSource } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { RULES, ruleStatement, DEFAULT_BRAND_CONFIG } from "@/data/rules-seed";
+import { crawl } from "@/data/crawl";
+import { statesData } from "@/data/states";
 
 const ruleInput = z.object({
   id: z.string().min(1).optional(),
@@ -15,8 +17,41 @@ const ruleInput = z.object({
   checkJson: z.string().optional(),
 });
 
+async function seedCatalog(userId: string) {
+  const sql = await getSql();
+  const crawlJson = JSON.stringify(crawl);
+  const statesJson = JSON.stringify(statesData);
+  const blobs = [
+    {
+      kind: "crawl",
+      json: crawlJson,
+      rows: crawl.pages.length,
+      bytes: crawlJson.length,
+    },
+    {
+      kind: "states",
+      json: statesJson,
+      rows: statesData.states.length,
+      bytes: statesJson.length,
+    },
+  ];
+  for (const b of blobs) {
+    const id = `${userId}:${b.kind}`;
+    await sql`
+      insert into studio_catalog (id, user_id, kind, bytes, rows, json, updated_at)
+      values (${id}, ${userId}, ${b.kind}, ${b.bytes}, ${b.rows}, ${b.json}, now())
+      on conflict (id) do update set
+        bytes = excluded.bytes,
+        rows = excluded.rows,
+        json = excluded.json,
+        updated_at = now()
+    `;
+  }
+}
+
 async function seedIfEmpty(userId: string) {
   const sql = await getSql();
+  await seedCatalog(userId);
   const existing = await sql<{ n: number }>`select count(*)::int as n from studio_rules where user_id = ${userId}`;
   if ((existing[0]?.n ?? 0) > 0) return;
   for (const r of RULES) {
@@ -69,7 +104,27 @@ export const listStudio = createServerFn({ method: "GET" })
       brand: string;
       json: string;
     }>`select brand, json from studio_configs where user_id = ${userId}`;
-    return { rules, tasks, configs, store: "postgres" as const };
+    const catalog = await sql<{
+      kind: string;
+      bytes: number;
+      rows: number;
+      updated_at: string;
+    }>`select kind, bytes, rows, updated_at from studio_catalog where user_id = ${userId} order by kind`;
+    const ruleN = await sql<{ n: number }>`select count(*)::int as n from studio_rules where user_id = ${userId}`;
+    const taskN = await sql<{ n: number }>`select count(*)::int as n from studio_tasks where user_id = ${userId}`;
+    const noteN = await sql<{ n: number }>`select count(*)::int as n from studio_notes where user_id = ${userId}`;
+    return {
+      rules,
+      tasks,
+      configs,
+      catalog,
+      store: dbSource,
+      counts: {
+        rules: ruleN[0]?.n ?? 0,
+        tasks: taskN[0]?.n ?? 0,
+        notes: noteN[0]?.n ?? 0,
+      },
+    };
   });
 
 export const upsertRule = createServerFn({ method: "POST" })
