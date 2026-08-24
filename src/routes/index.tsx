@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Studio } from "@/components/studio/Studio";
 import { RedirectToSignIn } from "@/lib/auth/gates";
@@ -7,13 +8,21 @@ export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   const { user, isPending } = useCurrentUserState();
-  if (isPending) {
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    try {
+      setDemo(sessionStorage.getItem("origin.demo") === "1");
+    } catch {
+      setDemo(false);
+    }
+  }, []);
+  if (isPending && !demo) {
     return (
       <div className="grid min-h-dvh place-items-center bg-bg text-sm text-muted">
         Loading session…
       </div>
     );
   }
-  if (!user) return <RedirectToSignIn />;
+  if (!user && !demo) return <RedirectToSignIn />;
   return <Studio />;
 }

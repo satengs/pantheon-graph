@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
+import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { confirmDemoLogin } from "@/lib/server/demo-session";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({ component: Login });
-
-const DEMO_EMAIL = "admin@origin.local";
-const DEMO_PASSWORD = "OriginAdmin123!";
 
 function Login() {
   const navigate = useNavigate();
@@ -18,18 +16,12 @@ function Login() {
   async function confirm() {
     setBusy(true);
     setError(null);
-    const email = user.trim() === "admin" ? DEMO_EMAIL : user.trim();
-    const pass = password === "123" && user.trim() === "admin" ? DEMO_PASSWORD : password;
     try {
-      const signed = await authClient.signIn.email({ email, password: pass, callbackURL: "/" });
-      if (signed.error) {
-        const created = await authClient.signUp.email({
-          email,
-          password: pass,
-          name: "Admin",
-          callbackURL: "/",
-        });
-        if (created.error) throw new Error(created.error.message ?? "Sign-in failed");
+      await confirmDemoLogin({ data: { user: user.trim(), password } });
+      try {
+        sessionStorage.setItem("origin.demo", "1");
+      } catch {
+        /* ignore */
       }
       await navigate({ to: "/" });
     } catch (err) {
