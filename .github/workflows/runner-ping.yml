@@ -1,0 +1,21 @@
+name: Runner ping
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Self-hosted health
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Report host
+        run: |
+          echo "host=$(hostname)"
+          uname -a
+          command -v node && node -v
+          command -v npm && npm -v
+          echo "ok"

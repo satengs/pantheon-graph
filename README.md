@@ -94,6 +94,29 @@ npm run typecheck
 
 `VITE_AUTH_ENABLED=false` is set in the workflow. Do not add `DATABASE_URL`.
 
+### Self-hosted runners
+
+Jobs pick a runner in this order:
+
+1. **Run workflow** input (`ubuntu-latest` or `self-hosted`)
+2. Repo variable **`ACTIONS_RUNNER`** (Settings → Variables → Actions)
+3. `ubuntu-latest` (GitHub-hosted fallback so the first push does not queue forever)
+
+To pin every push/PR to your machine, set `ACTIONS_RUNNER` to `self-hosted`. Register a Linux x64 runner:
+
+1. Open [github.com/satengs/pantheon-graph/settings/actions/runners/new](https://github.com/satengs/pantheon-graph/settings/actions/runners/new)
+2. Copy the registration token
+3. On the host (Node 22):
+
+```bash
+RUNNER_TOKEN=... ./scripts/github-self-hosted-runner.sh
+```
+
+Labels applied: `self-hosted`, `linux`, `x64`, `pantheon-graph`. **Runner ping** (`workflow_dispatch`) targets `[self-hosted, linux, x64]` so you can confirm the host before flipping the variable.
+
+Do not run the listener in this preview sandbox. Keep `_work/` off the git remote.
+
+
 ## Git
 
 Remote: [github.com/satengs/pantheon-graph](https://github.com/satengs/pantheon-graph)

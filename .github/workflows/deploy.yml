@@ -4,6 +4,12 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner (ubuntu-latest or self-hosted)
+        type: choice
+        options: [ubuntu-latest, self-hosted]
+        default: self-hosted
 
 concurrency:
   group: vercel-production
@@ -15,7 +21,7 @@ permissions:
 jobs:
   vercel:
     name: Vercel production
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || vars.ACTIONS_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 15
     env:
       VITE_AUTH_ENABLED: "false"

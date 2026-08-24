@@ -19,3 +19,5 @@ routeTree.gen.ts
 !.grok/app-env.json
 .node_modules.lock
 .node_modules.tmp.*
+actions-runner/
+_work/

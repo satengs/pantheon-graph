@@ -4,6 +4,13 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner (ubuntu-latest or self-hosted)
+        type: choice
+        options: [ubuntu-latest, self-hosted]
+        default: self-hosted
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -15,7 +22,7 @@ permissions:
 jobs:
   check:
     name: Typecheck, test, build
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner || vars.ACTIONS_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 12
     env:
       VITE_AUTH_ENABLED: "false"
