@@ -188,13 +188,8 @@ export default defineConfig(({ command, isPreview }) => ({
             sourcemap: false,
             routeRules: {
               "/": {
-                isr: {
-                  expiration: 3600,
-                  allowQuery: ["install", "platform"],
-                  passQuery: true,
-                },
                 headers: {
-                  "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+                  "cache-control": "private, no-store",
                 },
               },
               "/data/build-metrics.json": {

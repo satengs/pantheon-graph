@@ -3,26 +3,36 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Studio } from "@/components/studio/Studio";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { getStudioUser } from "@/lib/server/demo-session";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-  const { user, isPending } = useCurrentUserState();
-  const [demo, setDemo] = useState(false);
+  const { user } = useCurrentUserState();
+  const [ok, setOk] = useState<boolean | null>(null);
+
   useEffect(() => {
     try {
-      setDemo(sessionStorage.getItem("origin.demo") === "1");
+      if (sessionStorage.getItem("origin.demo") === "1") {
+        setOk(true);
+        return;
+      }
     } catch {
-      setDemo(false);
+      /* ignore */
     }
+    void getStudioUser()
+      .then((u) => setOk(Boolean(u)))
+      .catch(() => setOk(false));
   }, []);
-  if (isPending && !demo) {
+
+  if (user) return <Studio />;
+  if (ok === null) {
     return (
       <div className="grid min-h-dvh place-items-center bg-bg text-sm text-muted">
         Loading session…
       </div>
     );
   }
-  if (!user && !demo) return <RedirectToSignIn />;
+  if (!ok) return <RedirectToSignIn />;
   return <Studio />;
 }

@@ -13,3 +13,8 @@ export const confirmDemoLogin = createServerFn({ method: "POST" })
     await issueDemoCookie();
     return { ok: true as const };
   });
+
+export const getStudioUser = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSessionUser } = await import("@/lib/auth/verify.server");
+  return getSessionUser();
+});
