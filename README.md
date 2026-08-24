@@ -80,6 +80,20 @@ npm run typecheck
 - `public/data/crawl.json` — same snapshot for export
 - `public/data/build-metrics.json` — last production build timings (client / SSR / Nitro)
 
+## GitHub Actions
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs typecheck, tests, and a production build on every push and pull request to `main` / `master`.
+
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) ships the Nitro output to Vercel. Add these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Required | Where |
+| --- | --- | --- |
+| `VERCEL_TOKEN` | yes | [vercel.com/account/tokens](https://vercel.com/account/tokens) |
+| `VERCEL_ORG_ID` | recommended | Vercel project → Settings → General |
+| `VERCEL_PROJECT_ID` | recommended | same page |
+
+`VITE_AUTH_ENABLED=false` is set in the workflow. Do not add `DATABASE_URL`.
+
 ## Git
 
 Remote: [github.com/satengs/pantheon-graph](https://github.com/satengs/pantheon-graph)
