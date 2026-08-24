@@ -85,7 +85,7 @@ Remote: [github.com/satengs/pantheon-graph](https://github.com/satengs/pantheon-
 
 ## Deploy (Vercel)
 
-This app builds with Nitro’s **Vercel** preset (Node 22, TanStack Start). Import the GitHub repo — no env vars are required (auth and database are off).
+This app builds with Nitro’s **Vercel** preset (Node 22, TanStack Start). HTML is regenerated on the origin and **cached at the Vercel Edge Network** (ISR, 1 hour; install tutorial is a separate cache key). `/data/*` JSON is CDN-cached for a day. No env vars are required (auth and database are off).
 
 1. Open [vercel.com/new](https://vercel.com/new) and import **satengs/pantheon-graph**.
 2. Confirm the framework is **TanStack Start**, build command `npm run build`, Node **22**.
@@ -93,4 +93,4 @@ This app builds with Nitro’s **Vercel** preset (Node 22, TanStack Start). Impo
 
 Git pushes to `main` (or `master`) then trigger a new production deploy. Preview deploys run on other branches.
 
-Do not commit `.env` files. PageSpeed and sitemap fetches need no secrets. Live crawl / PageSpeed server calls are allowed 60s on Vercel.
+Do not commit `.env` files. PageSpeed and sitemap fetches need no secrets. Live crawl / PageSpeed stay on the Node function (60s, streamed) so they are not capped by the Edge runtime.

@@ -2,6 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "tanstack-start",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "regions": ["iad1"]
+  "installCommand": "npm install"
 }
