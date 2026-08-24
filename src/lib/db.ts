@@ -105,18 +105,45 @@ function createNeonSql(): Promise<Sql> {
   return globalRef.__pgSqlPromise__;
 }
 
+async function readPgliteFile(name: string): Promise<Uint8Array> {
+  const { readFile } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const dirs = [
+    join(process.cwd(), "node_modules/@electric-sql/pglite/dist"),
+    join(process.cwd(), "_libs"),
+    process.cwd(),
+  ];
+  const errors: string[] = [];
+  for (const dir of dirs) {
+    try {
+      return new Uint8Array(await readFile(join(dir, name)));
+    } catch (err) {
+      errors.push(`${join(dir, name)}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  throw new Error(`PGLite ${name} not found. Tried:\n${errors.join("\n")}`);
+}
+
 async function createPgliteSql(): Promise<Sql> {
   // Embedded Postgres, imported on demand so it never loads on the Neon path.
   // One in-memory instance per process, shared across HMR module instances, so
   // data survives source edits (it resets on dev-server restart).
   globalRef.__pgliteInstance__ ??= (async () => {
     const { PGlite } = await import("@electric-sql/pglite");
+    const [data, wasm, initdb] = await Promise.all([
+      readPgliteFile("pglite.data"),
+      readPgliteFile("pglite.wasm"),
+      readPgliteFile("initdb.wasm"),
+    ]);
     const pg = new PGlite({
       parsers: {
         [OID_INT8]: Number,
         [OID_DATE]: identity,
         [OID_INTERVAL]: identity,
       },
+      fsBundle: new Blob([data]),
+      pgliteWasmModule: await WebAssembly.compile(wasm),
+      initdbWasmModule: await WebAssembly.compile(initdb),
     });
     await pg.waitReady;
     await pg.exec(
