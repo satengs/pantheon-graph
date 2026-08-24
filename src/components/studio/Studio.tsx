@@ -74,7 +74,7 @@ export function Studio() {
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-bg text-fg">
+    <div className="flex h-dvh min-w-0 flex-col overflow-x-hidden bg-bg text-fg">
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
         <div className="mr-2">
           <p className="font-display text-2xl leading-none tracking-tight">Origin</p>
@@ -193,8 +193,8 @@ export function Studio() {
         <p className="border-b border-border px-4 py-1.5 font-mono text-[11px] text-muted">{crawlMsg}</p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="flex min-h-0 flex-col border-b border-border lg:border-b-0 lg:border-r">
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="flex min-h-0 min-w-0 flex-col border-b border-border lg:border-b-0 lg:border-r">
           {tab === "graph" ? (
             <div className="min-h-0 flex-1 p-3">
               <GraphCanvas />

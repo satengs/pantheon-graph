@@ -76,6 +76,7 @@ npm run typecheck
 
 - `src/data/crawl.json` — compact page catalog, glossary overlap (130 shared slugs), near-duplicates, `crawledAt`
 - `src/data/issues.ts` — S01–S20 with citations and origin/page acceptance (PSI, CWV, Cloudflare HIT/MISS/DYNAMIC)
+- `src/data/states.json` — 50 states + DC: FDR settlement (direct / legal partner / none), FDR near-me + city pages, Achieve HELOC/HEL, personal loans, debt relief, collections, and NMLS licenses
 - `public/data/crawl.json` — same snapshot for export
 
 ## Git

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
 import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
-import { FDR_LABEL, stateByCode, statesData, type StateRow } from "@/data/states";
+import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone, type StateRow } from "@/data/states";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -18,6 +18,7 @@ export function Inspector() {
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectedState = useStudio((s) => s.selectedState);
+  const tab = useStudio((s) => s.tab);
   const selectIssue = useStudio((s) => s.selectIssue);
   const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
@@ -61,9 +62,10 @@ export function Inspector() {
 
   const row = selectedState ? stateByCode(selectedState) : undefined;
   if (row) return <StateInspector row={row} />;
+  if (tab === "states") return <StatesOverview />;
 
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
+    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
         <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">Inspector</p>
         <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
@@ -232,47 +234,44 @@ export function Inspector() {
 
 
 function StateInspector({ row }: { row: StateRow }) {
+  const services = identifyServices(row);
+  const fdr = services.filter((s) => s.brand === "fdr");
+  const achieve = services.filter((s) => s.brand === "achieve");
+  const liveFdr = fdr.filter((s) => s.status !== "none");
+  const liveAchieve = achieve.filter((s) => s.status !== "none");
+
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4">
+    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
-        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">State coverage</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">State services</p>
         <h2 className="mt-1 font-display text-xl leading-tight text-fg">
           {row.name} <span className="font-mono text-sm text-muted">{row.code}</span>
         </h2>
+        <p className="mt-1 text-sm text-muted">
+          {liveFdr.length} FDR · {liveAchieve.length} Achieve services identified
+        </p>
       </header>
-      <section className="space-y-2">
-        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
-          <span className="text-sm text-muted">FDR settlement</span>
-          <Badge tone={row.fdrSettlement === "direct" ? "ok" : row.fdrSettlement === "partner" ? "warn" : "neutral"}>
-            {FDR_LABEL[row.fdrSettlement]}
-          </Badge>
-        </div>
-        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
-          <span className="text-sm text-muted">Achieve debt relief</span>
-          <Badge tone={row.achieveDebtRelief === "direct" ? "ok" : row.achieveDebtRelief === "partner" ? "warn" : "neutral"}>
-            {FDR_LABEL[row.achieveDebtRelief]}
-          </Badge>
-        </div>
-        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
-          <span className="text-sm text-muted">Achieve HELOC / HEL license</span>
-          <Badge tone={row.achieveMortgage ? "ok" : "neutral"}>
-            {row.achieveMortgage ? "Licensed" : "No license"}
-          </Badge>
-        </div>
-        <div className="flex items-center justify-between rounded-lg bg-raised p-3">
-          <span className="text-sm text-muted">Achieve personal loan</span>
-          <Badge tone={row.achievePersonalLoan === "offered" ? "ok" : row.achievePersonalLoan === "licensed" ? "warn" : "neutral"}>
-            {row.achievePersonalLoan}
-          </Badge>
-        </div>
-      </section>
+
+      <BrandServices title="Freedom Debt Relief" tone="fdr" items={fdr} />
+      <BrandServices title="Achieve" tone="achieve" items={achieve} />
+
       {row.fdrUrl ? (
-        <a href={row.fdrUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-fdr hover:underline">
-          FDR near-me page <ExternalLink className="size-3.5" />
+        <a
+          href={row.fdrUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-fdr hover:underline"
+        >
+          FDR {row.name} near-me page <ExternalLink className="size-3.5" />
         </a>
+      ) : row.fdrCityPages ? (
+        <p className="text-sm text-muted">
+          {row.fdrCityPages} FDR city pages, no statewide landing.
+        </p>
       ) : (
         <p className="text-sm text-subtle">No FDR near-me landing for this state.</p>
       )}
+
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Achieve licenses</h3>
         {row.licenses.length === 0 ? (
@@ -294,8 +293,120 @@ function StateInspector({ row }: { row: StateRow }) {
         )}
       </section>
       <p className="text-[10px] text-subtle">
-        Snapshot {statesData.source.capturedAt}. License is not a guarantee the product is currently offered.
+        Snapshot {statesData.source.capturedAt}. {statesData.notes.fdrService}
       </p>
+    </aside>
+  );
+}
+
+function BrandServices({
+  title,
+  tone,
+  items,
+}: {
+  title: string;
+  tone: "fdr" | "achieve";
+  items: ReturnType<typeof identifyServices>;
+}) {
+  return (
+    <section>
+      <div className="mb-2 flex items-center gap-2">
+        <Badge tone={tone}>{title}</Badge>
+      </div>
+      <ul className="space-y-2">
+        {items.map((svc) => (
+          <li key={svc.id} className="flex items-start justify-between gap-2 rounded-lg bg-raised p-3">
+            <div className="min-w-0">
+              <p className="text-sm text-fg">{svc.label}</p>
+              <p className="text-xs text-muted">{svc.detail}</p>
+              {svc.url ? (
+                <a
+                  href={svc.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center gap-1 text-xs text-fdr hover:underline"
+                >
+                  Open <ExternalLink className="size-3" />
+                </a>
+              ) : null}
+            </div>
+            <Badge tone={statusTone(svc.status)}>
+              {svc.status === "content"
+                ? "Content"
+                : svc.status === "none"
+                  ? "None"
+                  : svc.status === "direct"
+                    ? "Direct"
+                    : svc.status === "partner"
+                      ? "Partner"
+                      : svc.status === "offered"
+                        ? "Offered"
+                        : "Licensed"}
+            </Badge>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function StatesOverview() {
+  const fdr = SERVICE_CATALOG.filter((s) => s.brand === "fdr");
+  const achieve = SERVICE_CATALOG.filter((s) => s.brand === "achieve");
+  const counts = {
+    fdrDirect: statesData.notes.fdrDirect.length,
+    fdrPartner: statesData.notes.fdrPartner.length,
+    heloc: statesData.states.filter((s) => s.achieveHeloc === "offered").length,
+    pl: statesData.states.filter((s) => s.achievePersonalLoan === "offered").length,
+  };
+  return (
+    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
+      <header>
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">State services</p>
+        <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
+          Both brands, 51 jurisdictions
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Click a state to see what each brand can actually sell there.
+        </p>
+      </header>
+      <section>
+        <Badge tone="fdr">Freedom Debt Relief</Badge>
+        <ul className="mt-2 space-y-2">
+          {fdr.map((s) => (
+            <li key={s.id} className="rounded-lg bg-raised p-3">
+              <p className="text-sm text-fg">{s.label}</p>
+              <p className="text-xs text-muted">{s.entity}</p>
+              <p className="mt-1 font-mono text-xs text-subtle">
+                {s.id === "settlement"
+                  ? `${counts.fdrDirect} direct · ${counts.fdrPartner} partner`
+                  : "Local SEO landings, not a separate product"}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <Badge tone="achieve">Achieve</Badge>
+        <ul className="mt-2 space-y-2">
+          {achieve.map((s) => (
+            <li key={s.id} className="rounded-lg bg-raised p-3">
+              <p className="text-sm text-fg">{s.label}</p>
+              <p className="text-xs text-muted">{s.entity}</p>
+              <p className="mt-1 font-mono text-xs text-subtle">
+                {s.id === "heloc" || s.id === "hel"
+                  ? `${counts.heloc} states offered`
+                  : s.id === "personal-loan"
+                    ? `${counts.pl} states offered`
+                    : s.id === "debt-relief"
+                      ? "Same footprint as FDR settlement"
+                      : "Where a collection license is on file"}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <p className="text-[10px] text-subtle">{statesData.notes.achieveHelocClaim}</p>
     </aside>
   );
 }
