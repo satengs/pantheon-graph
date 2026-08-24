@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { authEnabled } from "@/lib/auth/client";
+import { confirmDemoLogin } from "@/lib/server/demo-session";
+import { Button } from "@/components/ui/button";
 import { confirmDemoLogin } from "@/lib/server/demo-session";
 import { Button } from "@/components/ui/button";
 
@@ -68,18 +72,6 @@ function Login() {
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? "Signing in…" : "Confirm"}
             </Button>
-            <div className="pt-2 space-y-2">
-              {GROK_PROVIDERS.map((p) => (
-                <button
-                  key={p.providerId}
-                  type="button"
-                  onClick={() => void signIn(p.providerId, { callbackURL: "/" })}
-                  className="w-full rounded-md bg-raised px-4 py-2 text-sm text-muted hover:text-fg"
-                >
-                  Continue with {p.label}
-                </button>
-              ))}
-            </div>
           </form>
         ) : (
           <p className="mt-4 text-sm text-muted">Sign-in is disabled.</p>
