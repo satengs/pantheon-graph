@@ -186,6 +186,7 @@ export default defineConfig(({ command, isPreview }) => ({
             serverDir: "./server",
             minify: true,
             sourcemap: false,
+            compressPublicAssets: false,
             routeRules: {
               "/": {
                 headers: {

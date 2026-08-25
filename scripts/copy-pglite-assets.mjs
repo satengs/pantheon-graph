@@ -11,7 +11,9 @@ export function copyPgliteAssets(root = process.cwd()) {
   mkdirSync(dest, { recursive: true });
   for (const name of FILES) {
     const from = join(src, name);
-    if (existsSync(from)) cpSync(from, join(dest, name));
+    const to = join(dest, name);
+    if (!existsSync(from) || existsSync(to)) continue;
+    cpSync(from, to);
   }
 }
 
