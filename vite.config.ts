@@ -222,13 +222,15 @@ export default defineConfig(({ command, isPreview }) => ({
                 supportsResponseStreaming: true,
               },
             },
-            hooks: {
-              async compiled() {
-                const { copyPgliteAssets } = await import("./scripts/copy-pglite-assets.mjs");
-                copyPgliteAssets();
-              },
-            },
           }),
+          {
+            name: "copy-pglite-after-nitro",
+            apply: "build" as const,
+            enforce: "post" as const,
+            closeBundle() {
+              return import("./scripts/copy-pglite-assets.mjs").then((m) => m.copyPgliteAssets());
+            },
+          },
         ]
       : []),
     viteReact(),
