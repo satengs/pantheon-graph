@@ -8,6 +8,7 @@ import {
   Settings2,
   Shield,
   Search,
+  Compass,
 } from "lucide-react";
 import { crawl } from "@/data/crawl";
 import { RULES } from "@/data/rules-seed";
@@ -16,6 +17,7 @@ import { recrawl } from "@/lib/server/ops";
 import { runValidation } from "@/lib/server/validate-run";
 import { Button } from "@/components/ui/button";
 import { GraphCanvas } from "@/components/studio/GraphCanvas";
+import { Explore } from "@/components/studio/Explore";
 import { Inspector } from "@/components/studio/Inspector";
 import { ValidationTable } from "@/components/studio/ValidationTable";
 import { Backlog } from "@/components/studio/Backlog";
@@ -32,6 +34,7 @@ import { loadNote, saveNote } from "@/lib/server/studio-db";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
   { id: "graph", label: "Graph", icon: GitBranch, hint: "Brands and products. Issues live on the edges." },
+  { id: "explore", label: "Explore", icon: Compass, hint: "Tree suggestions as a table. Analyse and export." },
   { id: "states", label: "States", icon: MapPin, hint: "Where each product is offered or licensed." },
   { id: "validation", label: "Validation", icon: LayoutGrid, hint: "Table of website validation points." },
   { id: "rules", label: "Rules", icon: Scale, hint: "The checks the gate runs." },
@@ -122,6 +125,7 @@ export function Studio() {
           <GraphCanvas />
         </div>
       ) : null}
+      {tab === "explore" ? <Explore /> : null}
       {tab === "states" ? <StatesPanel /> : null}
       {tab === "validation" ? <ValidationTable /> : null}
       {tab === "rules" ? <Rules /> : null}

@@ -19,6 +19,8 @@ export type JsonLdOptions = {
 
 const COMPETING = [
   "Article",
+  "NewsArticle",
+  "BlogPosting",
   "FinancialProduct",
   "LoanOrCredit",
   "Service",

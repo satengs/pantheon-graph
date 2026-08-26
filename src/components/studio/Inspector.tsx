@@ -167,7 +167,7 @@ export function Inspector() {
       <section className="rounded-lg bg-raised p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">
-            {finding && /^(S05|S07|S08|S21|S26)$/.test(finding.code) ? "JSON-LD diff" : "Found vs suggested"}
+            {finding && /^(S05|S07|S08|S21|S26|S27|S28|S29|S30|S31)$/.test(finding.code) ? "JSON-LD diff" : "Found vs suggested"}
           </h3>
           {issue.urls[0] ? (
             <Button

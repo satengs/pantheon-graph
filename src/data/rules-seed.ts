@@ -22,6 +22,11 @@ export const RULE_CODES = [
   "S24",
   "S25",
   "S26",
+  "S27",
+  "S28",
+  "S29",
+  "S30",
+  "S31",
 ] as const;
 
 export const RULES: BacklogItem[] = ISSUES.filter((i) =>

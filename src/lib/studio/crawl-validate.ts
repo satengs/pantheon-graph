@@ -134,5 +134,22 @@ export function validateCrawl(crawl: CrawlSnapshot): HtmlFinding[] {
     );
   }
 
+  const articles = crawl.pages.filter((p) => p.k === "a");
+  if (articles.length) {
+    const fdrA = articles.filter((p) => p.b === "fdr").length;
+    const achA = articles.filter((p) => p.b === "achieve").length;
+    out.push(
+      finding(
+        "S27",
+        `${articles.length} article URLs in last crawl need complete Article schema`,
+        `${BRAND_HOST.achieve}/learn/achieve-insights/7-smarter-debt-steps-to-start-the-new-year`,
+        `Last crawl: ${fdrA} FDR + ${achA} Achieve articles. Achieve insights template omits datePublished. FDR learn mixes Article + FAQPage and a keyword title vs question H1.`,
+        `articles ${articles.length}\nFDR ${fdrA}\nAchieve ${achA}`,
+        "Run S27–S31 on learn/newsroom HTML. Do not recrawl — use snapshots.",
+        "issue",
+      ),
+    );
+  }
+
   return out;
 }

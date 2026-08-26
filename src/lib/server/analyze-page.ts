@@ -4,6 +4,7 @@ import { authMiddleware } from "@/lib/auth/middleware";
 import { getSql } from "@/lib/db";
 import { analyzeHtml, type HtmlFinding } from "@/lib/html/semantic";
 import { analyzeJsonLd } from "@/lib/html/jsonld";
+import { analyzeArticleSignals } from "@/lib/html/article-signals";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
 
@@ -44,7 +45,7 @@ export const analyzePage = createServerFn({ method: "POST" })
     });
     if (!res.ok) throw new Error(`Fetch ${data.url} ${res.status}`);
     const html = (await res.text()).slice(0, 400_000);
-    let findings = [...analyzeHtml(html, data.url), ...analyzeJsonLd(html, data.url)];
+    let findings = [...analyzeHtml(html, data.url), ...analyzeJsonLd(html, data.url), ...analyzeArticleSignals(html, data.url)];
 
     const endpoint = data.endpoint?.trim();
     if (endpoint && /^https:\/\//i.test(endpoint)) {

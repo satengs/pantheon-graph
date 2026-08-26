@@ -19,6 +19,11 @@ export const ISSUE_ALIAS: Record<string, string> = {
   S24: "Achieve relief URLs",
   S25: "FDR lending terms",
   S26: "Achieve no JSON-LD",
+  S27: "incomplete Article",
+  S28: "title clash",
+  S29: "author clash",
+  S30: "date clash",
+  S31: "image entity",
 };
 
 export function edgeTag(code: string): string {

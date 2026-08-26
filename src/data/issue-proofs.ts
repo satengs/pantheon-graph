@@ -363,4 +363,65 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
       },
     ],
   },
+  S27: {
+    conflict: "Achieve Article has headline + author, no datePublished. FDR Article is complete on dates but competes with FAQPage.",
+    rows: [
+      {
+        brand: "achieve",
+        url: "https://www.achieve.com/learn/achieve-insights/7-smarter-debt-steps-to-start-the-new-year",
+        h1: "7 smarter debt steps to start the New Year",
+        canonical: "https://www.achieve.com/learn/achieve-insights/7-smarter-debt-steps-to-start-the-new-year",
+        extra: "Article author Elina Tarkazikis · missing datePublished, dateModified, mainEntityOfPage",
+      },
+    ],
+  },
+  S28: {
+    conflict: "Keyword <title>/og:title vs question H1/headline on the same FDR learn URL.",
+    rows: [
+      {
+        brand: "fdr",
+        url: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        h1: "Is it a Good Idea to Use a 401(k) Loan to Pay Off Your Credit Card Debt?",
+        canonical: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        extra: "title/og: 401(K) Loan To Pay Off Your Credit Card Debt | Freedom Debt Relief",
+      },
+    ],
+  },
+  S29: {
+    conflict: "NewsArticle author is the Organization node, not a Person.",
+    rows: [
+      {
+        brand: "fdr",
+        url: "https://www.freedomdebtrelief.com/newsroom/freedom-debt-relief-settles-over-20-billion-dollars-in-consumer-debt-wins-usa-today-america-best-customer-service-2025-award/",
+        h1: "Freedom Debt Relief settles over $20 billion in consumer debt, wins USA Today’s America's Best Customer Service 2025 award",
+        canonical:
+          "https://www.freedomdebtrelief.com/newsroom/freedom-debt-relief-settles-over-20-billion-dollars-in-consumer-debt-wins-usa-today-america-best-customer-service-2025-award/",
+        extra: "author @id → organization/freedom-debt-relief",
+      },
+    ],
+  },
+  S30: {
+    conflict: "datePublished 2023-01-23 vs dateModified 2026-03-10. No visible <time>. Achieve insights have no dates.",
+    rows: [
+      {
+        brand: "fdr",
+        url: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        h1: "Is it a Good Idea to Use a 401(k) Loan to Pay Off Your Credit Card Debt?",
+        canonical: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        extra: "datePublished 2023-01-23 · dateModified 2026-03-10 · ~1,142 days",
+      },
+    ],
+  },
+  S31: {
+    conflict: "Article.image @id is the debt-relief product hero, not this learn URL.",
+    rows: [
+      {
+        brand: "fdr",
+        url: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        h1: "Is it a Good Idea to Use a 401(k) Loan to Pay Off Your Credit Card Debt?",
+        canonical: "https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/",
+        extra: "image @id https://www.freedomdebtrelief.com/debt-relief/#primaryimage",
+      },
+    ],
+  },
 };

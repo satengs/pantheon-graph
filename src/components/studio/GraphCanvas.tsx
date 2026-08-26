@@ -231,6 +231,7 @@ export function GraphCanvas() {
               if (!a || !b) return null;
               const conflict = e.kind === "conflict";
               const sameAs = e.kind === "sameAs";
+              const suggests = e.kind === "suggests";
               const mx = r2((a.x + b.x) / 2);
               const my = r2((a.y + b.y) / 2 - 14);
               return (
@@ -250,10 +251,12 @@ export function GraphCanvas() {
                         ? "var(--color-danger)"
                         : sameAs
                           ? "var(--color-accent)"
-                          : "color-mix(in oklab, var(--color-fg) 22%, transparent)"
+                          : suggests
+                            ? "var(--color-achieve)"
+                            : "color-mix(in oklab, var(--color-fg) 22%, transparent)"
                     }
-                    strokeWidth={conflict || sameAs ? 1.8 : 1.2}
-                    strokeDasharray={conflict ? "5 4" : sameAs ? "2 3" : undefined}
+                    strokeWidth={conflict || sameAs || suggests ? 1.8 : 1.2}
+                    strokeDasharray={conflict ? "5 4" : sameAs ? "2 3" : suggests ? "6 4" : undefined}
                   />
                   {e.label ? (
                     <text
