@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { getSql } from "@/lib/db";
 import { analyzeHtml, type HtmlFinding } from "@/lib/html/semantic";
+import { analyzeJsonLd } from "@/lib/html/jsonld";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
 
@@ -25,7 +26,12 @@ async function insertFindings(userId: string, findings: HtmlFinding[]) {
 }
 
 export async function persistFindings(userId: string, findings: HtmlFinding[]) {
-  await insertFindings(userId, findings);
+  if (!findings.length) return;
+  try {
+    await insertFindings(userId, findings);
+  } catch {
+    /* preview still returns findings when the table is not ready */
+  }
 }
 
 export const analyzePage = createServerFn({ method: "POST" })
@@ -38,7 +44,7 @@ export const analyzePage = createServerFn({ method: "POST" })
     });
     if (!res.ok) throw new Error(`Fetch ${data.url} ${res.status}`);
     const html = (await res.text()).slice(0, 400_000);
-    let findings = analyzeHtml(html, data.url);
+    let findings = [...analyzeHtml(html, data.url), ...analyzeJsonLd(html, data.url)];
 
     const endpoint = data.endpoint?.trim();
     if (endpoint && /^https:\/\//i.test(endpoint)) {

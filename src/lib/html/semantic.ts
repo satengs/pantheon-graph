@@ -229,7 +229,15 @@ function jaccard(a: string, b: string): number {
 
 /** Seed outlines so Issues has rows before the first live fetch. */
 export const SEED_HTML: Record<string, string> = {
-  "https://www.freedomdebtrelief.com/debt-relief/": `<html><head><title>What is debt relief? An Overview | Freedom Debt Relief</title></head>
+  "https://www.freedomdebtrelief.com/debt-relief/": `<html><head><title>What is debt relief? An Overview | Freedom Debt Relief</title>
+<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "@id": "https://www.freedomdebtrelief.com/#wrong", name: "Freedom Debt Relief" },
+      { "@type": ["WebPage", "FAQPage", "Article"], "@id": "https://www.freedomdebtrelief.com/debt-relief/", name: "What is debt relief?" },
+    ],
+  })}</script>
+</head>
 <body>
 <div class="page">
 <h1>What is debt relief?</h1>

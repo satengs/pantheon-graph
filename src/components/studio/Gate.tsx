@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { RULES } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
+import { crawlMetrics, pct } from "@/lib/studio/crawl-metrics";
 import {
   buildTone,
   formatBytes,
@@ -24,6 +25,7 @@ export function Gate() {
     ...n,
     score: jaccard(n.fdr_slug, n.ach_slug),
   }));
+  const metrics = crawlMetrics(crawl);
   const blocked = openCritical.length > 0;
   const originFdr = {
     psi: 82,
@@ -47,9 +49,16 @@ export function Gate() {
         <p className="mt-1 font-display text-3xl text-fg">{blocked ? "Blocked" : "Clear"}</p>
         <p className="mt-1 text-sm text-muted">
           {blocked
-            ? `${openCritical.length} critical open items. Publish is refused until S01–S13 content owners land.`
+            ? `${openCritical.length} critical open items. Publish is refused until content and JSON-LD owners land.`
             : "No critical L1/L2 items remain."}
         </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <GateStat label="Overlap error" value={pct(metrics.glossary.overlapRate)} detail={`${metrics.glossary.overlap} twin slugs`} />
+        <GateStat label="Path clones" value={String(metrics.clones.exact)} detail="same path both hosts" />
+        <GateStat label="Schema miss" value={pct(metrics.schema.schemaErrorRate)} detail="Achieve glossary template" />
+        <GateStat label="FDR lending URLs" value={String(metrics.ownership.fdrLending)} detail="HELOC / HEL / personal loan on FDR" />
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -92,6 +101,16 @@ export function Gate() {
           ))}
         </ul>
       </section>
+    </div>
+  );
+}
+
+function GateStat({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-xl bg-raised p-3">
+      <p className="text-[10px] uppercase tracking-wide text-subtle">{label}</p>
+      <p className="mt-1 font-mono text-xl text-fg">{value}</p>
+      <p className="mt-1 text-xs text-muted">{detail}</p>
     </div>
   );
 }

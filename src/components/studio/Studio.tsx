@@ -13,6 +13,7 @@ import { crawl } from "@/data/crawl";
 import { RULES } from "@/data/rules-seed";
 import { PRODUCT_LABEL, type ProductId } from "@/lib/graph/types";
 import { recrawl } from "@/lib/server/ops";
+import { runValidation } from "@/lib/server/validate-run";
 import { Button } from "@/components/ui/button";
 import { GraphCanvas } from "@/components/studio/GraphCanvas";
 import { Inspector } from "@/components/studio/Inspector";
@@ -70,6 +71,7 @@ export function Studio() {
   const setMaximized = useStudio((s) => s.setMaximized);
   const [crawlMsg, setCrawlMsg] = useState<string | null>(null);
   const [crawling, setCrawling] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [draft, setDraft] = useState("");
   const openCount = RULES.filter((i) => i.status === "open").length;
   const issueHits = filterIssues(RULES, { brand, product, layer, impact, query }).length;
@@ -94,6 +96,22 @@ export function Studio() {
       setCrawlMsg(err instanceof Error ? err.message : "Crawl failed");
     } finally {
       setCrawling(false);
+    }
+  }
+
+  async function onCheck() {
+    setChecking(true);
+    setCrawlMsg(null);
+    try {
+      const res = await runValidation({
+        data: { scope: brand === "all" ? "all" : brand, brand, product, live: false, limit: 12 },
+      });
+      setCrawlMsg(`Checked ${res.pages} crawled pages · ${res.fail} issues · no recrawl`);
+      setTab("validation");
+    } catch (err) {
+      setCrawlMsg(err instanceof Error ? err.message : "Check failed");
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -235,6 +253,9 @@ export function Studio() {
             {maximized ? "Exit full screen" : "Full screen"}
           </Button>
         )}
+        <Button variant="secondary" size="sm" onClick={() => void onCheck()} disabled={checking || crawling}>
+          {checking ? "Checking…" : "Run checks"}
+        </Button>
         <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
           {crawling ? "Crawling…" : "Live crawl"}
         </Button>

@@ -11,6 +11,8 @@ import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
 import { listStudio } from "@/lib/server/studio-db";
 import { analyzePage } from "@/lib/server/analyze-page";
+import { ISSUE_PROOFS } from "@/data/issue-proofs";
+import { jsonLdDiff } from "@/lib/html/json-diff";
 import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone, type StateRow } from "@/data/states";
 
 export function Inspector() {
@@ -50,6 +52,7 @@ export function Inspector() {
   const toneBrand = issue.domain === "achieve" ? "achieve" : "fdr";
   const tone = toneRatio(toneText, toneBrand);
   const finding = findings.find((f) => f.id === selectedFindingId) ?? findings.find((f) => f.url === issue.urls[0]);
+  const proofView = ISSUE_PROOFS[issue.code];
 
   useEffect(() => {
     void listStudio()
@@ -137,9 +140,35 @@ export function Inspector() {
         <p className="mt-1 text-sm leading-relaxed text-fg text-pretty">{issue.fix}</p>
       </section>
 
+      {proofView ? (
+        <section className="rounded-lg bg-raised p-3">
+          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Proof · last crawl + captured HTML</h3>
+          <p className="mt-2 text-xs text-danger">{proofView.conflict}</p>
+          <ul className="mt-3 space-y-2">
+            {proofView.rows.map((row) => (
+              <li key={row.url} className="rounded-md bg-bg p-2">
+                <div className="flex items-center gap-2">
+                  <Badge tone={row.brand === "fdr" ? "fdr" : "achieve"}>{row.brand}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-fg">{row.h1 || "(no H1)"}</p>
+                <p className="mt-1 font-mono text-[10px] text-muted">
+                  canonical → {row.canonical.replace(/^https:\/\//, "") || "(none)"}
+                </p>
+                <p className="mt-1 text-[10px] text-subtle">{row.extra}</p>
+                <a href={row.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[10px] text-fdr hover:underline">
+                  {row.url.replace(/^https:\/\//, "")} <ExternalLink className="size-3" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="rounded-lg bg-raised p-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">HTML outline</h3>
+          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">
+            {finding && /^(S05|S07|S08|S21|S26)$/.test(finding.code) ? "JSON-LD diff" : "Found vs suggested"}
+          </h3>
           {issue.urls[0] ? (
             <Button
               variant="ghost"
@@ -170,14 +199,7 @@ export function Inspector() {
         {finding ? (
           <div className="mt-2 space-y-2">
             <p className="text-sm text-muted">{finding.why}</p>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-subtle">Wrong</p>
-              <pre className="mt-1 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] text-danger">{finding.found}</pre>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-subtle">Suggested</p>
-              <pre className="mt-1 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] text-ok">{finding.suggested}</pre>
-            </div>
+            <JsonLdDiffBlock found={finding.found} suggested={finding.suggested} />
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted">
@@ -313,6 +335,28 @@ export function Inspector() {
   );
 }
 
+
+
+
+function JsonLdDiffBlock({ found, suggested }: { found: string; suggested: string }) {
+  const lines = jsonLdDiff(found, suggested);
+  return (
+    <div className="overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] leading-relaxed">
+      <p className="mb-1 text-[10px] uppercase tracking-wide text-subtle">JSON-LD diff · red gone · green add</p>
+      {lines.map((l, i) => (
+        <div
+          key={`${l.op}-${i}`}
+          className={
+            l.op === "del" ? "text-danger" : l.op === "add" ? "text-ok" : "text-muted"
+          }
+        >
+          {l.op === "del" ? "− " : l.op === "add" ? "+ " : "  "}
+          {l.text || " "}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function StateInspector({ row }: { row: StateRow }) {
   const services = identifyServices(row);

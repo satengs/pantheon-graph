@@ -67,7 +67,7 @@ export function Rules() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <p className="text-sm text-muted">
-        Validation rules the gate runs. Create, edit, or delete. Technical studio tickets are not stored here.
+        Common rules run on every brand. FDR and Achieve rules add brand pins (Organization @id, loan fields). Edit a rule, then run checks on crawled pages — you do not need to crawl again.
       </p>
       {err ? <p className="text-sm text-danger">{err}</p> : null}
       <form
@@ -107,6 +107,41 @@ export function Rules() {
           placeholder="Rule statement"
           className="min-h-20 rounded-md bg-bg px-3 py-2 text-sm shadow-[var(--shadow-border)] md:col-span-2"
         />
+        <label className="text-xs text-muted">
+          Applies to
+          <select
+            value={form.domain}
+            onChange={(e) => setForm({ ...form, domain: e.target.value as typeof form.domain })}
+            className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+          >
+            <option value="both">Common — both brands</option>
+            <option value="fdr">FDR only</option>
+            <option value="achieve">Achieve only</option>
+            <option value="system">System</option>
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs text-muted">
+            Layer
+            <select
+              value={form.layer}
+              onChange={(e) => setForm({ ...form, layer: e.target.value as "L1" | "L2" })}
+              className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            >
+              <option value="L1">L1 — this page</option>
+              <option value="L2">L2 — across brands</option>
+            </select>
+          </label>
+          <label className="text-xs text-muted">
+            Product
+            <input
+              value={form.product}
+              onChange={(e) => setForm({ ...form, product: e.target.value })}
+              placeholder="all"
+              className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm shadow-[var(--shadow-border)]"
+            />
+          </label>
+        </div>
         <div className="flex gap-2 md:col-span-2">
           <Button type="submit" size="sm">
             {editId ? "Save rule" : "Create rule"}
@@ -143,7 +178,7 @@ export function Rules() {
               <span className="font-medium">{r.title}</span>
               <Badge>{r.layer}</Badge>
               <Badge tone={r.domain === "fdr" ? "fdr" : r.domain === "achieve" ? "achieve" : "neutral"}>
-                {r.domain}
+                {r.domain === "both" ? "common" : r.domain}
               </Badge>
             </div>
             <p className="mt-2 text-sm text-muted">{r.statement}</p>

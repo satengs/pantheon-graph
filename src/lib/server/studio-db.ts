@@ -2,10 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql, dbSource } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { RULES, ruleStatement, DEFAULT_BRAND_CONFIG } from "@/data/rules-seed";
+import { RULES, ruleStatement, ruleCheckJson, DEFAULT_BRAND_CONFIG } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
 import { statesData } from "@/data/states";
 import { analyzeHtml, SEED_HTML } from "@/lib/html/semantic";
+import { analyzeJsonLd } from "@/lib/html/jsonld";
 
 const ruleInput = z.object({
   id: z.string().min(1).optional(),
@@ -75,7 +76,7 @@ async function seedIfEmpty(userId: string) {
   const foundN = await sql<{ n: number }>`select count(*)::int as n from studio_findings where user_id = ${userId}`;
   if ((foundN[0]?.n ?? 0) === 0) {
     for (const [url, html] of Object.entries(SEED_HTML)) {
-      for (const f of analyzeHtml(html, url)) {
+      for (const f of [...analyzeHtml(html, url), ...analyzeJsonLd(html, url)]) {
         const id = `${userId}:${f.code}:${encodeURIComponent(f.url)}`;
         await sql`
           insert into studio_findings (id, user_id, code, title, lane, url, why, found, suggested)
@@ -85,13 +86,14 @@ async function seedIfEmpty(userId: string) {
       }
     }
   }
-  const existing = await sql<{ n: number }>`select count(*)::int as n from studio_rules where user_id = ${userId}`;
-  if ((existing[0]?.n ?? 0) > 0) return;
+  const existing = await sql<{ code: string }>`select code from studio_rules where user_id = ${userId}`;
+  const have = new Set(existing.map((r) => r.code));
   for (const r of RULES) {
+    if (have.has(r.code)) continue;
     const id = `${userId}:${r.id}`;
     await sql`
       insert into studio_rules (id, user_id, code, title, layer, domain, product, statement, check_json)
-      values (${id}, ${userId}, ${r.code}, ${r.title}, ${r.layer}, ${r.domain}, ${r.product}, ${ruleStatement(r)}, ${"{}"})
+      values (${id}, ${userId}, ${r.code}, ${r.title}, ${r.layer}, ${r.domain}, ${r.product}, ${ruleStatement(r)}, ${ruleCheckJson(r.code)})
       on conflict (id) do nothing
     `;
     await sql`
@@ -105,7 +107,7 @@ async function seedIfEmpty(userId: string) {
     await sql`
       insert into studio_configs (id, user_id, brand, json)
       values (${`${userId}:${brand}`}, ${userId}, ${brand}, ${json})
-      on conflict (id) do update set json = excluded.json
+      on conflict (id) do nothing
     `;
   }
 }

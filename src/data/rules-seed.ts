@@ -1,7 +1,7 @@
 import { ISSUES } from "@/data/issues";
 import type { BacklogItem } from "@/lib/graph/types";
 
-/** Content/schema rules the gate runs against. S01–S13 only. */
+/** Content/schema rules from the last crawl, plus JSON-LD. */
 export const RULE_CODES = [
   "S01",
   "S02",
@@ -16,6 +16,12 @@ export const RULE_CODES = [
   "S11",
   "S12",
   "S13",
+  "S21",
+  "S22",
+  "S23",
+  "S24",
+  "S25",
+  "S26",
 ] as const;
 
 export const RULES: BacklogItem[] = ISSUES.filter((i) =>
@@ -24,6 +30,16 @@ export const RULES: BacklogItem[] = ISSUES.filter((i) =>
 
 export function ruleStatement(i: BacklogItem): string {
   return i.reason;
+}
+
+export function ruleCheckJson(code: string): string {
+  const map: Record<string, unknown> = {
+    S05: { engine: "jsonld", checks: ["org"] },
+    S07: { engine: "jsonld", checks: ["type"] },
+    S08: { engine: "jsonld", checks: ["props"] },
+    S21: { engine: "jsonld", checks: ["exists", "org", "type"] },
+  };
+  return JSON.stringify(map[code] ?? {});
 }
 
 export const DEFAULT_BRAND_CONFIG: Record<"fdr" | "achieve", Record<string, unknown>> = {

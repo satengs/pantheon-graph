@@ -161,76 +161,46 @@ export function buildGraph(opts: {
     }
   }
 
-  if (brands.includes("fdr") && brands.includes("achieve")) {
-    const pairs =
-      opts.product === "all" || opts.product === "glossary"
-        ? crawl.glossaryOverlap.length
-        : 0;
-    if (pairs > 0 && nodes.some((n) => n.id === "hub:fdr:glossary") && nodes.some((n) => n.id === "hub:achieve:glossary")) {
-      addE({
-        id: "conflict:glossary",
-        source: "hub:fdr:glossary",
-        target: "hub:achieve:glossary",
-        kind: "conflict",
-        label: edgeTag("S01"),
-        issueId: "S01",
-      });
-    }
-    if (
-      nodes.some((n) => n.id === "hub:fdr:debt-relief") &&
-      nodes.some((n) => n.id === "hub:achieve:debt-relief")
-    ) {
-      addE({
-        id: "conflict:debt-relief",
-        source: "hub:fdr:debt-relief",
-        target: "hub:achieve:debt-relief",
-        kind: "conflict",
-        label: edgeTag("S02"),
-        issueId: "S02",
-      });
-    }
-    if (
-      nodes.some((n) => n.id === "hub:achieve:hel") &&
-      nodes.some((n) => n.id === "hub:achieve:heloc")
-    ) {
-      addE({
-        id: "conflict:hel-heloc",
-        source: "hub:achieve:hel",
-        target: "hub:achieve:heloc",
-        kind: "conflict",
-        label: edgeTag("S09"),
-        issueId: "S09",
-      });
-    }
-    addE({
-      id: "sameAs:org",
-      source: "brand:fdr",
-      target: "brand:achieve",
-      kind: "sameAs",
-      label: edgeTag("S06"),
-      issueId: "S06",
-    });
-    if (
-      nodes.some((n) => n.id === "hub:fdr:debt-relief") &&
-      nodes.some((n) => n.id === "hub:fdr:settlement")
-    ) {
-      addE({
-        id: "conflict:relief-settlement",
-        source: "hub:fdr:debt-relief",
-        target: "hub:fdr:settlement",
-        kind: "conflict",
-        label: edgeTag("S02"),
-        issueId: "S02",
-      });
-    }
-  }
-
   const showL2 = opts.layer === "all" || opts.layer === "L2";
-  if (!showL2) {
-    const drop = new Set(edges.filter((e) => e.kind === "conflict" || e.kind === "sameAs").map((e) => e.id));
-    for (let i = edges.length - 1; i >= 0; i--) {
-      if (drop.has(edges[i]!.id)) edges.splice(i, 1);
-    }
+  const showL1 = opts.layer === "all" || opts.layer === "L1";
+  const has = (id: string) => nodes.some((n) => n.id === id);
+
+  const TREE: Array<{ code: string; source: string; target: string; kind: GraphEdge["kind"] }> = [
+    { code: "S01", source: "hub:fdr:glossary", target: "hub:achieve:glossary", kind: "conflict" },
+    { code: "S02", source: "hub:fdr:debt-relief", target: "hub:fdr:settlement", kind: "conflict" },
+    { code: "S03", source: "hub:achieve:glossary", target: "hub:achieve:heloc", kind: "suggests" },
+    { code: "S04", source: "hub:fdr:glossary", target: "hub:achieve:glossary", kind: "suggests" },
+    { code: "S05", source: "brand:achieve", target: "hub:achieve:other", kind: "suggests" },
+    { code: "S06", source: "brand:fdr", target: "brand:achieve", kind: "sameAs" },
+    { code: "S07", source: "hub:fdr:debt-relief", target: "hub:achieve:heloc", kind: "suggests" },
+    { code: "S08", source: "brand:achieve", target: "hub:achieve:heloc", kind: "suggests" },
+    { code: "S09", source: "hub:achieve:hel", target: "hub:achieve:heloc", kind: "conflict" },
+    { code: "S10", source: "hub:achieve:personal-loan", target: "hub:achieve:hel", kind: "conflict" },
+    { code: "S11", source: "hub:achieve:personal-loan", target: "hub:achieve:debt-relief", kind: "suggests" },
+    { code: "S12", source: "hub:achieve:debt-relief", target: "hub:achieve:personal-loan", kind: "suggests" },
+    { code: "S13", source: "hub:fdr:debt-relief", target: "hub:achieve:debt-relief", kind: "conflict" },
+    { code: "S21", source: "hub:fdr:debt-relief", target: "hub:achieve:heloc", kind: "suggests" },
+    { code: "S22", source: "hub:fdr:debt-relief", target: "hub:achieve:debt-relief", kind: "conflict" },
+    { code: "S23", source: "hub:fdr:heloc", target: "hub:achieve:heloc", kind: "conflict" },
+    { code: "S24", source: "hub:achieve:debt-relief", target: "hub:fdr:debt-relief", kind: "suggests" },
+    { code: "S25", source: "hub:fdr:glossary", target: "hub:achieve:personal-loan", kind: "suggests" },
+    { code: "S26", source: "hub:achieve:glossary", target: "hub:fdr:glossary", kind: "suggests" },
+  ];
+
+  for (const t of TREE) {
+    const rule = RULES.find((r) => r.code === t.code);
+    if (!rule) continue;
+    if (rule.layer === "L1" && !showL1) continue;
+    if (rule.layer === "L2" && !showL2) continue;
+    if (!has(t.source) || !has(t.target)) continue;
+    addE({
+      id: `sug:${t.code}:${t.source}:${t.target}`,
+      source: t.source,
+      target: t.target,
+      kind: t.kind,
+      label: edgeTag(t.code),
+      issueId: t.code,
+    });
   }
 
   if (opts.explode) {
