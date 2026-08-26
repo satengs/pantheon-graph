@@ -686,8 +686,6 @@ export const ISSUES: BacklogItem[] = [
     acceptance: acc(false, false, 66, "HIT", "fail"),
   },
   {
-
-  {
     id: "S32",
     code: "S32",
     title: "Silo HELOC and home equity loan as separate products",
