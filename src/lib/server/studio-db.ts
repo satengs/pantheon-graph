@@ -7,6 +7,7 @@ import { crawl } from "@/data/crawl";
 import { statesData } from "@/data/states";
 import { analyzeHtml, SEED_HTML } from "@/lib/html/semantic";
 import { analyzeJsonLd } from "@/lib/html/jsonld";
+import { detectRuleConflicts, type RuleRow } from "@/lib/studio/rule-conflicts";
 
 const ruleInput = z.object({
   id: z.string().min(1).optional(),
@@ -166,8 +167,10 @@ export const listStudio = createServerFn({ method: "GET" })
       found: string;
       suggested: string;
     }>`select id, code, title, lane, url, why, found, suggested from studio_findings where user_id = ${userId} order by code, title`;
+    const conflicts = detectRuleConflicts(rules);
     return {
       rules,
+      conflicts,
       tasks,
       configs,
       catalog,
@@ -208,7 +211,11 @@ export const upsertRule = createServerFn({ method: "POST" })
       JSON.stringify(data),
       1,
     );
-    return { id };
+    const rows = await sql<RuleRow>`
+      select code, title, domain, product, statement from studio_rules where user_id = ${context.userId}
+    `;
+    const conflicts = detectRuleConflicts(rows);
+    return { id, conflicts };
   });
 
 export const deleteRule = createServerFn({ method: "POST" })
@@ -243,7 +250,11 @@ export const upsertTask = createServerFn({ method: "POST" })
         status = excluded.status,
         rule_id = excluded.rule_id
     `;
-    return { id };
+    const rows = await sql<RuleRow>`
+      select code, title, domain, product, statement from studio_rules where user_id = ${context.userId}
+    `;
+    const conflicts = detectRuleConflicts(rows);
+    return { id, conflicts };
   });
 
 export const deleteTask = createServerFn({ method: "POST" })

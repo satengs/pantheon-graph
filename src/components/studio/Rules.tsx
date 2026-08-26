@@ -6,6 +6,7 @@ import { deleteRule, listStudio, upsertRule } from "@/lib/server/studio-db";
 import { filterIssues } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
+import type { RuleConflict } from "@/lib/studio/rule-conflicts";
 
 type Rule = {
   id: string;
@@ -40,6 +41,7 @@ export function Rules() {
   const [err, setErr] = useState<string | null>(null);
   const [checkMsg, setCheckMsg] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [conflicts, setConflicts] = useState<RuleConflict[]>([]);
 
   const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query }).map((r) => r.code));
 
@@ -47,6 +49,7 @@ export function Rules() {
     try {
       const data = await listStudio();
       setRules(data.rules);
+      setConflicts(data.conflicts ?? []);
       setErr(null);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load rules");
@@ -70,11 +73,26 @@ export function Rules() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <p className="text-sm text-muted">
-        On production: open <span className="text-fg">Rules</span>, create or edit a rule, then click <span className="text-fg">Run validation</span>.
-        Checks use the last crawl plus any saved page copies — no recrawl. Live URL check is on the Validation tab.
+        Create or edit a rule and save. The app checks the new rule against every other rule, then runs crawl validation.
+        Live URL check stays on the Validation tab.
       </p>
       {err ? <p className="text-sm text-danger">{err}</p> : null}
       {checkMsg ? <p className="text-sm text-ok">{checkMsg}</p> : null}
+      {conflicts.length ? (
+        <ul className="rounded-xl bg-raised p-3 text-sm text-danger">
+          {conflicts.map((c, i) => (
+            <li key={`${c.a}-${c.b}-${i}`}>
+              <span className="font-mono">{c.a}</span>
+              {" × "}
+              <span className="font-mono">{c.b}</span>
+              {" — "}
+              {c.why}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-xs text-subtle">No rule-to-rule conflicts on the current set.</p>
+      )}
       <form
         className="grid gap-2 rounded-xl bg-raised p-3 md:grid-cols-2"
         onSubmit={(e) => {
@@ -84,10 +102,27 @@ export function Rules() {
               id: editId ?? undefined,
               ...form,
             },
-          }).then(() => {
+          }).then(async (res) => {
+            setConflicts(res.conflicts ?? []);
             setForm(empty);
             setEditId(null);
-            void reload();
+            await reload();
+            setChecking(true);
+            try {
+              const v = await runValidation({
+                data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 },
+              });
+              const n = res.conflicts?.length ?? 0;
+              setCheckMsg(
+                n
+                  ? `${n} rule conflicts · crawl ${v.pages} pages · ${v.fail} issues`
+                  : `Rules consistent · crawl ${v.pages} pages · ${v.fail} issues`,
+              );
+            } catch (e) {
+              setErr(e instanceof Error ? e.message : "Validation failed");
+            } finally {
+              setChecking(false);
+            }
           });
         }}
       >
