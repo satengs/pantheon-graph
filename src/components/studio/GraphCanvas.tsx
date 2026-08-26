@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RE } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import { buildGraph } from "@/lib/graph/model";
 import { useStudio, type GraphLayout } from "@/store/studio";
 import type { GraphNode } from "@/lib/graph/types";
@@ -107,6 +108,9 @@ export function GraphCanvas() {
   const setGraphLayout = useStudio((s) => s.setGraphLayout);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
+  const graphFocusStack = useStudio((s) => s.graphFocusStack);
+  const pushGraphFocus = useStudio((s) => s.pushGraphFocus);
+  const popGraphFocus = useStudio((s) => s.popGraphFocus);
   const svgRef = useRef<SVGSVGElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<null | { kind: "pan" | "node"; id?: string; x: number; y: number; ox: number; oy: number }>(null);
@@ -123,9 +127,23 @@ export function GraphCanvas() {
     }
   }, []);
 
+  useEffect(() => {
+    if (maximized !== "graph") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMaximized(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [maximized, setMaximized]);
+
   const graph = useMemo(
-    () => buildGraph({ explode, brand, product, layer }),
-    [explode, brand, product, layer],
+    () => buildGraph({ explode, brand, product, layer, expandIds: graphFocusStack }),
+    [explode, brand, product, layer, graphFocusStack],
   );
   const base = useMemo(() => layoutOf(graphLayout, graph.nodes, explode), [graph.nodes, explode, graphLayout]);
 
@@ -167,8 +185,8 @@ export function GraphCanvas() {
 
   const full = maximized === "graph";
 
-  return (
-    <div className={`relative flex h-full min-h-[280px] w-full flex-col overflow-hidden rounded-xl bg-bg ${full ? "fixed inset-0 z-50 rounded-none" : ""}`}>
+  const shell = (
+    <div className={`relative flex h-full min-h-[280px] w-full flex-col overflow-hidden rounded-xl bg-bg ${full ? "fixed inset-0 z-[200] h-dvh rounded-none" : ""}`}>
       <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-surface px-2 py-1.5">
         {LAYOUTS.map((l) => (
           <button
@@ -185,7 +203,17 @@ export function GraphCanvas() {
             {l.label}
           </button>
         ))}
-        <span className="px-2 text-[11px] text-subtle">Drag nodes · labels are the relationship</span>
+        <span className="px-2 text-[11px] text-subtle">Drag · double-click a node to load related pages</span>
+        <button
+          type="button"
+          disabled={!graphFocusStack.length}
+          title="Hide the last loaded related nodes"
+          onClick={() => popGraphFocus()}
+          className="inline-flex h-8 items-center gap-1 rounded-md bg-raised px-2 text-xs text-muted disabled:opacity-40"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back
+        </button>
         <button
           type="button"
           className="ml-auto inline-flex h-8 items-center gap-1 rounded-md bg-raised px-2 text-xs text-muted"
@@ -293,6 +321,12 @@ export function GraphCanvas() {
                     setDrag({ kind: "node", id: n.id, x: s.x, y: s.y, ox: o.x, oy: o.y });
                     selectNode(n.id);
                   }}
+                  onDoubleClick={(ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    if (n.kind === "page") return;
+                    pushGraphFocus(n.id);
+                  }}
                 >
                   {n.kind === "glossary" ? (
                     <rect
@@ -347,4 +381,9 @@ export function GraphCanvas() {
       </div>
     </div>
   );
+
+  if (full && typeof document !== "undefined") {
+    return createPortal(shell, document.body);
+  }
+  return shell;
 }

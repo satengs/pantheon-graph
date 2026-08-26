@@ -23,6 +23,7 @@ type StudioState = {
   sortDir: "asc" | "desc";
   graphLayout: GraphLayout;
   maximized: Maximized;
+  graphFocusStack: string[];
   setTab: (tab: StudioTab) => void;
   setExplode: (v: boolean) => void;
   setBrand: (v: "all" | BrandId) => void;
@@ -40,6 +41,8 @@ type StudioState = {
   setSort: (key: string) => void;
   setGraphLayout: (v: GraphLayout) => void;
   setMaximized: (v: Maximized) => void;
+  pushGraphFocus: (id: string) => void;
+  popGraphFocus: () => void;
 };
 
 export const useStudio = create<StudioState>((set, get) => ({
@@ -60,6 +63,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   sortDir: "asc",
   graphLayout: "tree",
   maximized: null,
+  graphFocusStack: [],
   setTab: (tab) => set({ tab }),
   setExplode: (explode) => set({ explode }),
   setBrand: (brand) => set({ brand, selectedState: null }),
@@ -101,4 +105,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   },
   setGraphLayout: (graphLayout) => set({ graphLayout }),
   setMaximized: (maximized) => set({ maximized }),
+  pushGraphFocus: (id) =>
+    set((s) => (s.graphFocusStack.includes(id) ? s : { graphFocusStack: [...s.graphFocusStack, id] })),
+  popGraphFocus: () => set((s) => ({ graphFocusStack: s.graphFocusStack.slice(0, -1) })),
 }));

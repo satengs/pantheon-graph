@@ -184,32 +184,34 @@ export function buildGraph(opts: {
     });
   }
 
-  if (opts.explode) {
-    const hubs = nodes.filter((n) => n.kind === "product" || n.kind === "glossary");
-    for (const hub of hubs) {
-      if (!hub.brand || !hub.product) continue;
-      const pages = crawl.pages.filter((p) => p.b === hub.brand && p.p === hub.product);
-      const shown: CrawlPage[] = pages.slice(0, EXPLODE_CAP);
-      shown.forEach((p, i) => {
-        const url = pageUrl(p);
-        const id = `page:${hub.brand}:${hub.product}:${i}`;
-        addN({
-          id,
-          label: p.path.replace(/\/$/, "").split("/").filter(Boolean).slice(-1)[0] || "/",
-          kind: "page",
-          brand: hub.brand,
-          product: hub.product,
-          url,
-        });
-        addE({
-          id: `has:${id}`,
-          source: hub.id,
-          target: id,
-          kind: "owns",
-          label: "page",
-        });
+  const expand = new Set(opts.expandIds ?? []);
+  const hubs = nodes.filter((n) => n.kind === "product" || n.kind === "glossary");
+  for (const hub of hubs) {
+    if (!hub.brand || !hub.product) continue;
+    const brandOpen = expand.has(`brand:${hub.brand}`);
+    const open = opts.explode || expand.has(hub.id) || brandOpen;
+    if (!open) continue;
+    const pages = crawl.pages.filter((p) => p.b === hub.brand && p.p === hub.product);
+    pages.slice(0, EXPLODE_CAP).forEach((p, i) => {
+      const url = pageUrl(p);
+      const id = `page:${hub.brand}:${hub.product}:${i}`;
+      if (nodes.some((n) => n.id === id)) return;
+      addN({
+        id,
+        label: p.path.replace(/\/$/, "").split("/").filter(Boolean).slice(-1)[0] || "/",
+        kind: "page",
+        brand: hub.brand,
+        product: hub.product,
+        url,
       });
-    }
+      addE({
+        id: `has:${id}`,
+        source: hub.id,
+        target: id,
+        kind: "owns",
+        label: "page",
+      });
+    });
   }
 
   return { nodes, edges };
