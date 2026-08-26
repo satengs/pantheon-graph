@@ -718,6 +718,7 @@ export const ISSUES: BacklogItem[] = [
     ],
     acceptance: acc(true, false, 70, "DYNAMIC", "fail"),
   },
+  {
     id: "S14",
     code: "S14",
     title: "Generate MCP shorts from graph nodes",
