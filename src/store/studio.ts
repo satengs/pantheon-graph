@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { BrandId, ProductId } from "@/lib/graph/types";
 
-export type StudioTab = "graph" | "explore" | "validation" | "issues" | "rules" | "gate" | "states" | "config";
+export type StudioTab = "graph" | "explore" | "recommend" | "validation" | "issues" | "rules" | "gate" | "states" | "config";
 export type GraphLayout = "tree" | "circle" | "breadthfirst" | "grid";
 export type Maximized = null | "graph" | "states" | "validation" | "explore";
 
