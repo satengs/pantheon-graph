@@ -686,6 +686,38 @@ export const ISSUES: BacklogItem[] = [
     acceptance: acc(false, false, 66, "HIT", "fail"),
   },
   {
+
+  {
+    id: "S32",
+    code: "S32",
+    title: "Silo HELOC and home equity loan as separate products",
+    layer: "L2",
+    domain: "achieve",
+    product: "heloc",
+    reason:
+      "HELOC is a revolving line of credit (draw period, variable rate). A home equity loan is a closed-end lump-sum loan (fixed rate, closing). They are siblings, not aliases. Shared H1s, outlines, or a single URL teach search and AI they are one product.",
+    fix: "Two URLs, two H1s, two schema nodes. /heloc never titles itself a home equity loan. /home-equity-loan never titles itself HELOC. Compare links must say compare — not redirect or merge.",
+    impact: "critical",
+    status: "open",
+    urls: ["https://www.achieve.com/heloc", "https://www.achieve.com/home-equity-loan"],
+    citations: [
+      {
+        url: "https://www.achieve.com/heloc",
+        brand: "achieve",
+        quote: "Home Equity Line of Credit (HELOC) - Apply FREE today!",
+        location: "product URL",
+        whyReal: "Live Achieve HELOC product. Must stay a line-of-credit entity.",
+      },
+      {
+        url: "https://www.achieve.com/home-equity-loan",
+        brand: "achieve",
+        quote: "HOME EQUITY LOANS (Apply FREE today!) | Achieve",
+        location: "product URL",
+        whyReal: "Live Achieve HEL product. Separate path from /heloc.",
+      },
+    ],
+    acceptance: acc(true, false, 70, "DYNAMIC", "fail"),
+  },
     id: "S14",
     code: "S14",
     title: "Generate MCP shorts from graph nodes",

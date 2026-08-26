@@ -34,6 +34,7 @@ export const TREE_SUGGESTIONS: Array<{
   { code: "S29", source: "brand:fdr", target: "hub:fdr:other", kind: "suggests" },
   { code: "S30", source: "hub:fdr:other", target: "hub:achieve:other", kind: "suggests" },
   { code: "S31", source: "hub:fdr:other", target: "hub:fdr:debt-relief", kind: "conflict" },
+  { code: "S32", source: "hub:achieve:hel", target: "hub:achieve:heloc", kind: "conflict" },
 ];
 
 export function nodeLabel(id: string): string {

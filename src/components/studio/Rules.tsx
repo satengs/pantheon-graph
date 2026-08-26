@@ -5,6 +5,7 @@ import { useStudio } from "@/store/studio";
 import { deleteRule, listStudio, upsertRule } from "@/lib/server/studio-db";
 import { filterIssues } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
+import { runValidation } from "@/lib/server/validate-run";
 
 type Rule = {
   id: string;
@@ -37,6 +38,8 @@ export function Rules() {
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [checkMsg, setCheckMsg] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query }).map((r) => r.code));
 
@@ -67,9 +70,11 @@ export function Rules() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <p className="text-sm text-muted">
-        Common rules run on every brand. FDR and Achieve rules add brand pins (Organization @id, loan fields). Edit a rule, then run checks on crawled pages — you do not need to crawl again.
+        On production: open <span className="text-fg">Rules</span>, create or edit a rule, then click <span className="text-fg">Run validation</span>.
+        Checks use the last crawl plus any saved page copies — no recrawl. Live URL check is on the Validation tab.
       </p>
       {err ? <p className="text-sm text-danger">{err}</p> : null}
+      {checkMsg ? <p className="text-sm text-ok">{checkMsg}</p> : null}
       <form
         className="grid gap-2 rounded-xl bg-raised p-3 md:grid-cols-2"
         onSubmit={(e) => {
@@ -142,9 +147,25 @@ export function Rules() {
             />
           </label>
         </div>
-        <div className="flex gap-2 md:col-span-2">
+        <div className="flex flex-wrap gap-2 md:col-span-2">
           <Button type="submit" size="sm">
             {editId ? "Save rule" : "Create rule"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={checking}
+            onClick={() => {
+              setChecking(true);
+              setCheckMsg(null);
+              void runValidation({ data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 } })
+                .then((res) => setCheckMsg(`${res.pages} pages · ${res.fail} issues · last crawl + snapshots`))
+                .catch((e) => setErr(e instanceof Error ? e.message : "Validation failed"))
+                .finally(() => setChecking(false));
+            }}
+          >
+            {checking ? "Checking…" : "Run validation"}
           </Button>
           {editId ? (
             <Button

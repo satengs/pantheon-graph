@@ -77,7 +77,7 @@ export const RECS: RecItem[] = [
     ai: "Assistants stop recommending FDR for home equity and Achieve for settlement.",
   },
   {
-    codes: ["S02", "S09", "S10", "S11", "S12"],
+    codes: ["S02", "S09", "S10", "S11", "S12", "S32"],
     category: "same-page",
     title: "Split products that currently share a URL or an outline",
     today:

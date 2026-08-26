@@ -24,6 +24,7 @@ export const ISSUE_ALIAS: Record<string, string> = {
   S29: "author clash",
   S30: "date clash",
   S31: "image entity",
+  S32: "HEL vs HELOC silo",
 };
 
 export function edgeTag(code: string): string {

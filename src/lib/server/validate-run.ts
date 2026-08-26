@@ -7,6 +7,7 @@ import { analyzeHtml, SEED_HTML, type HtmlFinding } from "@/lib/html/semantic";
 import { analyzeJsonLd, extractJsonLd, type JsonLdCheck } from "@/lib/html/jsonld";
 import { persistFindings } from "@/lib/server/analyze-page";
 import { analyzeArticleSignals } from "@/lib/html/article-signals";
+import { analyzeHelSilo } from "@/lib/html/hel-silo";
 import { validateCrawl } from "@/lib/studio/crawl-validate";
 import type { BrandId, CrawlPage, ProductId } from "@/lib/graph/types";
 import { BRAND_HOST } from "@/lib/graph/types";
@@ -119,7 +120,7 @@ function runEngines(
   url: string,
   opts: { brand?: BrandId | "all"; product?: ProductId | "all"; orgId?: string; checks: JsonLdCheck[] },
 ): HtmlFinding[] {
-  return [...analyzeHtml(html, url), ...analyzeJsonLd(html, url, opts), ...analyzeArticleSignals(html, url)];
+  return [...analyzeHtml(html, url), ...analyzeJsonLd(html, url, opts), ...analyzeArticleSignals(html, url), ...analyzeHelSilo(html, url)];
 }
 
 const checksFromScope: JsonLdCheck[] = ["exists", "org", "type", "props"];
@@ -157,7 +158,7 @@ export const validateLiveUrl = createServerFn({ method: "POST" })
     const codes = [...new Set(findings.map((f) => f.code))];
     try {
       const sql = await getSql();
-      await sql`delete from studio_findings where user_id = ${userId} and url = ${data.url} and code in ('H1','TITLE','S05','S07','S08','S21','S27','S28','S29','S30','S31')`;
+      await sql`delete from studio_findings where user_id = ${userId} and url = ${data.url} and code in ('H1','TITLE','S05','S07','S08','S21','S27','S28','S29','S30','S31','S32')`;
     } catch {
       /* still return */
     }
@@ -250,7 +251,7 @@ export const runValidation = createServerFn({ method: "POST" })
       });
       try {
         const sql = await getSql();
-        await sql`delete from studio_findings where user_id = ${userId} and url = ${url} and code in ('H1','TITLE','S05','S07','S08','S21','S27','S28','S29','S30','S31')`;
+        await sql`delete from studio_findings where user_id = ${userId} and url = ${url} and code in ('H1','TITLE','S05','S07','S08','S21','S27','S28','S29','S30','S31','S32')`;
       } catch {
         /* continue */
       }

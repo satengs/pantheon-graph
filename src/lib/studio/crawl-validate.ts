@@ -151,5 +151,30 @@ export function validateCrawl(crawl: CrawlSnapshot): HtmlFinding[] {
     );
   }
 
+
+  const mixedHel = crawl.pages.filter((p) => {
+    const path = p.path.toLowerCase();
+    return path.includes("heloc") && /home-equity-loan/.test(path);
+  });
+  const hasHelocUrl = crawl.pages.some((p) => p.b === "achieve" && /^\/heloc\/?$/.test(p.path));
+  const hasHelUrl = crawl.pages.some((p) => p.b === "achieve" && /^\/home-equity-loan\/?$/.test(p.path));
+  if (mixedHel.length || (hasHelocUrl !== hasHelUrl)) {
+    out.push(
+      finding(
+        "S32",
+        "HELOC and home equity loan must stay siloed",
+        mixedHel[0] ? `${BRAND_HOST[mixedHel[0].b]}${mixedHel[0].path}` : `${BRAND_HOST.achieve}/heloc`,
+        "A HELOC is a line of credit. A home equity loan is a closed-end lump-sum loan. Mixed paths or a missing product URL collapse the two entities.",
+        [
+          mixedHel.length ? mixedHel.slice(0, 10).map((p) => `${p.b} ${p.path}`).join("\n") : "no mixed-path URLs",
+          `product /heloc in crawl: ${hasHelocUrl}`,
+          `product /home-equity-loan in crawl: ${hasHelUrl}`,
+        ].join("\n"),
+        "Two product URLs. Never put heloc and home-equity-loan in the same path. Compare is a third URL.",
+        "achieve",
+      ),
+    );
+  }
+
   return out;
 }
