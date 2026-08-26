@@ -35,9 +35,11 @@ export function Inspector() {
   >([]);
   const [analyzeBusy, setAnalyzeBusy] = useState(false);
 
+  const graphFocusStack = useStudio((s) => s.graphFocusStack);
+
   const graph = useMemo(
-    () => buildGraph({ explode, brand, product, layer }),
-    [explode, brand, product, layer],
+    () => buildGraph({ explode, brand, product, layer, expandIds: graphFocusStack }),
+    [explode, brand, product, layer, graphFocusStack],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
   const issue =

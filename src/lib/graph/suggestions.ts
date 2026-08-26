@@ -48,6 +48,8 @@ export function nodeLabel(id: string): string {
     const product = parts[2] && parts[2] in PRODUCT_LABEL ? PRODUCT_LABEL[parts[2] as keyof typeof PRODUCT_LABEL] : parts[2];
     return `${brand} · ${product}`;
   }
+  if (id.startsWith("issue:")) return id.slice(6);
+  if (id.startsWith("page:")) return "Page";
   return id;
 }
 
