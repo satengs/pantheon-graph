@@ -250,11 +250,7 @@ export const upsertTask = createServerFn({ method: "POST" })
         status = excluded.status,
         rule_id = excluded.rule_id
     `;
-    const rows = await sql<RuleRow>`
-      select code, title, domain, product, statement from studio_rules where user_id = ${context.userId}
-    `;
-    const conflicts = detectRuleConflicts(rows);
-    return { id, conflicts };
+    return { id };
   });
 
 export const deleteTask = createServerFn({ method: "POST" })
