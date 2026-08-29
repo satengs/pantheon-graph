@@ -9,19 +9,19 @@ import {
   suggestionRows,
   type SuggestionRow,
 } from "@/lib/graph/suggestions";
+import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import { listStudio } from "@/lib/server/studio-db";
 import { cmp } from "@/lib/studio/query";
 import { isSeedFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
+import { IssueRow, issueRowFromRule } from "@/components/studio/IssueDrawer";
+import { formatIssueListRow } from "@/lib/studio/issue-detail";
 
-const COLS: { key: keyof SuggestionRow | "hits"; label: string }[] = [
+const SORTS: { key: string; label: string }[] = [
+  { key: "page", label: "Page" },
   { key: "code", label: "ID" },
-  { key: "alias", label: "Type" },
   { key: "kind", label: "Kind" },
-  { key: "from", label: "From" },
-  { key: "to", label: "To" },
-  { key: "proof", label: "Proof" },
   { key: "hits", label: "Hits" },
 ];
 
@@ -31,7 +31,6 @@ export function Explore() {
   const impact = useStudio((s) => s.impact);
   const query = useStudio((s) => s.query);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
-  const selectIssue = useStudio((s) => s.selectIssue);
   const hoverIssue = useStudio((s) => s.hoverIssue);
   const selectedIssueIds = useStudio((s) => s.selectedIssueIds);
   const toggleIssueSelect = useStudio((s) => s.toggleIssueSelect);
@@ -43,6 +42,7 @@ export function Explore() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
   const parentId = useStudio((s) => s.parentId);
+  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [kind, setKind] = useState<"all" | "conflict" | "suggests" | "sameAs">("all");
   const [copied, setCopied] = useState<"md" | "json" | null>(null);
@@ -74,11 +74,15 @@ export function Explore() {
       })
       .slice()
       .sort((a, b) => {
-        const av = sortKey === "hits" ? String(hits[a.code] ?? 0) : String(a[sortKey as keyof SuggestionRow] ?? "");
-        const bv = sortKey === "hits" ? String(hits[b.code] ?? 0) : String(b[sortKey as keyof SuggestionRow] ?? "");
+        const ruleA = RULES.find((x) => x.code === a.code);
+        const ruleB = RULES.find((x) => x.code === b.code);
+        const pageA = ruleA ? issueRowFromRule(ruleA, graphOrg).pagePath : a.from;
+        const pageB = ruleB ? issueRowFromRule(ruleB, graphOrg).pagePath : b.from;
+        const av = sortKey === "hits" ? String(hits[a.code] ?? 0) : sortKey === "page" ? pageA : String(a[sortKey as keyof SuggestionRow] ?? "");
+        const bv = sortKey === "hits" ? String(hits[b.code] ?? 0) : sortKey === "page" ? pageB : String(b[sortKey as keyof SuggestionRow] ?? "");
         return cmp(av, bv, sortDir);
       });
-  }, [kind, layer, impact, brand, query, sortKey, sortDir, hits]);
+  }, [kind, layer, impact, brand, query, sortKey, sortDir, hits, graphOrg]);
 
   const selected = rows.filter((r) => selectedIssueIds.includes(r.code));
   const exportRows = selected.length ? selected : rows;
@@ -128,6 +132,17 @@ export function Explore() {
               {k}
             </button>
           ))}
+          {SORTS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={`h-8 rounded-md px-2 text-xs ${sortKey === c.key ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+              onClick={() => setSort(c.key)}
+            >
+              {c.label}
+              {sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+            </button>
+          ))}
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => void analyse()}>
             {busy ? "Analysing…" : "Analyse"}
           </Button>
@@ -145,53 +160,35 @@ export function Explore() {
         </div>
       </div>
       {note ? <p className="border-b border-border px-3 py-2 text-xs text-muted">{note}</p> : null}
-      <table className="w-full min-w-[960px] table-fixed border-collapse text-left text-sm">
-        <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-wide text-subtle">
-          <tr>
-            <th className="w-8 px-3 py-2 font-medium" />
-            {COLS.map((c) => (
-              <th key={c.key} className={`px-2 py-2 font-medium ${c.key === "proof" ? "w-[32%]" : ""}`}>
-                <button type="button" className="inline-flex items-center gap-1" onClick={() => setSort(c.key)}>
-                  {c.label}
-                  {sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </button>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr
+      <div>
+        {rows.map((r) => {
+          const rule = RULES.find((x) => x.code === r.code);
+          const row = rule
+            ? issueRowFromRule(rule, graphOrg)
+            : formatIssueListRow({ id: r.code, code: r.code, title: r.title, impact: r.impact, layer: r.layer, org: graphOrg });
+          return (
+            <IssueRow
               key={`${r.code}:${r.fromId}:${r.toId}`}
-              onClick={() => selectIssue(r.code)}
-              onMouseEnter={() => hoverIssue(r.code)}
-              onMouseLeave={() => hoverIssue(null)}
-              className={`cursor-pointer border-t border-border/80 hover:bg-raised/70 ${selectedIssueId === r.code ? "bg-raised" : ""}`}
-            >
-              <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
-                  className="size-4 accent-[var(--color-accent)]"
-                  checked={selectedIssueIds.includes(r.code)}
-                  onChange={() => toggleIssueSelect(r.code)}
-                  aria-label={`Select ${r.code}`}
-                />
-              </td>
-              <td className="px-2 py-3 font-mono text-xs text-fg">{r.code}</td>
-              <td className="px-2 py-3 text-fg">{r.alias}</td>
-              <td className="px-2 py-3">
-                <Badge tone={r.kind === "conflict" ? "danger" : r.kind === "sameAs" ? "ok" : "warn"}>{r.kind}</Badge>
-              </td>
-              <td className="px-2 py-3 text-muted">{r.from}</td>
-              <td className="px-2 py-3 text-muted">{r.to}</td>
-              <td className="px-2 py-3">
-                <span className="line-clamp-2 text-fg">{r.proof}</span>
-              </td>
-              <td className="px-2 py-3 font-mono text-xs tabular-nums">{hits[r.code] ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              row={row}
+              selected={selectedIssueId === r.code}
+              onOpen={() => openIssueDrawer({ issueId: rule?.id ?? r.code, findingId: null })}
+              onHover={(on) => hoverIssue(on ? r.code : null)}
+              leading={
+                <span className="flex items-start gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[var(--color-accent)]"
+                    checked={selectedIssueIds.includes(r.code)}
+                    onChange={() => toggleIssueSelect(r.code)}
+                    aria-label={`Select ${r.code}`}
+                  />
+                  <Badge tone={r.kind === "conflict" ? "danger" : r.kind === "sameAs" ? "ok" : "warn"}>{r.kind}</Badge>
+                </span>
+              }
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

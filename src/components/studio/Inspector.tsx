@@ -29,6 +29,7 @@ export function Inspector() {
   const hoveredIssueId = useStudio((s) => s.hoveredIssueId);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const selectIssue = useStudio((s) => s.selectIssue);
+  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
@@ -131,6 +132,21 @@ export function Inspector() {
       </aside>
     );
   }
+  if (!issue && finding) {
+    return (
+      <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
+        <p className="text-[10px] uppercase tracking-wide text-subtle">HTML finding</p>
+        <h2 className="font-display text-xl text-fg text-balance">{finding.title}</h2>
+        <p className="font-mono text-xs text-fg rounded-md bg-raised px-2 py-1 shadow-[var(--shadow-border)]">
+          {finding.url.replace(/^https?:\/\//, "")}
+        </p>
+        <p className="text-sm text-muted text-pretty">{finding.why}</p>
+        <Button size="sm" onClick={() => openIssueDrawer({ findingId: finding.id, issueId: null })}>
+          View issue
+        </Button>
+      </aside>
+    );
+  }
   if (!issue) {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto">
@@ -155,6 +171,11 @@ export function Inspector() {
         <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
           {finding && selectedFindingId ? finding.title : `${issue.code} · ${issue.title}`}
         </h2>
+        <div className="mt-2">
+          <Button size="sm" onClick={() => openIssueDrawer()}>
+            View issue
+          </Button>
+        </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone={issue.layer === "L2" ? "warn" : "neutral"}>{issue.layer}</Badge>
           <Badge

@@ -39,6 +39,7 @@ import { filterIssues, filterStates } from "@/lib/studio/query";
 import { statesData } from "@/data/states";
 import { loadNote, saveNote } from "@/lib/server/studio-db";
 import { RegisterFamilyModal } from "@/components/studio/RegisterFamilyModal";
+import { IssueDrawer } from "@/components/studio/IssueDrawer";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
   { id: "companies", label: "Companies", icon: Building2, hint: "Parent company, sub-brands, retrieve from URL, coverage." },
@@ -374,6 +375,7 @@ export function Studio() {
         right={<Inspector />}
       />
       <RegisterFamilyModal />
+      <IssueDrawer />
     </div>
   );
 }

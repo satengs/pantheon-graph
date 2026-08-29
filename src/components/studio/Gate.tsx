@@ -14,6 +14,7 @@ import { jaccard } from "@/lib/graph/model";
 import { useStudio } from "@/store/studio";
 import { isSeedFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
+import { IssueRow, issueRowFromRule } from "@/components/studio/IssueDrawer";
 
 const PHASE_TONE: Record<string, string> = {
   client: "bg-accent",
@@ -24,6 +25,7 @@ const PHASE_TONE: Record<string, string> = {
 export function Gate() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
+  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   if (!isSeedFamily(graphOrg, parentSlug)) {
     return <EmptyFamilyCrawl title={`No gate data for ${graphOrg?.parent?.name ?? "this family"}`} />;
   }
@@ -98,16 +100,15 @@ export function Gate() {
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Open queue</h3>
-        <ul className="mt-2 space-y-1">
+        <div className="mt-2 overflow-hidden rounded-lg bg-surface/40">
           {[...openCritical, ...openHigh].map((i) => (
-            <li key={i.id} className="flex items-center justify-between rounded-lg bg-raised px-3 py-2 text-sm">
-              <span>
-                <span className="font-mono text-xs">{i.code}</span> {i.title}
-              </span>
-              <Badge tone={i.impact === "critical" ? "danger" : "warn"}>{i.impact}</Badge>
-            </li>
+            <IssueRow
+              key={i.id}
+              row={issueRowFromRule(i, graphOrg)}
+              onOpen={() => openIssueDrawer({ issueId: i.id, findingId: null })}
+            />
           ))}
-        </ul>
+        </div>
       </section>
     </div>
   );
