@@ -280,6 +280,7 @@ export function IssueRow({
     <div
       role="button"
       tabIndex={0}
+      aria-current={selected ? "true" : undefined}
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -290,7 +291,9 @@ export function IssueRow({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 py-3 text-left hover:bg-raised/70 ${
-        selected ? "bg-raised shadow-[inset_3px_0_0_var(--color-accent)]" : ""
+        selected
+          ? "bg-[color-mix(in_oklab,var(--color-accent)_16%,var(--color-surface))] shadow-[inset_4px_0_0_var(--color-accent)]"
+          : ""
       }`}
     >
       {leading}
