@@ -320,7 +320,6 @@ export function GraphCanvas() {
     return "var(--color-surface)";
   }
   function nodeStroke(n: GraphNode) {
-    if (n.id === selectedNodeId) return "var(--color-accent)";
     if (n.kind === "issue") {
       const k = TREE_SUGGESTIONS.find((t) => t.code === n.issueId)?.kind;
       if (k === "conflict") return "var(--color-danger)";
@@ -570,11 +569,14 @@ export function GraphCanvas() {
                     : n.kind === "page"
                       ? ""
                       : n.label;
+              const on = n.id === selectedNodeId;
+              const halo = Math.max(5, radius * 0.28);
               return (
                 <g
                   key={n.id}
                   data-kind={n.kind}
                   data-url={n.url ?? ""}
+                  data-selected={on ? "true" : undefined}
                   transform={`translate(${p.x} ${p.y})`}
                   className="cursor-grab"
                   onPointerDown={(ev) => {
@@ -595,6 +597,27 @@ export function GraphCanvas() {
                     expandNode(n);
                   }}
                 >
+                  {on && n.kind === "glossary" ? (
+                    <rect
+                      x={-(radius + halo)}
+                      y={-(radius + halo)}
+                      width={(radius + halo) * 2}
+                      height={(radius + halo) * 2}
+                      rx={4}
+                      transform="rotate(45)"
+                      fill="color-mix(in oklab, var(--color-accent) 22%, transparent)"
+                      stroke="var(--color-accent)"
+                      strokeWidth={2.5}
+                    />
+                  ) : null}
+                  {on && n.kind !== "glossary" ? (
+                    <circle
+                      r={radius + halo}
+                      fill="color-mix(in oklab, var(--color-accent) 22%, transparent)"
+                      stroke="var(--color-accent)"
+                      strokeWidth={2.5}
+                    />
+                  ) : null}
                   {n.kind === "glossary" ? (
                     <rect
                       x={-radius}
@@ -605,14 +628,14 @@ export function GraphCanvas() {
                       transform="rotate(45)"
                       fill={nodeFill(n)}
                       stroke={nodeStroke(n)}
-                      strokeWidth={n.id === selectedNodeId ? 2.5 : 1.5}
+                      strokeWidth={on ? 2.2 : 1.5}
                     />
                   ) : (
                     <circle
                       r={radius}
                       fill={nodeFill(n)}
                       stroke={nodeStroke(n)}
-                      strokeWidth={n.id === selectedNodeId ? 2.5 : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
+                      strokeWidth={on ? 2.2 : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
                   )}
                   {label ? (
