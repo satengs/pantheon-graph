@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useStudio } from "@/store/studio";
+import { familyContextFrom, useStudio } from "@/store/studio";
 import { deleteRule, listStudio, upsertRule } from "@/lib/server/studio-db";
 import { filterIssues } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import type { RuleConflict } from "@/lib/studio/rule-conflicts";
 import { isSystemRule, SYSTEM_RULE_SET } from "@/lib/org/system-rules";
-import { isSeedFamily } from "@/lib/org/catalog";
+import { isSeedFamily, productsForFamily } from "@/lib/org/catalog";
+import { attachFamilyRules } from "@/lib/server/orgs";
+import { productLabel } from "@/lib/graph/types";
 
 type Rule = {
   id: string;
@@ -24,7 +26,7 @@ const empty = {
   code: "",
   title: "",
   layer: "L1" as "L1" | "L2",
-  domain: "system" as "fdr" | "achieve" | "both" | "system",
+  domain: "system",
   product: "all",
   statement: "",
 };
@@ -40,7 +42,10 @@ export function Rules() {
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
+  const parentId = useStudio((s) => s.parentId);
+  const applyFamilyContext = useStudio((s) => s.applyFamilyContext);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
+  const familyProducts = productsForFamily(graphOrg?.brands ?? [], "all");
   const [rules, setRules] = useState<Rule[]>([]);
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState<string | null>(null);
@@ -92,8 +97,8 @@ export function Rules() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <p className="text-sm text-muted">
-        Default system rules (schema, canonical, JSON-LD, article semantics) apply to every company. Brand rules stay on
-        FDR, Achieve, or a new origin you add. Save a rule, then recheck.
+        Default system rules (schema, canonical, JSON-LD) can apply on any family. Brand rules you write here attach only
+        to {graphOrg?.parent?.name ?? "this family"} — never copied onto another company.
       </p>
       <div className="flex flex-wrap gap-1.5">
         {(["all", "system", "brand"] as const).map((s) => (
@@ -134,6 +139,14 @@ export function Rules() {
               ...form,
             },
           }).then(async (res) => {
+            if (parentId) {
+              try {
+                const family = await attachFamilyRules({ data: { parentId, codes: [form.code] } });
+                applyFamilyContext(familyContextFrom(family));
+              } catch (e) {
+                setErr(e instanceof Error ? e.message : "Could not attach this rule to the family");
+              }
+            }
             setConflicts(res.conflicts ?? []);
             setForm(empty);
             setEditId(null);
@@ -186,9 +199,14 @@ export function Rules() {
             className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             <option value="system">System — schema, canonical, semantics</option>
-            <option value="both">Common — both seed brands</option>
-            <option value="fdr">FDR only</option>
-            <option value="achieve">Achieve only</option>
+            {graphOrg?.parent ? (
+              <option value={graphOrg.parent.slug}>This family — {graphOrg.parent.name}</option>
+            ) : null}
+            {(graphOrg?.brands ?? []).map((b) => (
+              <option key={b.slug} value={b.slug}>
+                {b.name} only
+              </option>
+            ))}
           </select>
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -207,10 +225,19 @@ export function Rules() {
             Product
             <input
               value={form.product}
+              list="family-products"
               onChange={(e) => setForm({ ...form, product: e.target.value })}
               placeholder="all"
               className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm shadow-[var(--shadow-border)]"
             />
+            <datalist id="family-products">
+              <option value="all">All products</option>
+              {familyProducts.map((p) => (
+                <option key={p} value={p}>
+                  {productLabel(p)}
+                </option>
+              ))}
+            </datalist>
           </label>
         </div>
         <div className="flex flex-wrap gap-2 md:col-span-2">

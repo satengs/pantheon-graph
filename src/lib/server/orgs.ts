@@ -15,6 +15,7 @@ import {
   slugify,
   normalizeProductList,
   brandSeedRules,
+  isSystemRule,
   type OrgProbe,
   type StudioOrg,
 } from "@/lib/org/catalog";
@@ -542,6 +543,30 @@ export const attachBrandRules = createServerFn({ method: "POST" })
     const allowed = new Set(brandSeedRules().map((r) => r.code));
     const codes = [...new Set(data.codes.filter((c) => allowed.has(c)))];
     if (!codes.length) throw new Error("Pick a brand rule from the seed set");
+    const result = await mergeParentRules(context.userId, data.parentId, codes);
+    const next = await loadFamily(context.userId, data.parentId);
+    return { added: result.attached, ...next };
+  });
+
+export const attachFamilyRules = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      parentId: z.string().min(1),
+      codes: z.array(z.string().min(1).max(16)).min(1).max(20),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    const family = await loadFamily(context.userId, data.parentId);
+    const seed =
+      family.parent?.slug === SEED_PARENT.slug ||
+      family.brands.some((b) => SEED_BRANDS.some((s) => s.slug === b.slug));
+    const seedBrand = new Set(brandSeedRules().map((r) => r.code));
+    const codes = [...new Set(data.codes.map((c) => c.trim()).filter(Boolean))].filter((c) => {
+      if (seed || isSystemRule(c)) return true;
+      return !seedBrand.has(c);
+    });
+    if (!codes.length) throw new Error("That rule belongs to another family");
     const result = await mergeParentRules(context.userId, data.parentId, codes);
     const next = await loadFamily(context.userId, data.parentId);
     return { added: result.attached, ...next };

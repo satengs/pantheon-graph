@@ -266,13 +266,11 @@ export function Companies() {
                     className="h-9 min-w-[160px] flex-1 rounded-md bg-surface px-3 text-sm shadow-[var(--shadow-border)]"
                   />
                   <datalist id={`products-${b.id}`}>
-                    {Object.keys(PRODUCT_LABEL)
-                      .filter((p) => !b.products.includes(p))
-                      .map((p) => (
-                        <option key={p} value={p}>
-                          {productLabel(p)}
-                        </option>
-                      ))}
+                    {(seedFamily ? Object.keys(PRODUCT_LABEL) : []).filter((p) => !b.products.includes(p)).map((p) => (
+                      <option key={p} value={p}>
+                        {productLabel(p)}
+                      </option>
+                    ))}
                   </datalist>
                   <Button size="sm" type="submit" disabled={busy === `prod:${b.id}` || !draft.trim() || Boolean(errMsg)}>
                     {busy === `prod:${b.id}` ? "Saving…" : "Add"}
