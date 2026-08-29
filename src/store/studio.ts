@@ -48,6 +48,8 @@ type StudioState = {
   selectedState: string | null;
   hoveredIssueId: string | null;
   selectedFindingId: string | null;
+  issueDrawerOpen: boolean;
+  drawerPageUrl: string | null;
   query: string;
   sortKey: string;
   sortDir: "asc" | "desc";
@@ -74,6 +76,8 @@ type StudioState = {
   selectState: (code: string | null) => void;
   hoverIssue: (id: string | null) => void;
   selectFinding: (id: string | null) => void;
+  openIssueDrawer: (opts?: { issueId?: string | null; findingId?: string | null; pageUrl?: string | null }) => void;
+  closeIssueDrawer: () => void;
   toggleIssueSelect: (id: string) => void;
   clearIssueSelect: () => void;
   setQuery: (q: string) => void;
@@ -166,8 +170,10 @@ export const useStudio = create<StudioState>((set, get) => ({
   selectedState: null,
   hoveredIssueId: null,
   selectedFindingId: null,
+  issueDrawerOpen: false,
+  drawerPageUrl: null,
   query: "",
-  sortKey: "code",
+  sortKey: "impact",
   sortDir: "asc",
   graphLayout: "tree",
   maximized: null,
@@ -207,7 +213,15 @@ export const useStudio = create<StudioState>((set, get) => ({
         selectedState: null,
       });
     } else {
-      set({ selectedNodeId, selectedState: null });
+      set({
+        selectedNodeId,
+        selectedState: null,
+        selectedIssueId: null,
+        selectedFindingId: null,
+        hoveredIssueId: null,
+        issueDrawerOpen: false,
+  drawerPageUrl: null,
+      });
     }
   },
   selectIssue: (selectedIssueId) =>
@@ -219,6 +233,22 @@ export const useStudio = create<StudioState>((set, get) => ({
   selectState: (selectedState) => set({ selectedState, selectedNodeId: null }),
   hoverIssue: (hoveredIssueId) => set({ hoveredIssueId }),
   selectFinding: (selectedFindingId) => set({ selectedFindingId, selectedState: null }),
+  openIssueDrawer: (opts) =>
+    set((s) => {
+      const fromIssue = Boolean(opts && "issueId" in opts);
+      const fromFinding = Boolean(opts && "findingId" in opts);
+      const issueId = fromIssue ? opts!.issueId ?? null : fromFinding ? null : s.selectedIssueId;
+      const findingId = fromFinding ? opts!.findingId ?? null : fromIssue ? null : s.selectedFindingId;
+      return {
+        issueDrawerOpen: true,
+        selectedIssueId: issueId,
+        selectedFindingId: findingId,
+        drawerPageUrl: opts?.pageUrl ?? s.drawerPageUrl,
+        selectedNodeId: issueId ? `issue:${issueId}` : findingId ? null : s.selectedNodeId,
+        selectedState: null,
+      };
+    }),
+  closeIssueDrawer: () => set({ issueDrawerOpen: false, drawerPageUrl: null }),
   toggleIssueSelect: (id) =>
     set((s) => ({
       selectedIssueIds: s.selectedIssueIds.includes(id)
@@ -237,7 +267,11 @@ export const useStudio = create<StudioState>((set, get) => ({
   pushGraphFocus: (id) =>
     set((s) => (s.graphFocusStack.includes(id) ? s : { graphFocusStack: [...s.graphFocusStack, id] })),
   popGraphFocus: () => set((s) => ({ graphFocusStack: s.graphFocusStack.slice(0, -1) })),
-  setIncludeParent: (includeParent) => set({ includeParent }),
+  setIncludeParent: (includeParent) =>
+    set((s) => ({
+      includeParent,
+      parents: s.parents.map((p) => (p.id === s.parentId ? { ...p, includeInGraph: includeParent } : p)),
+    })),
   setParentSlug: (parentSlug) => set({ parentSlug }),
   setGraphOrg: (graphOrg) => set({ graphOrg }),
   setRegisterOpen: (registerOpen) => set({ registerOpen }),
@@ -265,6 +299,8 @@ export const useStudio = create<StudioState>((set, get) => ({
         selectedIssueId: issue,
         selectedNodeId: issue ? `issue:${issue}` : null,
         selectedFindingId: null,
+        issueDrawerOpen: false,
+  drawerPageUrl: null,
         graphFocusStack: [],
       };
     }),

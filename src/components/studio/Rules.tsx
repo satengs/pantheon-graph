@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { familyContextFrom, useStudio } from "@/store/studio";
 import { deleteRule, listStudio, upsertRule } from "@/lib/server/studio-db";
-import { filterIssues } from "@/lib/studio/query";
+import { filterIssues, isHiddenUiCode } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import type { RuleConflict } from "@/lib/studio/rule-conflicts";
@@ -73,6 +73,7 @@ export function Rules() {
   }, []);
 
   const visible = rules.filter((r) => {
+    if (isHiddenUiCode(r.code)) return false;
     if (attachedRuleCodes.length && !attachedRuleCodes.includes(r.code) && r.id !== editId) return false;
     if (
       !seedFamily &&
@@ -154,7 +155,7 @@ export function Rules() {
             setChecking(true);
             try {
               const v = await runValidation({
-                data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 },
+                data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12, parentId: parentId || undefined },
               });
               const n = res.conflicts?.length ?? 0;
               setCheckMsg(
@@ -252,7 +253,7 @@ export function Rules() {
             onClick={() => {
               setChecking(true);
               setCheckMsg(null);
-              void runValidation({ data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 } })
+              void runValidation({ data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12, parentId: parentId || undefined } })
                 .then((res) => setCheckMsg(`${res.pages} pages · ${res.fail} issues · last crawl + snapshots`))
                 .catch((e) => setErr(e instanceof Error ? e.message : "Validation failed"))
                 .finally(() => setChecking(false));

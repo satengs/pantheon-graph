@@ -20,7 +20,16 @@ import {
   type StudioOrg,
 } from "@/lib/org/catalog";
 import { RULE_CODES } from "@/data/rules-seed";
-import { parseWebsite, validateOrgName } from "@/lib/org/family-form";
+import {
+  firstFamilyError,
+  hasFamilyErrors,
+  hostTaken,
+  nameTaken,
+  parseWebsite,
+  usedBrand,
+  validateFamilyDraft,
+  validateOrgName,
+} from "@/lib/org/family-form";
 import { PRODUCT_LABEL, type ProductId } from "@/lib/graph/types";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
@@ -106,7 +115,40 @@ function locs(xml: string): string[] {
   return [...xml.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/g)].map((m) => m[1]!.trim());
 }
 
-async function probeUrl(url: string): Promise<OrgProbe> {
+type ProbeFetch = { probe: OrgProbe; html: string };
+
+async function saveHtmlSnapshot(userId: string, url: string, html: string) {
+  if (!html) return;
+  try {
+    const sql = await getSql();
+    const jsonld = JSON.stringify(extractJsonLd(html).nodes.map((n) => ({ id: n.id, types: n.types })));
+    const id = `${userId}:${encodeURIComponent(url)}`;
+    await sql`
+      insert into studio_snapshots (id, user_id, url, html, jsonld, fetched_at)
+      values (${id}, ${userId}, ${url}, ${html}, ${jsonld}, now())
+      on conflict (id) do update set html = excluded.html, jsonld = excluded.jsonld, fetched_at = now()
+    `;
+  } catch {
+    /* snapshots are optional on first boot */
+  }
+}
+
+async function tryProbe(url: string): Promise<ProbeFetch> {
+  try {
+    return await probeUrl(url);
+  } catch (e) {
+    return {
+      probe: {
+        ok: false,
+        error: e instanceof Error ? e.message : "Retrieve failed",
+        fetchedAt: new Date().toISOString(),
+      },
+      html: "",
+    };
+  }
+}
+
+async function probeUrl(url: string): Promise<ProbeFetch> {
   const homeUrl = absUrl(url);
   const origin = new URL(homeUrl).origin;
   const html = (await fetchText(homeUrl)).slice(0, 400_000);
@@ -177,20 +219,35 @@ async function probeUrl(url: string): Promise<OrgProbe> {
 
   const products = detectProducts(html, samplePaths);
   return {
-    fetchedAt: new Date().toISOString(),
-    ok: true,
-    title,
-    h1,
-    canonical,
-    hasJsonLd: jsonld.nodes.length > 0,
-    orgName: orgNode?.name || undefined,
-    orgId: orgNode?.id || undefined,
-    schemaTypes,
-    sitemapUrl: sitemapUrl || undefined,
-    pageCount,
-    products,
-    samplePaths,
+    probe: {
+      fetchedAt: new Date().toISOString(),
+      ok: true,
+      title,
+      h1,
+      canonical,
+      hasJsonLd: jsonld.nodes.length > 0,
+      orgName: orgNode?.name || undefined,
+      orgId: orgNode?.id || undefined,
+      schemaTypes,
+      sitemapUrl: sitemapUrl || undefined,
+      pageCount,
+      products,
+      samplePaths,
+    },
+    html,
   };
+}
+
+async function listOrgHints(userId: string) {
+  const sql = await getSql();
+  const rows = await sql<{ name: string; host: string; kind: string }>`
+    select name, host, kind from studio_orgs where user_id = ${userId}
+  `;
+  return rows.map((r) => ({
+    name: r.name,
+    host: r.host,
+    kind: (r.kind === "parent" ? "parent" : "brand") as "parent" | "brand",
+  }));
 }
 
 async function uniqueSlug(userId: string, base: string): Promise<string> {
@@ -330,11 +387,18 @@ export const createParent = createServerFn({ method: "POST" })
     await seedOrgs(context.userId);
     const slug = await uniqueSlug(context.userId, slugify(data.name));
     const id = `${context.userId}:org:${slug}`;
+    const existing = await listOrgHints(context.userId);
+    const nameHit = nameTaken(data.name, existing);
+    if (nameHit) throw new Error(nameHit);
+    const hostHit = hostTaken(data.website ?? "", existing);
+    if (hostHit) throw new Error(hostHit);
     let website = (data.website ?? "").trim();
     let probe: OrgProbe = {};
     if (website) {
       website = absUrl(website);
-      probe = await probeUrl(website);
+      const fetched = await tryProbe(website);
+      probe = fetched.probe;
+      await saveHtmlSnapshot(context.userId, website, fetched.html);
     }
     await sql`
       insert into studio_orgs (id, user_id, slug, name, kind, parent_id, website, host, products_json, probe_json, include_in_graph, rules_json)
@@ -370,17 +434,22 @@ export const addBrand = createServerFn({ method: "POST" })
       select id from studio_orgs where id = ${data.parentId} and user_id = ${context.userId} and kind = 'parent' limit 1
     `;
     if (!parent[0]) throw new Error("Parent company not found");
+    const existing = await listOrgHints(context.userId);
+    const nameHit = nameTaken(data.name, existing);
+    if (nameHit) throw new Error(nameHit);
+    const hostHit = hostTaken(data.website ?? "", existing);
+    if (hostHit) throw new Error(hostHit);
     let website = (data.website ?? "").trim();
     let probe: OrgProbe = {};
     let products: string[] = [];
     let name = data.name.trim();
+    if (website) website = absUrl(website);
     if (data.retrieve && website) {
-      website = absUrl(website);
-      probe = await probeUrl(website);
+      const fetched = await tryProbe(website);
+      probe = fetched.probe;
       products = probe.products ?? [];
+      await saveHtmlSnapshot(context.userId, website, fetched.html);
       if (!name || name === website) name = probe.orgName || probe.title?.split("|")[0]?.trim() || name;
-    } else if (website) {
-      website = absUrl(website);
     }
     const slug = await uniqueSlug(context.userId, slugify(name));
     const id = `${context.userId}:org:${slug}`;
@@ -403,20 +472,21 @@ export const probeWebsite = createServerFn({ method: "POST" })
       else if (site.empty) ctx.addIssue({ code: "custom", message: "Paste a website first", path: ["url"] });
     }),
   )
-  .handler(async ({ data }) => {
-    try {
-      const probe = await probeUrl(data.url);
-      const guessedName = probe.orgName || probe.title?.split("|")[0]?.trim() || hostOf(data.url);
-      return { ok: true as const, probe, guessedName, host: hostOf(absUrl(data.url)), website: absUrl(data.url) };
-    } catch (e) {
+  .handler(async ({ context, data }) => {
+    const website = absUrl(data.url);
+    const fetched = await tryProbe(data.url);
+    await saveHtmlSnapshot(context.userId, website, fetched.html);
+    if (!fetched.probe.ok) {
       return {
         ok: false as const,
-        probe: { ok: false, error: e instanceof Error ? e.message : "Retrieve failed" } satisfies OrgProbe,
+        probe: fetched.probe,
         guessedName: "",
         host: "",
         website: data.url,
       };
     }
+    const guessedName = fetched.probe.orgName || fetched.probe.title?.split("|")[0]?.trim() || hostOf(data.url);
+    return { ok: true as const, probe: fetched.probe, guessedName, host: hostOf(website), website };
   });
 
 export const setIncludeParent = createServerFn({ method: "POST" })
@@ -445,7 +515,9 @@ export const retrieveBrand = createServerFn({ method: "POST" })
     }>`select id, website, parent_id, name, products_json from studio_orgs where id = ${data.id} and user_id = ${context.userId} limit 1`;
     const row = rows[0];
     if (!row?.website) throw new Error("Add a website first");
-    const probe = await probeUrl(row.website);
+    const fetched = await tryProbe(row.website);
+    const probe = fetched.probe;
+    await saveHtmlSnapshot(context.userId, row.website, fetched.html);
     const products = normalizeProductList([...(parseProducts(row.products_json)), ...(probe.products ?? [])]);
     const name = probe.orgName || row.name;
     await sql`
@@ -570,6 +642,102 @@ export const attachFamilyRules = createServerFn({ method: "POST" })
     const result = await mergeParentRules(context.userId, data.parentId, codes);
     const next = await loadFamily(context.userId, data.parentId);
     return { added: result.attached, ...next };
+  });
+
+
+const familyBrandInput = z.object({
+  name: z.string().max(120),
+  website: z.string().max(300),
+  retrieve: z.boolean().optional(),
+  products: z.array(z.string().max(80)).max(24).optional(),
+  pageCount: z.number().int().nonnegative().optional(),
+});
+
+export const registerFamily = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z
+      .object({
+        name: z.string().max(120),
+        website: z.string().max(300).optional(),
+        includeInGraph: z.boolean().optional(),
+        brands: z.array(familyBrandInput).min(1).max(12),
+      })
+      .superRefine((data, ctx) => {
+        const nameErr = validateOrgName(data.name, "parent");
+        if (nameErr) ctx.addIssue({ code: "custom", message: nameErr, path: ["name"] });
+        const site = parseWebsite(data.website ?? "");
+        if (!site.ok) ctx.addIssue({ code: "custom", message: site.error, path: ["website"] });
+      }),
+  )
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    await seedOrgs(context.userId);
+    const drafts = data.brands.map((b, i) => ({
+      key: `b${i}`,
+      name: b.name,
+      website: b.website,
+    }));
+    const existing = await listOrgHints(context.userId);
+    const errors = validateFamilyDraft(
+      { parentName: data.name, parentUrl: data.website ?? "", brands: drafts.filter(usedBrand) },
+      existing,
+    );
+    if (hasFamilyErrors(errors)) throw new Error(firstFamilyError(errors));
+
+    const slug = await uniqueSlug(context.userId, slugify(data.name));
+    const parentId = `${context.userId}:org:${slug}`;
+    let website = (data.website ?? "").trim();
+    let parentProbe: OrgProbe = {};
+    if (website) {
+      website = absUrl(website);
+      const fetched = await tryProbe(website);
+      parentProbe = fetched.probe;
+      await saveHtmlSnapshot(context.userId, website, fetched.html);
+    }
+    const systemCodes = JSON.stringify([...SYSTEM_RULE_CODES]);
+    await sql`
+      insert into studio_orgs (id, user_id, slug, name, kind, parent_id, website, host, products_json, probe_json, include_in_graph, rules_json)
+      values (
+        ${parentId}, ${context.userId}, ${slug}, ${data.name.trim()}, ${"parent"}, ${null},
+        ${website}, ${hostOf(website)}, ${"[]"}, ${JSON.stringify(parentProbe)}, ${data.includeInGraph === false ? 0 : 1}, ${systemCodes}
+      )
+    `;
+    await ensureRuleRows(context.userId, [...SYSTEM_RULE_CODES]);
+
+    for (const b of data.brands.filter((x) => usedBrand({ key: "x", name: x.name, website: x.website }))) {
+      let brandSite = (b.website ?? "").trim();
+      if (!brandSite) continue;
+      brandSite = absUrl(brandSite);
+      let probe: OrgProbe = {};
+      let products = normalizeProductList(b.products ?? []);
+      let name = b.name.trim();
+      if (b.retrieve !== false) {
+        const fetched = await tryProbe(brandSite);
+        probe = fetched.probe;
+        await saveHtmlSnapshot(context.userId, brandSite, fetched.html);
+        products = normalizeProductList([...products, ...(probe.products ?? [])]);
+        if (!name || name === brandSite) name = probe.orgName || probe.title?.split("|")[0]?.trim() || name;
+      } else {
+        probe = {
+          ok: true,
+          fetchedAt: new Date().toISOString(),
+          products,
+          pageCount: b.pageCount,
+        };
+      }
+      const brandSlug = await uniqueSlug(context.userId, slugify(name));
+      await sql`
+        insert into studio_orgs (id, user_id, slug, name, kind, parent_id, website, host, products_json, probe_json, include_in_graph)
+        values (
+          ${`${context.userId}:org:${brandSlug}`}, ${context.userId}, ${brandSlug}, ${name}, ${"brand"}, ${parentId},
+          ${brandSite}, ${hostOf(brandSite)}, ${JSON.stringify(products)}, ${JSON.stringify(probe)}, ${1}
+        )
+      `;
+    }
+
+    const family = await loadFamily(context.userId, parentId);
+    return { added: SYSTEM_RULE_CODES.length, ...family };
   });
 
 export const productHintLabel = (p: string) =>

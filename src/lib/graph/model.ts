@@ -1,5 +1,6 @@
 import { crawl, pageUrl } from "@/data/crawl";
 import { RULES } from "@/data/rules-seed";
+import { isHiddenUiCode } from "@/lib/studio/query";
 import { edgeTag } from "@/lib/graph/aliases";
 import { TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import type {
@@ -321,21 +322,30 @@ export function buildGraph(opts: {
   }
 
   const showL2 = opts.layer === "all" || opts.layer === "L2";
-  const showL1 = opts.layer === "all" || opts.layer === "L1";
   const TREE = TREE_SUGGESTIONS;
   const issueShown = new Set<string>();
 
   function ruleVisible(code: string) {
+    if (isHiddenUiCode(code)) return false;
     if (opts.ruleCodes && !opts.ruleCodes.includes(code)) return false;
     const rule = RULES.find((r) => r.code === code);
     if (!rule) return false;
-    if (rule.layer === "L1" && !showL1) return false;
+    // L1 page issues (S08 loan properties, S07 schema type) are not family edges.
+    if (rule.layer === "L1" && opts.layer !== "L1") return false;
     if (rule.layer === "L2" && !showL2) return false;
     return true;
   }
 
+  function familyEdgeAllowed(t: (typeof TREE)[number]) {
+    if (opts.layer === "L1") return true;
+    const glossary = (id: string) => id.includes(":glossary");
+    const twins = t.kind === "conflict" && glossary(t.source) && glossary(t.target);
+    return t.kind === "sameAs" || twins;
+  }
+
   function attachIssue(t: (typeof TREE)[number], withCites = false) {
     if (!ruleVisible(t.code)) return;
+    if (!familyEdgeAllowed(t)) return;
     ensureNode(t.source);
     ensureNode(t.target);
     const iid = `issue:${t.code}`;
@@ -444,6 +454,7 @@ export function buildGraph(opts: {
     if (issueShown.has(t.code)) continue;
     if (!ruleVisible(t.code)) continue;
     if (!has(t.source) || !has(t.target)) continue;
+    if (!familyEdgeAllowed(t)) continue;
     addE({
       id: `sug:${t.code}:${t.source}:${t.target}`,
       source: t.source,

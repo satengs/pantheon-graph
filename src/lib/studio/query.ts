@@ -10,9 +10,16 @@ export type StudioFilters = {
   codes?: string[] | null;
 };
 
+export const HIDDEN_UI_CODES = new Set(["S14"]);
+
+export function isHiddenUiCode(code: string | null | undefined): boolean {
+  return Boolean(code && HIDDEN_UI_CODES.has(code));
+}
+
 export function filterIssues(issues: BacklogItem[], f: StudioFilters): BacklogItem[] {
   const q = f.query.trim().toLowerCase();
   return issues.filter((i) => {
+    if (isHiddenUiCode(i.code)) return false;
     if (f.codes && f.codes.length > 0 && !f.codes.includes(i.code)) return false;
     if (f.codes && f.codes.length === 0) return false;
     if (f.brand !== "all" && i.domain !== "both" && i.domain !== "system" && i.domain !== f.brand) {

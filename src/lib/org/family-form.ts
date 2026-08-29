@@ -168,3 +168,30 @@ export function validateWebsiteField(raw: string): string | undefined {
   if (parsed.empty) return "Paste a website first";
   return undefined;
 }
+
+export function nameTaken(name: string, existing: ExistingOrgHint[]): string | undefined {
+  const n = name.trim().toLowerCase();
+  if (!n) return undefined;
+  const hit = existing.find((o) => o.name.trim().toLowerCase() === n);
+  if (!hit) return undefined;
+  return hit.kind === "parent" ? "A parent with this name already exists" : "A brand with this name already exists";
+}
+
+export function hostTaken(website: string, existing: ExistingOrgHint[]): string | undefined {
+  const site = parseWebsite(website);
+  if (!site.ok || site.empty) return undefined;
+  const hit = existing.find((o) => o.host.trim().toLowerCase().replace(/^www\./, "") === site.host);
+  if (!hit) return undefined;
+  return "This website is already in the studio";
+}
+
+export function firstFamilyError(e: FamilyFormErrors): string {
+  if (e.parentName) return e.parentName;
+  if (e.parentUrl) return e.parentUrl;
+  if (e.form) return e.form;
+  for (const b of Object.values(e.brands)) {
+    if (b.name) return b.name;
+    if (b.website) return b.website;
+  }
+  return "Fix the highlighted fields";
+}

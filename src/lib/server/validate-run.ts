@@ -11,6 +11,8 @@ import { analyzeHelSilo } from "@/lib/html/hel-silo";
 import { validateCrawl } from "@/lib/studio/crawl-validate";
 import type { BrandId, CrawlPage, ProductId } from "@/lib/graph/types";
 import { BRAND_HOST } from "@/lib/graph/types";
+import { parseRuleCodes } from "@/lib/org/catalog";
+import { brandSlugForUrl, familyIsSeed, findingFitsFamilyRules, recheckTargets, type FamilySite } from "@/lib/org/family-validate";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
 
@@ -93,7 +95,7 @@ async function loadSnapshot(userId: string, url: string): Promise<string | null>
   }
 }
 
-async function saveSnapshot(userId: string, url: string, html: string) {
+export async function saveSnapshot(userId: string, url: string, html: string) {
   try {
     const sql = await getSql();
     const jsonld = JSON.stringify(extractJsonLd(html).nodes.map((n) => ({ id: n.id, types: n.types })));
@@ -181,30 +183,51 @@ export const runValidation = createServerFn({ method: "POST" })
       product: z.string().default("all"),
       live: z.boolean().optional(),
       limit: z.number().int().min(1).max(24).optional(),
+      parentId: z.string().optional(),
     }),
   )
   .handler(async ({ context, data }) => {
     const userId = context.userId;
     const configs = await loadConfigs(userId);
     const { crawl } = await import("@/data/crawl");
-    const extra = RULES.flatMap((r) => r.urls).slice(0, 12);
+    let familySites: FamilySite[] = [];
+    let parentSlug = "";
+    let parentWebsite = "";
+    let parentId = data.parentId ?? "";
+    let ruleCodes: string[] = [];
     try {
       const sql = await getSql();
-      const sites = await sql<{ website: string; slug: string }>`
-        select website, slug from studio_orgs
+      const parents = await sql<{ id: string; slug: string; website: string; rules_json: string }>`
+        select id, slug, website, coalesce(rules_json, '[]') as rules_json
+        from studio_orgs where user_id = ${userId} and kind = 'parent' order by created_at
+      `;
+      const sites = await sql<{ website: string; slug: string; parent_id: string | null }>`
+        select website, slug, parent_id from studio_orgs
         where user_id = ${userId} and kind = 'brand' and website <> ''
       `;
-      for (const s of sites) {
-        if (data.brand !== "all" && data.brand !== s.slug) continue;
-        extra.push(s.website);
-      }
+      familySites = sites.map((s) => ({ slug: s.slug, website: s.website, parentId: s.parent_id }));
+      const active = parentId ? parents.find((p) => p.id === parentId) : parents[0];
+      parentId = active?.id ?? parentId;
+      parentSlug = active?.slug ?? "";
+      parentWebsite = active?.website ?? "";
+      ruleCodes = parseRuleCodes(active?.rules_json);
     } catch {
       /* orgs table may be empty on first boot */
     }
+    const brandSlugs = familySites.filter((s) => !parentId || s.parentId === parentId).map((s) => s.slug);
+    const isSeed = familyIsSeed(parentSlug, brandSlugs) || (!parentId && !familySites.length);
+    let extra = recheckTargets({
+      parentId: parentId || undefined,
+      parentSlug,
+      parentWebsite,
+      brands: familySites.filter((s) => data.brand === "all" || s.slug === data.brand),
+      isSeed,
+      seedUrls: isSeed ? RULES.flatMap((r) => r.urls).slice(0, 12) : [],
+    });
     const urls = pickValidationUrls(
-      crawl.pages,
+      isSeed ? crawl.pages : [],
       extra,
-      crawl.glossaryOverlap,
+      isSeed ? crawl.glossaryOverlap : [],
       data.brand,
       data.product,
       data.limit ?? 12,
@@ -214,15 +237,18 @@ export const runValidation = createServerFn({ method: "POST" })
     let usedSnap = 0;
     const perUrl: Array<{ url: string; fail: number; source: string }> = [];
 
-    const crawlFindings = validateCrawl(crawl).filter((f) => {
-      const rule = RULES.find((r) => r.code === f.code);
-      if (!rule) return true;
-      return ruleApplies(rule.domain, data.scope);
-    });
-    all.push(...crawlFindings);
-    await persistFindings(userId, crawlFindings);
-    for (const f of crawlFindings) {
-      perUrl.push({ url: f.url, fail: 1, source: "last-crawl" });
+    if (isSeed) {
+      const crawlFindings = validateCrawl(crawl).filter((f) => {
+        const rule = RULES.find((r) => r.code === f.code);
+        if (!rule) return true;
+        if (!ruleApplies(rule.domain, data.scope)) return false;
+        return findingFitsFamilyRules(f.code, ruleCodes);
+      });
+      all.push(...crawlFindings);
+      await persistFindings(userId, crawlFindings);
+      for (const f of crawlFindings) {
+        perUrl.push({ url: f.url, fail: 1, source: "last-crawl" });
+      }
     }
 
     for (const url of urls) {
@@ -250,7 +276,8 @@ export const runValidation = createServerFn({ method: "POST" })
         continue;
       }
       if (source === "seed") await saveSnapshot(userId, url, html);
-      const brand: BrandId = url.includes("achieve.com") ? "achieve" : "fdr";
+      const slug = brandSlugForUrl(url, familySites);
+      const brand: BrandId = slug || (url.includes("achieve.com") ? "achieve" : url.includes("freedomdebtrelief") ? "fdr" : "all");
       const findings = runEngines(html, url, {
         brand,
         product: data.product === "all" ? "all" : (data.product as ProductId),
@@ -258,8 +285,9 @@ export const runValidation = createServerFn({ method: "POST" })
         checks: checksFromScope,
       }).filter((f) => {
         const rule = RULES.find((r) => r.code === f.code);
-        if (!rule) return true;
-        return ruleApplies(rule.domain, data.scope);
+        if (!rule) return findingFitsFamilyRules(f.code, ruleCodes);
+        if (!ruleApplies(rule.domain, data.scope)) return false;
+        return findingFitsFamilyRules(f.code, ruleCodes);
       });
       try {
         const sql = await getSql();

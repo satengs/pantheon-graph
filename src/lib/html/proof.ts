@@ -6,6 +6,8 @@ export type PageProof = {
   canonical: string;
   selfCanonical: boolean;
   description: string;
+  ogTitle?: string;
+  robots?: string;
   definedTermName: string;
   definedTermId: string;
   hasJsonLd: boolean;
@@ -42,6 +44,12 @@ export function extractPageProof(html: string, url: string, status = 200): PageP
   const description =
     attr(html, /<meta[^>]+name=["']description["'][^>]*>/i, "content") ||
     attr(html, /<meta[^>]+content=["'][^"']+["'][^>]*name=["']description["'][^>]*>/i, "content");
+  const ogTitle =
+    attr(html, /<meta[^>]+property=["']og:title["'][^>]*>/i, "content") ||
+    attr(html, /<meta[^>]+content=["'][^"']+["'][^>]*property=["']og:title["'][^>]*>/i, "content");
+  const robots =
+    attr(html, /<meta[^>]+name=["']robots["'][^>]*>/i, "content") ||
+    attr(html, /<meta[^>]+content=["'][^"']+["'][^>]*name=["']robots["'][^>]*>/i, "content");
   let definedTermName = "";
   let definedTermId = "";
   let hasJsonLd = /application\/ld\+json/i.test(html);
@@ -61,6 +69,8 @@ export function extractPageProof(html: string, url: string, status = 200): PageP
     canonical,
     selfCanonical: Boolean(canonical) && sameUrl(canonical, url),
     description,
+    ogTitle,
+    robots,
     definedTermName,
     definedTermId,
     hasJsonLd,
@@ -98,6 +108,7 @@ export const S01_PROOF_SEED: PairProof[] = [
       selfCanonical: true,
       description:
         "Debt relief: what it means, why it matters, and how understanding it can help you manage debt and achieve financial freedom.",
+      ogTitle: "Debt Relief Meaning & Definition",
       definedTermName: "Debt Relief",
       definedTermId:
         "https://data.freedomdebtrelief.com/freedomdebtrelief-com/web-pages/debt-relief-c4efdbf287255dba26c2a76707825f00cfd932256851c9ff35ec7233bfb311cf",
@@ -127,7 +138,9 @@ export const S01_PROOF_SEED: PairProof[] = [
       h1: "Bankruptcy Meaning & Definition",
       canonical: "https://www.freedomdebtrelief.com/glossary/b/bankruptcy/",
       selfCanonical: true,
-      description: "",
+      description:
+        "Bankruptcy: what it means, why it matters, and how understanding it can help you manage debt and achieve financial freedom.",
+      ogTitle: "Bankruptcy Meaning & Definition",
       definedTermName: "Bankruptcy",
       definedTermId: "",
       hasJsonLd: true,

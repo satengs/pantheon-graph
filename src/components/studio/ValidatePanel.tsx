@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { runValidation, validateLiveUrl, type RuleScope } from "@/lib/server/validate-run";
 import { useStudio } from "@/store/studio";
+import { isSeedFamily } from "@/lib/org/catalog";
 
 const SCOPES: { id: RuleScope; label: string; hint: string }[] = [
   { id: "all", label: "All rules", hint: "Common plus both brands" },
@@ -19,20 +20,40 @@ export function ValidatePanel() {
   const product = useStudio((s) => s.product);
   const selectFinding = useStudio((s) => s.selectFinding);
   const setTab = useStudio((s) => s.setTab);
-  const [scope, setScope] = useState<RuleScope>(brand === "all" ? "all" : brand);
-  const [url, setUrl] = useState("https://www.freedomdebtrelief.com/debt-relief/");
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentId = useStudio((s) => s.parentId);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
+  const scopes = useMemo(
+    () =>
+      seedFamily
+        ? SCOPES
+        : [
+            { id: "system", label: "System defaults", hint: "Schema, canonical, JSON-LD, article semantics" },
+            { id: "all", label: "Attached rules", hint: "Whatever this family has attached" },
+          ],
+    [seedFamily],
+  );
+  const home = graphOrg?.brands[0]?.url || graphOrg?.parent?.url || "https://www.freedomdebtrelief.com/debt-relief/";
+  const [scope, setScope] = useState<RuleScope>(seedFamily ? (brand === "all" ? "all" : brand) : "system");
+  const [url, setUrl] = useState(home);
   const [busy, setBusy] = useState<"crawl" | "live" | "url" | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [liveNodes, setLiveNodes] = useState<Array<{ id: string; types: string[]; name: string }>>([]);
 
+  useEffect(() => {
+    setScope(seedFamily ? (brand === "all" ? "all" : brand) : "system");
+    setUrl(home);
+  }, [seedFamily, parentId, home, brand]);
+
   async function onCrawled(live: boolean) {
     setBusy(live ? "live" : "crawl");
     setErr(null);
     try {
       const res = await runValidation({
-        data: { scope, brand, product, live, limit: 12 },
+        data: { scope, brand, product, live, limit: 12, parentId: parentId || undefined },
       });
       setRows(res.perUrl);
       setSummary(
@@ -75,7 +96,7 @@ export function ValidatePanel() {
         <div className="min-w-[220px] flex-1">
           <p className="text-[10px] uppercase tracking-wide text-subtle">Rule set</p>
           <div className="mt-1 flex flex-wrap gap-1">
-            {SCOPES.map((s) => (
+            {scopes.map((s) => (
               <button
                 key={s.id}
                 type="button"
@@ -110,7 +131,7 @@ export function ValidatePanel() {
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://www.freedomdebtrelief.com/debt-relief/"
+          placeholder={home}
           className="h-9 min-w-[240px] flex-1 rounded-md bg-bg px-3 text-sm text-fg shadow-[var(--shadow-border)]"
         />
         <Button type="submit" size="sm" disabled={!!busy}>
