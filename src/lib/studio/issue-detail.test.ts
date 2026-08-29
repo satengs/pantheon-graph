@@ -72,7 +72,7 @@ test("formatIssueDetail maps page, section, what, why, fix from a BacklogItem", 
   assert.equal(view.what, issue.title);
   assert.equal(view.why, issue.reason);
   assert.equal(view.fix, issue.fix);
-  assert.equal(view.gate.label, "Blocks live");
+  assert.equal(view.gate.verdict, "BLOCK");
   assert.equal(view.evidence.quotes.length, 1);
   assert.equal(view.evidence.quotes[0]?.quote, issue.citations[0]?.quote);
   assert.equal(view.history.length, 1);
@@ -123,9 +123,12 @@ test("formatIssueDetail returns null without issue or finding", () => {
   assert.equal(formatIssueDetail({}), null);
 });
 
-test("liveGate is a binary live/no-live verdict", () => {
-  assert.equal(liveGate("critical").label, "Blocks live");
+test("liveGate maps existing impact and originPass to BLOCK / ALERT / PASS", () => {
+  assert.equal(liveGate("critical").verdict, "BLOCK");
   assert.equal(liveGate("high").blocks, true);
-  assert.equal(liveGate("medium").label, "Doesn't block live");
-  assert.equal(liveGate("low", false).label, "Blocks live");
+  assert.equal(liveGate("medium").verdict, "ALERT");
+  assert.equal(liveGate("low", false).verdict, "BLOCK");
+  assert.equal(liveGate("low", true).verdict, "PASS");
+  assert.equal(liveGate("medium", false).verdict, "BLOCK");
 });
+

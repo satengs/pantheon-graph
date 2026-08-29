@@ -82,16 +82,22 @@ export type IssueDetailPage = {
   productLabel: string;
 };
 
+export type GoLiveVerdict = "BLOCK" | "ALERT" | "PASS";
+
 export type LiveGate = {
+  verdict: GoLiveVerdict;
   blocks: boolean;
-  label: "Blocks live" | "Doesn't block live";
+  label: GoLiveVerdict;
 };
 
 export function liveGate(impact: string, originPass?: boolean): LiveGate {
   if (originPass === false || impact === "critical" || impact === "high") {
-    return { blocks: true, label: "Blocks live" };
+    return { verdict: "BLOCK", blocks: true, label: "BLOCK" };
   }
-  return { blocks: false, label: "Doesn't block live" };
+  if (impact === "medium") {
+    return { verdict: "ALERT", blocks: false, label: "ALERT" };
+  }
+  return { verdict: "PASS", blocks: false, label: "PASS" };
 }
 
 export type IssueDetailView = {

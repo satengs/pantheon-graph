@@ -41,12 +41,7 @@ export function IssueDrawer() {
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
   useEffect(() => {
@@ -66,13 +61,16 @@ export function IssueDrawer() {
     RULES.find((i) => i.id === selectedIssueId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ??
     null;
   const issue = rawIssue && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
-  const finding = findings.find((f) => f.id === selectedFindingId) ?? null;
+  const finding =
+    findings.find((f) => f.id === selectedFindingId) ??
+    (issue ? findings.find((f) => f.url === issue.urls[0] || f.code === issue.code) : undefined) ??
+    null;
 
   const view = useMemo(
     () =>
       formatIssueDetail({
         issue,
-        finding: issue ? null : finding,
+        finding,
         proof: issue ? ISSUE_PROOFS[issue.code] : finding ? ISSUE_PROOFS[finding.code] : undefined,
         crawlAt: crawl.crawledAt,
         history,
@@ -83,43 +81,61 @@ export function IssueDrawer() {
 
   if (!ready || !open) return null;
 
+  const verdictTone =
+    view?.gate.verdict === "BLOCK" ? "danger" : view?.gate.verdict === "ALERT" ? "warn" : "ok";
+  const verdictHint =
+    view?.gate.verdict === "BLOCK"
+      ? "Would block going live"
+      : view?.gate.verdict === "ALERT"
+        ? "Alert · would not block going live"
+        : "Would not block going live";
+
   const panel = (
-    <div className="fixed inset-0 z-[70]" role="presentation">
-      <button type="button" aria-label="Close issue" className="absolute inset-0 bg-bg/80" onClick={close} />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="drawer-in absolute inset-y-0 right-0 flex h-full w-[min(520px,100vw)] max-w-full flex-col bg-surface shadow-[var(--shadow-border)]"
-      >
-        <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">View the issue</p>
-            <h2 id={titleId} className="mt-1 font-display text-2xl leading-tight text-fg text-balance">
-              {view?.what || "Issue"}
-            </h2>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {view?.gate ? (
-                <Badge tone={view.gate.blocks ? "danger" : "ok"}>{view.gate.label}</Badge>
-              ) : null}
-              {view?.code ? <Badge>{view.code}</Badge> : null}
-              {view?.layer ? <Badge>{view.layer}</Badge> : null}
-              {view?.impact ? (
-                <Badge tone={view.impact === "critical" ? "danger" : view.impact === "high" ? "warn" : "neutral"}>
-                  {view.impact}
-                </Badge>
-              ) : null}
+    <aside
+      role="dialog"
+      aria-labelledby={titleId}
+      className="drawer-in fixed inset-y-0 right-0 z-[70] flex h-full w-[min(520px,100vw)] max-w-full flex-col border-l border-border bg-surface shadow-[var(--shadow-border)]"
+    >
+      <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">View the issue</p>
+          <h2 id={titleId} className="mt-1 font-display text-2xl leading-tight text-fg text-balance">
+            {view?.what || "Issue"}
+          </h2>
+          {view ? (
+            <div
+              className={`mt-3 rounded-md px-2.5 py-2 ${
+                view.gate.verdict === "BLOCK"
+                  ? "bg-danger/15 text-danger"
+                  : view.gate.verdict === "ALERT"
+                    ? "bg-warn/15 text-warn"
+                    : "bg-ok/15 text-ok"
+              }`}
+            >
+              <p className="text-[10px] font-medium uppercase tracking-wide">Would this block going live?</p>
+              <p className="mt-0.5 text-lg font-medium leading-tight">{view.gate.verdict}</p>
+              <p className="mt-0.5 text-xs opacity-90">{verdictHint}</p>
             </div>
+          ) : null}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {view?.gate ? <Badge tone={verdictTone}>{view.gate.label}</Badge> : null}
+            {view?.code ? <Badge>{view.code}</Badge> : null}
+            {view?.layer ? <Badge>{view.layer}</Badge> : null}
+            {view?.impact ? (
+              <Badge tone={view.impact === "critical" ? "danger" : view.impact === "high" ? "warn" : "neutral"}>
+                {view.impact}
+              </Badge>
+            ) : null}
           </div>
-          <Button type="button" variant="ghost" size="icon" onClick={close} aria-label="Close">
-            <X />
-          </Button>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          {view ? <IssueDetailBody view={view} /> : <p className="text-sm text-muted">Nothing selected.</p>}
         </div>
-      </aside>
-    </div>
+        <Button type="button" variant="ghost" size="icon" onClick={close} aria-label="Close">
+          <X />
+        </Button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        {view ? <IssueDetailBody view={view} /> : <p className="text-sm text-muted">Nothing selected.</p>}
+      </div>
+    </aside>
   );
 
   return createPortal(panel, document.body);
@@ -309,23 +325,25 @@ export function IssueRow({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 py-3 text-left hover:bg-raised/70 ${
-        selected ? "bg-raised" : ""
+        selected ? "bg-raised shadow-[inset_3px_0_0_var(--color-accent)]" : ""
       }`}
     >
       {leading}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-block max-w-full truncate rounded-md bg-accent/12 px-2 py-1 font-mono text-sm text-fg shadow-[var(--shadow-border)]">
+        <p className="text-base font-medium leading-snug text-fg text-pretty">{row.what}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Page</span>
+          <span className="inline-block max-w-full truncate rounded-md bg-accent/12 px-2 py-0.5 font-mono text-xs text-fg shadow-[var(--shadow-border)]">
             {row.pagePath}
           </span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Section</span>
+          <span className="text-[11px] text-muted">{row.section || PAGE_LEVEL}</span>
           {row.brandLabel ? (
             <Badge tone={row.brand === "fdr" ? "fdr" : row.brand === "achieve" ? "achieve" : "neutral"}>
               {row.brandLabel}
             </Badge>
           ) : null}
-          <span className="text-[11px] text-muted">{row.section || PAGE_LEVEL}</span>
         </div>
-        <p className="mt-1.5 text-sm text-fg text-pretty">{row.what}</p>
         <p className="mt-0.5 font-mono text-[10px] text-subtle">
           {row.code}
           {row.layer ? ` · ${row.layer}` : ""}
