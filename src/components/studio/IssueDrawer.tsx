@@ -127,35 +127,53 @@ export function IssueDrawer() {
 
 function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatIssueDetail>> }) {
   const page = view.page.url ? view.page : null;
-  const extra = view.pages.filter((p) => p.url && p.url !== view.page.url);
+  const related = view.relatedPages.filter((p) => p.url);
+  const fixPage = view.fixPage.url ? view.fixPage : page;
   return (
     <div className="flex flex-col gap-6">
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Fix</h3>
-        <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.fix || "—"}</p>
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Issue on</h3>
+        {page ? (
+          <a href={page.url} target="_blank" rel="noreferrer" className="mt-1 block font-mono text-sm text-fg hover:underline">
+            {page.path}
+          </a>
+        ) : (
+          <p className="mt-1 text-sm text-muted">No live URL</p>
+        )}
+        <p className="mt-1 text-xs text-muted">
+          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+          {view.section || PAGE_LEVEL}
+        </p>
+      </section>
+
+      {related.length ? (
+        <section>
+          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Related page — mentioned, not the edit</h3>
+          <ul className="mt-1 space-y-1">
+            {related.map((p) => (
+              <li key={p.url}>
+                <a href={p.url} target="_blank" rel="noreferrer" className="font-mono text-sm text-muted hover:text-fg hover:underline">
+                  {p.path}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section>
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Fix on</h3>
+        {fixPage ? (
+          <a href={fixPage.url} target="_blank" rel="noreferrer" className="mt-1 block font-mono text-sm text-fg hover:underline">
+            {fixPage.path}
+          </a>
+        ) : null}
+        <p className="mt-2 text-base leading-relaxed text-fg text-pretty">{view.fix || "—"}</p>
       </section>
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">What</h3>
         <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.what}</p>
-        {page ? (
-          <p className="mt-2 truncate text-xs text-muted">
-            <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
-            <a href={page.url} target="_blank" rel="noreferrer" className="font-mono text-fg hover:underline">
-              {page.path}
-            </a>
-            <span className="text-subtle"> · </span>
-            <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
-            <span>{view.section || PAGE_LEVEL}</span>
-          </p>
-        ) : (
-          <p className="mt-2 text-sm text-muted">No live URL</p>
-        )}
-        {extra.length ? (
-          <p className="mt-1 text-xs text-subtle">
-            {view.code} also hits {extra.length} other page{extra.length === 1 ? "" : "s"}
-          </p>
-        ) : null}
       </section>
 
       <section>
@@ -300,11 +318,22 @@ export function IssueRow({
       <div className="min-w-0 flex-1">
         <p className="text-base font-medium leading-snug text-fg text-pretty">{row.what}</p>
         <p className="mt-1.5 truncate text-xs text-muted">
-          <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+          <span className="font-medium uppercase tracking-wide text-subtle">Issue on </span>
           <span className="font-mono text-fg">{row.pagePath}</span>
           <span className="text-subtle"> · </span>
           <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
           <span>{row.section || PAGE_LEVEL}</span>
+        </p>
+        <p className="mt-0.5 truncate text-xs text-subtle">
+          <span className="font-medium uppercase tracking-wide">Fix on </span>
+          <span className="font-mono">this page</span>
+          {row.relatedPath ? (
+            <>
+              <span> · </span>
+              <span className="font-medium uppercase tracking-wide">Related </span>
+              <span className="font-mono">{row.relatedPath}</span>
+            </>
+          ) : null}
         </p>
       </div>
       {row.impact ? (

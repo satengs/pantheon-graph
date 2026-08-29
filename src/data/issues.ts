@@ -61,8 +61,8 @@ export const ISSUES: BacklogItem[] = [
     domain: "fdr",
     product: "debt-relief",
     reason:
-      "FDR navigation and body copy treat /debt-relief/ and /debt-solutions/debt-settlement/ as interchangeable. That steals the settlement entity and pollutes the relief node.",
-    fix: "Split the entities. Debt relief is the parent program; settlement is one method. Distinct H1, schema (@type FinancialProduct vs Service), and internal links. Do not 301 one to the other.",
+      "The issue is on /debt-relief/. Its FAQ names debt settlement and should point at /debt-solutions/debt-settlement/, but the answer links to /debt-solutions/debt-settlement-pros-and-cons/ instead. Nav and copy still treat the two URLs as the same program.",
+    fix: "Edit /debt-relief/ only: in the FAQ answer “What are the pros and cons of debt settlement?”, link the settlement product URL (https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/), not the pros-and-cons article. Keep both pages. Distinct H1 and schema (Service vs FinancialProduct). Do not 301 one to the other.",
     impact: "critical",
     status: "open",
     urls: [
@@ -73,16 +73,17 @@ export const ISSUES: BacklogItem[] = [
       {
         url: "https://www.freedomdebtrelief.com/debt-relief/",
         brand: "fdr",
-        quote: "What is debt relief? An Overview | Freedom Debt Relief",
-        location: "title",
-        whyReal: "Live FDR overview page. Nav lists Debt Settlement as a sibling of Debt Relief Overview.",
+        quote: "What are the pros and cons of debt settlement?",
+        location: "FAQ",
+        whyReal:
+          "Live FAQ on /debt-relief/. The answer mentions settlement but links to /debt-solutions/debt-settlement-pros-and-cons/, not the settlement page named in this issue.",
       },
       {
         url: "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/",
         brand: "fdr",
         quote: "What Is Debt Settlement? | Freedom Debt Relief",
         location: "title",
-        whyReal: "Separate URL and title, but copy and IA alias the two terms. Entity graph should keep both nodes.",
+        whyReal: "Related page — the settlement entity. Exists as its own URL. FAQ on /debt-relief/ should link here. Do not edit this page to “fix” the FAQ.",
       },
     ],
     acceptance: acc(false, false, 68, "HIT", "fail"),

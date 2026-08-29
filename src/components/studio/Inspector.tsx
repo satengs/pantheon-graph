@@ -17,6 +17,7 @@ import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone,
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
+import { pagePath } from "@/lib/studio/issue-detail";
 import { PageMeta } from "@/components/studio/PageMeta";
 
 export function Inspector() {
@@ -189,14 +190,27 @@ export function Inspector() {
               className="h-36 w-full object-cover object-top"
             />
           </a>
-          <a
-            href={issue.urls[0]}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-fdr hover:underline"
-          >
-            Open live page <ExternalLink className="size-3.5" />
-          </a>
+          <div className="space-y-1 px-3 py-2 text-sm">
+            <p>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Issue on </span>
+              <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="font-mono text-fdr hover:underline">
+                {pagePath(issue.urls[0])}
+              </a>
+            </p>
+            <p>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Fix on </span>
+              <span className="font-mono text-fg">{pagePath(issue.urls[0])}</span>
+              <span className="text-subtle"> · do not edit the related URL</span>
+            </p>
+            {issue.urls[1] ? (
+              <p>
+                <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Related </span>
+                <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="font-mono text-muted hover:text-fg hover:underline">
+                  {pagePath(issue.urls[1])}
+                </a>
+              </p>
+            ) : null}
+          </div>
         </div>
       ) : (
         <Link to="/empty" search={{ q: issue.code }} className="text-sm text-fdr hover:underline">

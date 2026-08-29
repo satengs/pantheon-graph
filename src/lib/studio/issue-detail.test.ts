@@ -117,6 +117,45 @@ test("list row leads with the page and a short what-line", () => {
   assert.equal(row.brandLabel, "Freedom Debt Relief");
   assert.equal(row.section, "canonical + H1 + JSON-LD");
   assert.equal(row.what, issue.title);
+  assert.equal(row.relatedPath, "achieve.com/glossary/d/debt-relief");
+  assert.equal(row.relatedCount, 1);
+});
+
+test("S02-style row: issue on first URL, related is the mentioned page, fix is this page", () => {
+  const relief = "https://www.freedomdebtrelief.com/debt-relief/";
+  const settle = "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/";
+  const s02 = {
+    id: "S02",
+    code: "S02",
+    title: "Stop aliasing debt-relief as settlement",
+    reason: "FAQ on relief names settlement.",
+    fix: "Edit the FAQ on /debt-relief/ only.",
+    urls: [relief, settle],
+    citations: [{ url: relief, brand: "fdr", quote: "pros and cons of debt settlement", location: "FAQ" }],
+    domain: "fdr",
+    product: "debt-relief",
+    impact: "critical",
+    layer: "L2",
+  };
+  const view = formatIssueDetail({ issue: s02 });
+  assert.ok(view);
+  assert.equal(view.page.url, relief);
+  assert.equal(view.fixPage.url, relief);
+  assert.equal(view.relatedPages.length, 1);
+  assert.equal(view.relatedPages[0]?.url, settle);
+  assert.equal(view.section, "FAQ");
+  const row = formatIssueListRow({
+    id: s02.id,
+    code: s02.code,
+    title: s02.title,
+    urls: s02.urls,
+    citations: s02.citations,
+    domain: s02.domain,
+    product: s02.product,
+  });
+  assert.equal(row.pagePath, "freedomdebtrelief.com/debt-relief");
+  assert.equal(row.relatedPath, "freedomdebtrelief.com/debt-solutions/debt-settlement");
+  assert.equal(row.section, "FAQ");
 });
 
 test("formatIssueDetail returns null without issue or finding", () => {

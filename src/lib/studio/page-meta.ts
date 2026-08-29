@@ -156,7 +156,7 @@ export function pageMetaForUrl(url: string): PageMetaView | null {
       finish({
         url: only.url,
         canonical: only.canonical || "",
-        selfCanonical: Boolean(only.canonical) && samePage(only.canonical, only.url),
+        selfCanonical: Boolean(only.canonical) && samePage(only.canonical || "", only.url),
         title: only.title || "",
         h1: only.h1 || "",
         ogTitle: only.ogTitle || "",

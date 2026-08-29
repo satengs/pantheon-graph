@@ -48,7 +48,7 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S02: {
     conflict:
-      "Two FDR URLs, two H1s, both self-canonical. Relief page schema is FAQ + AggregateRating, not Service. Settlement page is LocalBusiness. Copy still treats them as the same program.",
+      "Issue is on /debt-relief/. FAQ “What are the pros and cons of debt settlement?” does not link the related page /debt-solutions/debt-settlement/ — it links debt-settlement-pros-and-cons instead. Both URLs self-canonical. Fix the FAQ on the relief page; keep the settlement page.",
     rows: [
       {
         brand: "fdr",

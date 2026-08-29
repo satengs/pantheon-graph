@@ -10,7 +10,7 @@ const FINDING_SECTION: Record<string, string> = {
   FOOT: "footer",
   NOFOOT: "footer",
   TITLE: "title",
-  S05: "JSON-LD",
+  S02: "FAQ",
   S07: "JSON-LD",
   S08: "JSON-LD",
   S21: "JSON-LD",
@@ -109,7 +109,9 @@ export type IssueDetailView = {
   layer: string;
   gate: LiveGate;
   page: IssueDetailPage;
+  fixPage: IssueDetailPage;
   pages: IssueDetailPage[];
+  relatedPages: IssueDetailPage[];
   evidence: {
     quotes: Array<{ url: string; quote: string; location: string; whyReal: string; brand: string }>;
     found: string;
@@ -134,6 +136,8 @@ export type IssueListRow = {
   what: string;
   impact: string;
   layer: string;
+  relatedPath: string;
+  relatedCount: number;
 };
 
 function asText(v: unknown): string {
@@ -307,7 +311,9 @@ export function formatIssueDetail(input: {
     layer: issue?.layer || (finding ? "L1" : ""),
     gate: liveGate(issue?.impact || (finding ? "high" : ""), issue?.acceptance?.originPass),
     page,
+    fixPage: page,
     pages,
+    relatedPages: pages.filter((p) => p.url && p.url !== page.url),
     evidence: {
       quotes,
       found: finding?.found ?? "",
@@ -336,6 +342,7 @@ export function formatIssueListRow(input: {
 }): IssueListRow {
   const url = (input.url || input.citations?.find((c) => c.url)?.url || input.urls?.[0] || "").trim();
   const page = toPage(url, input.org, input.domain, input.product);
+  const relatedUrls = [...new Set((input.urls ?? []).filter((u) => u && !samePage(u, url)))];
   return {
     id: input.id,
     code: input.code,
@@ -355,6 +362,8 @@ export function formatIssueListRow(input: {
     what: input.title.trim(),
     impact: input.impact ?? "",
     layer: input.layer ?? "",
+    relatedPath: relatedUrls[0] ? pagePath(relatedUrls[0]) : "",
+    relatedCount: relatedUrls.length,
   };
 }
 
