@@ -330,7 +330,7 @@ export function RegisterFamilyModal() {
                   <input
                     autoFocus
                     name="parentName"
-                    autoComplete="organization"
+                    autoComplete="off"
                     value={parentName}
                     onChange={(e) => {
                       setParentName(e.target.value);
@@ -341,7 +341,7 @@ export function RegisterFamilyModal() {
                       });
                     }}
                     onBlur={() => touch("parentName")}
-                    placeholder="Pantheon"
+                    placeholder="Holding company"
                     aria-invalid={Boolean(parentNameErr)}
                     aria-describedby={parentNameErr ? "parent-name-error" : undefined}
                     className={fieldClass(Boolean(parentNameErr))}
@@ -512,16 +512,15 @@ export function RegisterFamilyModal() {
           </div>
 
           <div className="flex flex-wrap justify-between gap-2 border-t border-border px-4 py-3">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={Boolean(busy) || step === 1}
-              onClick={() => setStep((s) => (s === 3 ? 2 : 1))}
-            >
-              Back
-            </Button>
+            {step > 1 ? (
+              <Button type="button" variant="ghost" disabled={Boolean(busy)} onClick={() => setStep((s) => (s === 3 ? 2 : 1))}>
+                Back
+              </Button>
+            ) : (
+              <span />
+            )}
             {step < 3 ? (
-              <Button type="submit" disabled={Boolean(busy)}>
+              <Button type="submit" disabled={Boolean(busy) || (step === 2 && filledBrands.length === 0)}>
                 Continue
               </Button>
             ) : (

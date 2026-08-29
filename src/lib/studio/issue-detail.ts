@@ -82,7 +82,7 @@ export type IssueDetailPage = {
   productLabel: string;
 };
 
-export type GoLiveVerdict = "BLOCK" | "ALERT" | "PASS";
+export type GoLiveVerdict = "Blocks live" | "Doesn't block live";
 
 export type LiveGate = {
   verdict: GoLiveVerdict;
@@ -92,12 +92,9 @@ export type LiveGate = {
 
 export function liveGate(impact: string, originPass?: boolean): LiveGate {
   if (originPass === false || impact === "critical" || impact === "high") {
-    return { verdict: "BLOCK", blocks: true, label: "BLOCK" };
+    return { verdict: "Blocks live", blocks: true, label: "Blocks live" };
   }
-  if (impact === "medium") {
-    return { verdict: "ALERT", blocks: false, label: "ALERT" };
-  }
-  return { verdict: "PASS", blocks: false, label: "PASS" };
+  return { verdict: "Doesn't block live", blocks: false, label: "Doesn't block live" };
 }
 
 export type IssueDetailView = {
@@ -138,6 +135,14 @@ export type IssueListRow = {
   impact: string;
   layer: string;
 };
+
+function asText(v: unknown): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v.trim();
+  if (v instanceof Date) return v.toISOString();
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  return String(v);
+}
 
 function hostOf(url: string): string {
   try {
@@ -237,13 +242,14 @@ export function formatIssueDetail(input: {
   crawlAt?: string | null;
   history?: HistoryLike[] | null;
   org?: IssueOrg | null;
+  pageUrl?: string | null;
 }): IssueDetailView | null {
   const issue = input.issue ?? null;
   const finding = input.finding ?? null;
   if (!issue && !finding) return null;
 
   const domain = issue?.domain || "";
-  const url = (finding?.url || issue?.citations.find((c) => c.url)?.url || issue?.urls[0] || "").trim();
+  const url = (input.pageUrl || finding?.url || issue?.citations.find((c) => c.url)?.url || issue?.urls[0] || "").trim();
   const page = toPage(url, input.org, domain, issue?.product);
 
   const extra: string[] = [];
@@ -260,6 +266,7 @@ export function formatIssueDetail(input: {
   const proofRow = input.proof?.rows.find((r) => samePage(r.url, url)) ?? input.proof?.rows[0];
   const quotes = (issue?.citations ?? [])
     .filter((c) => c.quote?.trim())
+    .filter((c) => !url || !c.url || samePage(c.url, url))
     .map((c) => ({
       url: c.url,
       quote: c.quote,
@@ -273,11 +280,13 @@ export function formatIssueDetail(input: {
     history.push({ when: input.crawlAt.trim(), label: "Last crawl snapshot", kind: "crawl" });
   }
   for (const h of input.history ?? []) {
-    if (!h.label?.trim() && !h.created_at?.trim()) continue;
+    const when = asText(h.created_at);
+    const label = asText(h.label);
+    if (!label && !when) continue;
     history.push({
-      when: (h.created_at ?? "").trim(),
-      label: (h.label || h.kind || "Previous crawl").trim(),
-      kind: h.kind || "history",
+      when,
+      label: label || asText(h.kind) || "Previous crawl",
+      kind: asText(h.kind) || "history",
     });
   }
 
@@ -304,7 +313,7 @@ export function formatIssueDetail(input: {
       found: finding?.found ?? "",
       suggested: finding?.suggested ?? "",
       proofConflict: input.proof?.conflict ?? "",
-      proofRows: input.proof?.rows ?? [],
+      proofRows: (input.proof?.rows ?? []).filter((r) => !url || samePage(r.url, url)),
     },
     history,
   };

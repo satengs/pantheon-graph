@@ -22,6 +22,29 @@ function r2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
+function pairKey(e: GraphEdge) {
+  return `${[e.source, e.target].sort().join("|")}:${e.kind}`;
+}
+
+function controlPoint(a: Pt, b: Pt, idx: number, kind: GraphEdge["kind"], explode: boolean): Pt {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  if (kind === "owns" || kind === "cites") {
+    return { x: r2(mx), y: r2(my - 8) };
+  }
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const px = -dy / len;
+  const py = dx / len;
+  const ring = explode ? 72 : 22;
+  const base = kind === "conflict" ? ring + 28 : kind === "sameAs" ? 42 : ring;
+  const sign = idx % 2 === 0 ? 1 : -1;
+  const mag = base + Math.floor(idx / 2) * 26;
+  return { x: r2(mx + px * mag * sign), y: r2(my + py * mag * sign) };
+}
+
+
 function layoutOf(
   kind: GraphLayout,
   nodes: GraphNode[],
@@ -188,6 +211,7 @@ export function GraphCanvas() {
   }>(null);
   const [offsets, setOffsets] = useState<Record<string, Pt>>({});
   const [ready, setReady] = useState(false);
+  const [hoverEdgeId, setHoverEdgeId] = useState<string | null>(null);
   const lastTap = useRef<{ id: string; t: number } | null>(null);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
@@ -249,6 +273,18 @@ export function GraphCanvas() {
     () => layoutOf(graphLayout, graph.nodes, graph.edges, explode),
     [graph.nodes, graph.edges, explode, graphLayout],
   );
+
+  const edgePairIndex = useMemo(() => {
+    const counts = new Map<string, number>();
+    const idx = new Map<string, number>();
+    for (const e of graph.edges) {
+      const k = pairKey(e);
+      const i = counts.get(k) ?? 0;
+      counts.set(k, i + 1);
+      idx.set(e.id, i);
+    }
+    return idx;
+  }, [graph.edges]);
 
   function at(id: string): Pt | undefined {
     const p = base.get(id);
@@ -453,10 +489,12 @@ export function GraphCanvas() {
               const sameAs = e.kind === "sameAs";
               const suggests = e.kind === "suggests";
               const cites = e.kind === "cites";
-              const mx = r2((a.x + b.x) / 2);
-              const my = r2((a.y + b.y) / 2 - 12);
+              const idx = edgePairIndex.get(e.id) ?? 0;
+              const c = controlPoint(a, b, idx, e.kind, explode);
               const issueNode = e.issueId ? graph.nodes.some((n) => n.id === `issue:${e.issueId}`) : false;
-              const showLabel = Boolean(e.label) && e.kind !== "owns" && !issueNode;
+              const showLabel = Boolean(e.label) && !issueNode && (conflict || sameAs);
+              const pairTitle = `${nodeLabel(e.source)} ↔ ${nodeLabel(e.target)}${e.label ? ` · ${e.label}` : ""}`;
+              const hovered = hoverEdgeId === e.id;
               return (
                 <g
                   key={e.id}
@@ -465,9 +503,13 @@ export function GraphCanvas() {
                     ev.stopPropagation();
                     if (e.issueId) selectIssue(e.issueId);
                   }}
+                  onPointerEnter={() => setHoverEdgeId(e.id)}
+                  onPointerLeave={() => setHoverEdgeId((id) => (id === e.id ? null : id))}
                 >
+                  <title>{pairTitle}</title>
+                  <path d={`M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`} fill="none" stroke="transparent" strokeWidth={14} />
                   <path
-                    d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
+                    d={`M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`}
                     fill="none"
                     stroke={
                       conflict
@@ -480,13 +522,13 @@ export function GraphCanvas() {
                               ? "color-mix(in oklab, var(--color-fg) 28%, transparent)"
                               : "color-mix(in oklab, var(--color-fg) 22%, transparent)"
                     }
-                    strokeWidth={conflict || sameAs || suggests ? 1.8 : 1.2}
+                    strokeWidth={conflict || sameAs || suggests ? (hovered ? 2.4 : 1.8) : 1.2}
                     strokeDasharray={conflict ? "5 4" : sameAs ? "2 3" : suggests ? "6 4" : cites ? "1 3" : undefined}
                   />
                   {showLabel ? (
                     <text
-                      x={mx}
-                      y={my + 4}
+                      x={c.x}
+                      y={c.y - 4}
                       textAnchor="middle"
                       fill="var(--color-fg)"
                       fontSize={9}
@@ -494,6 +536,19 @@ export function GraphCanvas() {
                       fontFamily="IBM Plex Sans, sans-serif"
                     >
                       {e.label}
+                    </text>
+                  ) : null}
+                  {hovered ? (
+                    <text
+                      x={c.x}
+                      y={c.y + (showLabel ? 12 : 4)}
+                      textAnchor="middle"
+                      fill="var(--color-fg)"
+                      fontSize={10}
+                      fontWeight={600}
+                      fontFamily="IBM Plex Sans, sans-serif"
+                    >
+                      {`${nodeLabel(e.source)} ↔ ${nodeLabel(e.target)}`}
                     </text>
                   ) : null}
                 </g>
@@ -518,6 +573,8 @@ export function GraphCanvas() {
               return (
                 <g
                   key={n.id}
+                  data-kind={n.kind}
+                  data-url={n.url ?? ""}
                   transform={`translate(${p.x} ${p.y})`}
                   className="cursor-grab"
                   onPointerDown={(ev) => {

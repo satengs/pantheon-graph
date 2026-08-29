@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Copy, Check } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { RULES } from "@/data/rules-seed";
 import { crawl } from "@/data/crawl";
-import { buildGraph, mcpShort, toneRatio } from "@/lib/graph/model";
+import { buildGraph, toneRatio } from "@/lib/graph/model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
@@ -15,7 +15,9 @@ import { ISSUE_PROOFS } from "@/data/issue-proofs";
 import { jsonLdDiff } from "@/lib/html/json-diff";
 import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone, type StateRow } from "@/data/states";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
+import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
+import { PageMeta } from "@/components/studio/PageMeta";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -30,7 +32,6 @@ export function Inspector() {
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const selectIssue = useStudio((s) => s.selectIssue);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
-  const [copied, setCopied] = useState(false);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
   const [findings, setFindings] = useState<
@@ -65,18 +66,8 @@ export function Inspector() {
     (node?.kind === "issue" ? node.issueId : undefined) ??
     (!node || node.kind === "issue" ? selectedIssueId : null);
   const rawIssue = RULES.find((i) => i.id === wantedId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ?? null;
-  const issue = rawIssue && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
+  const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
   const familyFindings = findings.filter((f) => (seedFamily ? true : urlInFamily(f.url, graphOrg)));
-  const short = node
-    ? mcpShort(node)
-    : issue
-      ? mcpShort({
-          id: `issue:${issue.id}`,
-          label: `${issue.code} ${issue.title}`,
-          kind: "issue",
-          issueId: issue.id,
-        })
-      : "";
   const toneText = issue ? `${issue.title} ${issue.reason} ${issue.fix}` : "";
   const toneBrand = issue?.domain === "achieve" ? "achieve" : "fdr";
   const tone = toneRatio(toneText, toneBrand);
@@ -88,12 +79,6 @@ export function Inspector() {
       .then((d) => setFindings(d.findings))
       .catch(() => setFindings([]));
   }, [selectedFindingId, selectedIssueId]);
-
-  async function copyShort() {
-    await navigator.clipboard.writeText(short);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
-  }
 
   async function fetchPsi() {
     const url = node?.url ?? issue?.urls[0];
@@ -123,12 +108,15 @@ export function Inspector() {
           </a>
         ) : null}
         {node.count != null ? <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p> : null}
-        <p className="text-sm text-muted">
-          {seedFamily
-            ? "Pick an issue on an edge to inspect proof."
-            : "No crawled issues for this company yet."}
-        </p>
-        {!seedFamily ? <EmptyFamilyCrawl /> : null}
+        {node.kind === "page" || node.url ? <PageMeta url={node.url} /> : null}
+        {node.kind !== "page" ? (
+          <p className="text-sm text-muted">
+            {seedFamily
+              ? "Pick an issue on an edge to inspect proof."
+              : "No crawled issues for this company yet."}
+          </p>
+        ) : null}
+        {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
       </aside>
     );
   }
@@ -356,20 +344,6 @@ export function Inspector() {
         </p>
       </section>
 
-      <section>
-        <div className="flex items-center justify-between">
-          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">
-            MCP short
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => void copyShort()}>
-            {copied ? <Check /> : <Copy />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-        </div>
-        <pre className="mt-1 overflow-x-auto rounded-lg bg-bg p-3 font-mono text-[11px] leading-relaxed text-muted">
-          {short}
-        </pre>
-      </section>
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">

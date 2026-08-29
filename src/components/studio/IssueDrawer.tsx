@@ -18,6 +18,8 @@ import {
   type IssueListRow,
 } from "@/lib/studio/issue-detail";
 import { issueFitsFamily } from "@/lib/org/catalog";
+import { isHiddenUiCode } from "@/lib/studio/query";
+import { PageMeta } from "@/components/studio/PageMeta";
 import { useStudio } from "@/store/studio";
 
 export function IssueDrawer() {
@@ -25,6 +27,7 @@ export function IssueDrawer() {
   const close = useStudio((s) => s.closeIssueDrawer);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
+  const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
@@ -60,7 +63,7 @@ export function IssueDrawer() {
   const rawIssue =
     RULES.find((i) => i.id === selectedIssueId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ??
     null;
-  const issue = rawIssue && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
+  const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
   const finding =
     findings.find((f) => f.id === selectedFindingId) ??
     (issue ? findings.find((f) => f.url === issue.urls[0] || f.code === issue.code) : undefined) ??
@@ -71,24 +74,16 @@ export function IssueDrawer() {
       formatIssueDetail({
         issue,
         finding,
+        pageUrl: drawerPageUrl,
         proof: issue ? ISSUE_PROOFS[issue.code] : finding ? ISSUE_PROOFS[finding.code] : undefined,
         crawlAt: crawl.crawledAt,
         history,
         org: graphOrg,
       }),
-    [issue, finding, history, graphOrg],
+    [issue, finding, history, graphOrg, drawerPageUrl],
   );
 
   if (!ready || !open) return null;
-
-  const verdictTone =
-    view?.gate.verdict === "BLOCK" ? "danger" : view?.gate.verdict === "ALERT" ? "warn" : "ok";
-  const verdictHint =
-    view?.gate.verdict === "BLOCK"
-      ? "Would block going live"
-      : view?.gate.verdict === "ALERT"
-        ? "Alert · would not block going live"
-        : "Would not block going live";
 
   const panel = (
     <aside
@@ -98,27 +93,16 @@ export function IssueDrawer() {
     >
       <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">View the issue</p>
-          <h2 id={titleId} className="mt-1 font-display text-2xl leading-tight text-fg text-balance">
-            {view?.what || "Issue"}
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">Live gate</p>
+          <h2
+            id={titleId}
+            className={`mt-1 font-display text-2xl leading-tight text-balance ${
+              view?.gate.blocks ? "text-danger" : "text-ok"
+            }`}
+          >
+            {view?.gate.label ?? "Doesn't block live"}
           </h2>
-          {view ? (
-            <div
-              className={`mt-3 rounded-md px-2.5 py-2 ${
-                view.gate.verdict === "BLOCK"
-                  ? "bg-danger/15 text-danger"
-                  : view.gate.verdict === "ALERT"
-                    ? "bg-warn/15 text-warn"
-                    : "bg-ok/15 text-ok"
-              }`}
-            >
-              <p className="text-[10px] font-medium uppercase tracking-wide">Would this block going live?</p>
-              <p className="mt-0.5 text-lg font-medium leading-tight">{view.gate.verdict}</p>
-              <p className="mt-0.5 text-xs opacity-90">{verdictHint}</p>
-            </div>
-          ) : null}
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {view?.gate ? <Badge tone={verdictTone}>{view.gate.label}</Badge> : null}
             {view?.code ? <Badge>{view.code}</Badge> : null}
             {view?.layer ? <Badge>{view.layer}</Badge> : null}
             {view?.impact ? (
@@ -142,52 +126,36 @@ export function IssueDrawer() {
 }
 
 function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatIssueDetail>> }) {
-  const pages = view.pages.length ? view.pages : view.page.url ? [view.page] : [];
+  const page = view.page.url ? view.page : null;
+  const extra = view.pages.filter((p) => p.url && p.url !== view.page.url);
   return (
     <div className="flex flex-col gap-6">
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Page</h3>
-        {pages.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No live URL</p>
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {pages.map((p) => (
-              <li key={p.url} className="rounded-lg bg-raised p-3">
-                {p.url ? (
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex max-w-full items-center gap-1.5 font-mono text-sm text-fg hover:underline"
-                  >
-                    <span className="truncate">{p.path}</span>
-                    <ExternalLink className="size-3.5 shrink-0 text-muted" />
-                  </a>
-                ) : (
-                  <p className="font-mono text-sm text-muted">{p.path}</p>
-                )}
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {p.brandLabel ? (
-                    <Badge tone={p.brand === "fdr" ? "fdr" : p.brand === "achieve" ? "achieve" : "neutral"}>
-                      {p.brandLabel}
-                    </Badge>
-                  ) : null}
-                  {p.productLabel ? <Badge>{p.productLabel}</Badge> : null}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Section</h3>
-        <p className="mt-1 text-base leading-relaxed text-fg">{view.section || PAGE_LEVEL}</p>
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Fix</h3>
+        <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.fix || "—"}</p>
       </section>
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">What</h3>
         <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.what}</p>
+        {page ? (
+          <p className="mt-2 truncate text-xs text-muted">
+            <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+            <a href={page.url} target="_blank" rel="noreferrer" className="font-mono text-fg hover:underline">
+              {page.path}
+            </a>
+            <span className="text-subtle"> · </span>
+            <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+            <span>{view.section || PAGE_LEVEL}</span>
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-muted">No live URL</p>
+        )}
+        {extra.length ? (
+          <p className="mt-1 text-xs text-subtle">
+            {view.code} also hits {extra.length} other page{extra.length === 1 ? "" : "s"}
+          </p>
+        ) : null}
       </section>
 
       <section>
@@ -195,10 +163,7 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
         <p className="mt-1 text-base leading-relaxed text-muted text-pretty">{view.why || "—"}</p>
       </section>
 
-      <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Fix</h3>
-        <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.fix || "—"}</p>
-      </section>
+      <PageMeta url={view.page.url} variant="drawer" />
 
       {hasEvidence(view) ? (
         <section className="rounded-lg bg-raised p-3">
@@ -331,38 +296,17 @@ export function IssueRow({
       {leading}
       <div className="min-w-0 flex-1">
         <p className="text-base font-medium leading-snug text-fg text-pretty">{row.what}</p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Page</span>
-          <span className="inline-block max-w-full truncate rounded-md bg-accent/12 px-2 py-0.5 font-mono text-xs text-fg shadow-[var(--shadow-border)]">
-            {row.pagePath}
-          </span>
-          <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Section</span>
-          <span className="text-[11px] text-muted">{row.section || PAGE_LEVEL}</span>
-          {row.brandLabel ? (
-            <Badge tone={row.brand === "fdr" ? "fdr" : row.brand === "achieve" ? "achieve" : "neutral"}>
-              {row.brandLabel}
-            </Badge>
-          ) : null}
-        </div>
-        <p className="mt-0.5 font-mono text-[10px] text-subtle">
-          {row.code}
-          {row.layer ? ` · ${row.layer}` : ""}
-          {row.productLabel ? ` · ${row.productLabel}` : ""}
+        <p className="mt-1.5 truncate text-xs text-muted">
+          <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+          <span className="font-mono text-fg">{row.pagePath}</span>
+          <span className="text-subtle"> · </span>
+          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+          <span>{row.section || PAGE_LEVEL}</span>
         </p>
       </div>
       {row.impact ? (
         <Badge tone={row.impact === "critical" ? "danger" : row.impact === "high" ? "warn" : "neutral"}>{row.impact}</Badge>
       ) : null}
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpen();
-        }}
-      >
-        View issue
-      </Button>
     </div>
   );
 }

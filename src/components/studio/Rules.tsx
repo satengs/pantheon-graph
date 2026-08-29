@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { familyContextFrom, useStudio } from "@/store/studio";
 import { deleteRule, listStudio, upsertRule } from "@/lib/server/studio-db";
-import { filterIssues } from "@/lib/studio/query";
+import { filterIssues, isHiddenUiCode } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import type { RuleConflict } from "@/lib/studio/rule-conflicts";
@@ -73,6 +73,7 @@ export function Rules() {
   }, []);
 
   const visible = rules.filter((r) => {
+    if (isHiddenUiCode(r.code)) return false;
     if (attachedRuleCodes.length && !attachedRuleCodes.includes(r.code) && r.id !== editId) return false;
     if (
       !seedFamily &&
