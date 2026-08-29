@@ -1,5 +1,4 @@
 /** Technical checks that apply to every origin — not a brand fight. */
-/** Technical checks that apply to every origin — not a brand fight. */
 export const SYSTEM_RULE_CODES = [
   "S04",
   "S07",

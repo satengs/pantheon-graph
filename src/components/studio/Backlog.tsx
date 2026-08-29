@@ -40,7 +40,8 @@ export function Backlog() {
   const setSort = useStudio((s) => s.setSort);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("https://www.freedomdebtrelief.com/debt-relief/");
+  const familyHome = graphOrg?.brands[0]?.url || graphOrg?.parent?.url || "https://www.freedomdebtrelief.com/debt-relief/";
+  const [url, setUrl] = useState(familyHome);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 

@@ -4,6 +4,7 @@ import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import { buildGraph } from "@/lib/graph/model";
 import { nodeLabel, TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import { useStudio, type GraphLayout } from "@/store/studio";
+import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 
 type Pt = { x: number; y: number };
@@ -171,6 +172,7 @@ export function GraphCanvas() {
   const popGraphFocus = useStudio((s) => s.popGraphFocus);
   const includeParent = useStudio((s) => s.includeParent);
   const setIncludeParent = useStudio((s) => s.setIncludeParent);
+  const parentId = useStudio((s) => s.parentId);
   const graphOrg = useStudio((s) => s.graphOrg);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -343,7 +345,11 @@ export function GraphCanvas() {
           <input
             type="checkbox"
             checked={includeParent}
-            onChange={(e) => setIncludeParent(e.target.checked)}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setIncludeParent(on);
+              if (parentId) void persistIncludeParent({ data: { parentId, include: on } });
+            }}
             className="size-3.5 accent-[var(--color-accent)]"
           />
           Parent

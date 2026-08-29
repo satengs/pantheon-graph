@@ -154,7 +154,7 @@ export function Rules() {
             setChecking(true);
             try {
               const v = await runValidation({
-                data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 },
+                data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12, parentId: parentId || undefined },
               });
               const n = res.conflicts?.length ?? 0;
               setCheckMsg(
@@ -252,7 +252,7 @@ export function Rules() {
             onClick={() => {
               setChecking(true);
               setCheckMsg(null);
-              void runValidation({ data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12 } })
+              void runValidation({ data: { scope: "all", brand, product: product === "all" ? "all" : product, live: false, limit: 12, parentId: parentId || undefined } })
                 .then((res) => setCheckMsg(`${res.pages} pages · ${res.fail} issues · last crawl + snapshots`))
                 .catch((e) => setErr(e instanceof Error ? e.message : "Validation failed"))
                 .finally(() => setChecking(false));

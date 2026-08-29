@@ -133,7 +133,7 @@ export function Studio() {
     setCrawlMsg(null);
     try {
       const res = await runValidation({
-        data: { scope: brand === "all" ? "all" : brand, brand, product, live: false, limit: 12 },
+        data: { scope: brand === "all" ? "all" : brand, brand, product, live: false, limit: 12, parentId: parentId || undefined },
       });
       setCrawlMsg(`Checked ${res.pages} crawled pages · ${res.fail} issues · no recrawl`);
       setTab("validation");

@@ -74,7 +74,15 @@ export function ValidationTable() {
   });
 
   if (!seedFamily) {
-    return <EmptyFamilyCrawl title={`No validation crawl for ${graphOrg?.parent?.name ?? "this family"}`} />;
+    return (
+      <div className="min-h-0 flex-1 overflow-auto">
+        <ValidatePanel />
+        <EmptyFamilyCrawl
+          title={`No seed crawl for ${graphOrg?.parent?.name ?? "this family"}`}
+          detail="Run checks on the brand homepages. Findings show here and on Issues. FDR × Achieve seed rows stay on Pantheon."
+        />
+      </div>
+    );
   }
 
   return (

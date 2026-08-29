@@ -309,15 +309,22 @@ export function Companies() {
             </Button>
             <Button
               size="sm"
-              disabled={busy === "check"}
+              disabled={busy === "check" || !parent}
               onClick={() => {
+                if (!parent) return;
                 setBusy("check");
                 void runValidation({
-                  data: { scope: "common", brand: brandFilter === "all" ? "all" : brandFilter, live: false, limit: 12 },
+                  data: {
+                    scope: seedFamily ? "common" : "system",
+                    brand: brandFilter === "all" ? "all" : brandFilter,
+                    live: false,
+                    limit: 12,
+                    parentId: parent.id,
+                  },
                 })
                   .then((res) => {
                     setMsg(`Rechecked ${res.pages} pages · ${res.fail} issues`);
-                    setTab("validation");
+                    setTab(seedFamily ? "validation" : "issues");
                   })
                   .catch((er) => setErr(er instanceof Error ? er.message : "Check failed"))
                   .finally(() => setBusy(null));

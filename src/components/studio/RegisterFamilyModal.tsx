@@ -2,9 +2,9 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Globe, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { addBrand, attachSystemRules, createParent, listOrgs, probeWebsite } from "@/lib/server/orgs";
+import { listOrgs, probeWebsite, registerFamily } from "@/lib/server/orgs";
 import type { OrgProbe } from "@/lib/org/catalog";
-import type { GraphOrg } from "@/lib/graph/model";
+import { runValidation } from "@/lib/server/validate-run";
 import {
   BRAND_MAX,
   firstErrorStep,
@@ -48,9 +48,6 @@ export function RegisterFamilyModal() {
   const open = useStudio((s) => s.registerOpen);
   const setOpen = useStudio((s) => s.setRegisterOpen);
   const setTab = useStudio((s) => s.setTab);
-  const setGraphOrg = useStudio((s) => s.setGraphOrg);
-  const setParentSlug = useStudio((s) => s.setParentSlug);
-  const setBrand = useStudio((s) => s.setBrand);
   const bumpFamily = useStudio((s) => s.bumpFamily);
   const applyFamilyContext = useStudio((s) => s.applyFamilyContext);
   const titleId = useId();
@@ -124,25 +121,6 @@ export function RegisterFamilyModal() {
 
   function touch(key: string) {
     setTouched((t) => (t[key] ? t : { ...t, [key]: true }));
-  }
-
-  function applyGraph(d: {
-    parent: { slug: string; name: string; website: string; includeInGraph: boolean } | null;
-    brands: Array<{ slug: string; name: string; website: string; products: string[]; probe: OrgProbe }>;
-  }) {
-    const org: GraphOrg = {
-      parent: d.parent ? { slug: d.parent.slug, name: d.parent.name, url: d.parent.website || undefined } : null,
-      brands: d.brands.map((b) => ({
-        slug: b.slug,
-        name: b.name,
-        url: b.website,
-        products: b.products,
-        pageCount: b.probe.pageCount,
-      })),
-    };
-    setGraphOrg(org);
-    if (d.parent) setParentSlug(d.parent.slug);
-    setBrand("all");
   }
 
   async function retrieveParent() {
@@ -227,30 +205,40 @@ export function RegisterFamilyModal() {
     setErr(null);
     try {
       const parentSite = parseWebsite(parentUrl);
-      let family = await createParent({
+      const brands = filledBrands.flatMap((b) => {
+        const site = parseWebsite(b.website);
+        if (!site.ok || site.empty) return [];
+        return [
+          {
+            name: b.name.trim(),
+            website: site.url,
+            retrieve: !b.probe?.ok,
+            products: b.probe?.products,
+            pageCount: b.probe?.pageCount,
+          },
+        ];
+      });
+      const done = await registerFamily({
         data: {
           name: parentName.trim(),
           website: parentSite.ok && !parentSite.empty ? parentSite.url : undefined,
           includeInGraph: true,
+          brands,
         },
       });
-      const parentId = family.parent?.id;
-      if (!parentId) throw new Error("Parent was not created");
-      for (const b of filledBrands) {
-        const site = parseWebsite(b.website);
-        if (!site.ok || site.empty) continue;
-        family = await addBrand({
-          data: {
-            parentId,
-            name: b.name.trim(),
-            website: site.url,
-            retrieve: true,
-          },
-        });
-      }
-      const done = await attachSystemRules({ data: { parentId } });
       applyFamilyContext(familyContextFrom(done));
       bumpFamily();
+      const parentId = done.parent?.id;
+      setBusy("check");
+      if (parentId) {
+        try {
+          await runValidation({
+            data: { scope: "system", brand: "all", product: "all", live: false, limit: 12, parentId },
+          });
+        } catch {
+          /* family exists even if the first recheck cannot fetch */
+        }
+      }
       setOpen(false);
       setTab("companies");
     } catch (e) {
@@ -504,7 +492,7 @@ export function RegisterFamilyModal() {
             {step === 3 ? (
               <div className="grid gap-3 text-sm">
                 <p className="text-muted">
-                  This family gets the default system rules (schema, canonical, JSON-LD, article semantics).
+                  This family gets the default system rules (schema, canonical, JSON-LD, article semantics), then we recheck the brand homepages.
                 </p>
                 <div className="rounded-lg bg-bg p-3">
                   <p className="text-[10px] uppercase tracking-wide text-subtle">Parent</p>
@@ -538,7 +526,7 @@ export function RegisterFamilyModal() {
               </Button>
             ) : (
               <Button type="submit" disabled={Boolean(busy)}>
-                {busy === "create" ? "Creating…" : "Create family"}
+                {busy === "create" ? "Creating…" : busy === "check" ? "Checking…" : "Create family"}
               </Button>
             )}
           </div>

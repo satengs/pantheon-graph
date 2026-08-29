@@ -237,7 +237,11 @@ export const useStudio = create<StudioState>((set, get) => ({
   pushGraphFocus: (id) =>
     set((s) => (s.graphFocusStack.includes(id) ? s : { graphFocusStack: [...s.graphFocusStack, id] })),
   popGraphFocus: () => set((s) => ({ graphFocusStack: s.graphFocusStack.slice(0, -1) })),
-  setIncludeParent: (includeParent) => set({ includeParent }),
+  setIncludeParent: (includeParent) =>
+    set((s) => ({
+      includeParent,
+      parents: s.parents.map((p) => (p.id === s.parentId ? { ...p, includeInGraph: includeParent } : p)),
+    })),
   setParentSlug: (parentSlug) => set({ parentSlug }),
   setGraphOrg: (graphOrg) => set({ graphOrg }),
   setRegisterOpen: (registerOpen) => set({ registerOpen }),

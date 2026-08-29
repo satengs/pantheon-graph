@@ -42,6 +42,7 @@ export function Explore() {
   const setMaximized = useStudio((s) => s.setMaximized);
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
+  const parentId = useStudio((s) => s.parentId);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [kind, setKind] = useState<"all" | "conflict" | "suggests" | "sameAs">("all");
   const [copied, setCopied] = useState<"md" | "json" | null>(null);
@@ -99,7 +100,7 @@ export function Explore() {
     setNote(null);
     try {
       const res = await runValidation({
-        data: { scope: brand === "all" ? "all" : brand, brand, live: false, limit: 16 },
+        data: { scope: brand === "all" ? "all" : brand, brand, live: false, limit: 16, parentId: parentId || undefined },
       });
       setNote(`Analysed last crawl · ${res.pages} pages · ${res.fail} hits`);
     } catch (err) {

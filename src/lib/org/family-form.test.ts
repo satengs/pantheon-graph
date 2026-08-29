@@ -8,6 +8,9 @@ import {
   validateFamilyDraft,
   validateOrgName,
   validateWebsiteField,
+  nameTaken,
+  hostTaken,
+  firstFamilyError,
 } from "./family-form.ts";
 
 test("parseWebsite accepts empty, host-only, and https", () => {
@@ -106,4 +109,19 @@ test("valid family passes", () => {
   assert.equal(hasFamilyErrors(e), false);
   assert.equal(usedBrand({ key: "x", name: "Harbor", website: "" }), true);
   assert.equal(validateWebsiteField(""), "Paste a website first");
+});
+
+test("nameTaken and hostTaken flag studio collisions", () => {
+  const existing = [
+    { name: "Pantheon", host: "", kind: "parent" as const },
+    { name: "Achieve", host: "achieve.com", kind: "brand" as const },
+  ];
+  assert.equal(nameTaken("Pantheon", existing), "A parent with this name already exists");
+  assert.equal(hostTaken("https://www.achieve.com/heloc", existing), "This website is already in the studio");
+  assert.equal(nameTaken("Northstar", existing), undefined);
+});
+
+test("firstFamilyError prefers parent then brand", () => {
+  assert.equal(firstFamilyError({ parentName: "Name the parent company", brands: {} }), "Name the parent company");
+  assert.equal(firstFamilyError({ brands: { a: { website: "Add this brand's website" } } }), "Add this brand's website");
 });
