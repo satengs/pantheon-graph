@@ -7,13 +7,15 @@ import { buildGraph, mcpShort, toneRatio } from "@/lib/graph/model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
-import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
+import { BRAND_LABEL, productLabel } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
 import { listStudio } from "@/lib/server/studio-db";
 import { analyzePage } from "@/lib/server/analyze-page";
 import { ISSUE_PROOFS } from "@/data/issue-proofs";
 import { jsonLdDiff } from "@/lib/html/json-diff";
 import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone, type StateRow } from "@/data/states";
+import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -36,25 +38,49 @@ export function Inspector() {
   const [analyzeBusy, setAnalyzeBusy] = useState(false);
 
   const graphFocusStack = useStudio((s) => s.graphFocusStack);
+  const includeParent = useStudio((s) => s.includeParent);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
 
   const graph = useMemo(
-    () => buildGraph({ explode, brand, product, layer, expandIds: graphFocusStack }),
-    [explode, brand, product, layer, graphFocusStack],
+    () =>
+      buildGraph({
+        explode,
+        brand,
+        product,
+        layer,
+        expandIds: graphFocusStack,
+        includeParent,
+        org: graphOrg ?? undefined,
+        ruleCodes: attachedRuleCodes,
+      }),
+    [explode, brand, product, layer, graphFocusStack, includeParent, graphOrg, attachedRuleCodes],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
-  const issue =
-    RULES.find((i) => i.id === (hoveredIssueId ?? node?.issueId ?? selectedIssueId)) ?? RULES[0]!;
-  const short = node ? mcpShort(node) : mcpShort({
-    id: `issue:${issue.id}`,
-    label: `${issue.code} ${issue.title}`,
-    kind: "issue",
-    issueId: issue.id,
-  });
-  const toneText = `${issue.title} ${issue.reason} ${issue.fix}`;
-  const toneBrand = issue.domain === "achieve" ? "achieve" : "fdr";
+  const wantedId =
+    hoveredIssueId ??
+    (node?.kind === "issue" ? node.issueId : undefined) ??
+    (!node || node.kind === "issue" ? selectedIssueId : null);
+  const rawIssue = RULES.find((i) => i.id === wantedId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ?? null;
+  const issue = rawIssue && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
+  const familyFindings = findings.filter((f) => (seedFamily ? true : urlInFamily(f.url, graphOrg)));
+  const short = node
+    ? mcpShort(node)
+    : issue
+      ? mcpShort({
+          id: `issue:${issue.id}`,
+          label: `${issue.code} ${issue.title}`,
+          kind: "issue",
+          issueId: issue.id,
+        })
+      : "";
+  const toneText = issue ? `${issue.title} ${issue.reason} ${issue.fix}` : "";
+  const toneBrand = issue?.domain === "achieve" ? "achieve" : "fdr";
   const tone = toneRatio(toneText, toneBrand);
-  const finding = findings.find((f) => f.id === selectedFindingId) ?? findings.find((f) => f.url === issue.urls[0]);
-  const proofView = ISSUE_PROOFS[issue.code];
+  const finding = familyFindings.find((f) => f.id === selectedFindingId) ?? (issue ? familyFindings.find((f) => f.url === issue.urls[0]) : undefined);
+  const proofView = issue ? ISSUE_PROOFS[issue.code] : undefined;
 
   useEffect(() => {
     void listStudio()
@@ -69,7 +95,7 @@ export function Inspector() {
   }
 
   async function fetchPsi() {
-    const url = node?.url ?? issue.urls[0];
+    const url = node?.url ?? issue?.urls[0];
     if (!url) return;
     setPsiBusy(true);
     try {
@@ -85,6 +111,40 @@ export function Inspector() {
   const row = selectedState ? stateByCode(selectedState) : undefined;
   if (row) return <StateInspector row={row} />;
   if (tab === "states") return <StatesOverview />;
+  if (node && node.kind !== "issue" && !issue) {
+    return (
+      <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
+        <p className="text-[10px] uppercase tracking-wide text-subtle">{node.kind}</p>
+        <h2 className="font-display text-xl text-fg">{node.label}</h2>
+        {node.url ? (
+          <a href={node.url} target="_blank" rel="noreferrer" className="font-mono text-xs text-muted hover:text-fg">
+            {node.url}
+          </a>
+        ) : null}
+        {node.count != null ? <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p> : null}
+        <p className="text-sm text-muted">
+          {seedFamily
+            ? "Pick an issue on an edge to inspect proof."
+            : "No crawled issues for this company yet."}
+        </p>
+        {!seedFamily ? <EmptyFamilyCrawl /> : null}
+      </aside>
+    );
+  }
+  if (!issue) {
+    return (
+      <aside className="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto">
+        <EmptyFamilyCrawl
+          title={seedFamily ? "Nothing selected" : undefined}
+          detail={
+            seedFamily
+              ? "Pick an issue from the graph, Issues, or Validation. This panel follows the family selected at the top."
+              : undefined
+          }
+        />
+      </aside>
+    );
+  }
 
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
@@ -104,7 +164,7 @@ export function Inspector() {
           >
             {issue.domain}
           </Badge>
-          <Badge>{issue.product === "all" ? "all products" : PRODUCT_LABEL[issue.product]}</Badge>
+          <Badge>{issue.product === "all" ? "all products" : productLabel(issue.product)}</Badge>
           <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
             {issue.impact}
           </Badge>
@@ -317,22 +377,26 @@ export function Inspector() {
       </section>
 
       <p className="text-[10px] text-subtle">
-        Graph version {crawl.crawledAt} · {crawl.counts.fdr} FDR · {crawl.counts.achieve} Achieve
+        {seedFamily
+          ? `Graph version ${crawl.crawledAt} · ${crawl.counts.fdr} FDR · ${crawl.counts.achieve} Achieve`
+          : `${graphOrg?.parent?.name ?? "Family"} · issues from this company's sites only`}
       </p>
-      <div className="flex flex-wrap gap-1">
-        {RULES.map((i) => (
-          <button
-            key={i.id}
-            type="button"
-            onClick={() => selectIssue(i.id)}
-            className={`h-7 rounded-sm px-2 font-mono text-[10px] ${
-              issue.id === i.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"
-            }`}
-          >
-            {i.code}
-          </button>
-        ))}
-      </div>
+      {seedFamily ? (
+        <div className="flex flex-wrap gap-1">
+          {RULES.filter((i) => attachedRuleCodes.includes(i.code) && issueFitsFamily(i, graphOrg, parentSlug)).map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              onClick={() => selectIssue(i.id)}
+              className={`h-7 rounded-sm px-2 font-mono text-[10px] ${
+                issue.id === i.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"
+              }`}
+            >
+              {i.code}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </aside>
   );
 }

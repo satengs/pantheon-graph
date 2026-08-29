@@ -11,6 +11,9 @@ import {
 } from "@/data/build-metrics";
 import { Badge } from "@/components/ui/badge";
 import { jaccard } from "@/lib/graph/model";
+import { useStudio } from "@/store/studio";
+import { isSeedFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 const PHASE_TONE: Record<string, string> = {
   client: "bg-accent",
@@ -19,6 +22,11 @@ const PHASE_TONE: Record<string, string> = {
 };
 
 export function Gate() {
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  if (!isSeedFamily(graphOrg, parentSlug)) {
+    return <EmptyFamilyCrawl title={`No gate data for ${graphOrg?.parent?.name ?? "this family"}`} />;
+  }
   const openCritical = RULES.filter((i) => i.status === "open" && i.impact === "critical");
   const openHigh = RULES.filter((i) => i.status === "open" && i.impact === "high");
   const gloss = crawl.glossaryNear.map((n) => ({

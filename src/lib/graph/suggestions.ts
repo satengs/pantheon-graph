@@ -2,7 +2,7 @@ import { RULES } from "@/data/rules-seed";
 import { ISSUE_PROOFS } from "@/data/issue-proofs";
 import { ISSUE_ALIAS, edgeTag } from "@/lib/graph/aliases";
 import type { GraphEdge } from "@/lib/graph/types";
-import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
+import { brandLabel, PRODUCT_LABEL } from "@/lib/graph/types";
 
 export const TREE_SUGGESTIONS: Array<{
   code: string;
@@ -38,13 +38,14 @@ export const TREE_SUGGESTIONS: Array<{
 ];
 
 export function nodeLabel(id: string): string {
+  if (id.startsWith("parent:")) return brandLabel(id.slice(7));
   if (id.startsWith("brand:")) {
     const b = id.slice(6);
-    return b === "fdr" || b === "achieve" ? BRAND_LABEL[b] : id;
+    return brandLabel(b);
   }
   if (id.startsWith("hub:")) {
     const parts = id.split(":");
-    const brand = parts[1] === "fdr" || parts[1] === "achieve" ? BRAND_LABEL[parts[1]] : parts[1];
+    const brand = parts[1] ? brandLabel(parts[1]) : parts[1];
     const product = parts[2] && parts[2] in PRODUCT_LABEL ? PRODUCT_LABEL[parts[2] as keyof typeof PRODUCT_LABEL] : parts[2];
     return `${brand} · ${product}`;
   }

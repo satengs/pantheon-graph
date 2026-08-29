@@ -10,12 +10,14 @@ import {
   Search,
   Compass,
   Sparkles,
+  Building2,
+  Plus,
 } from "lucide-react";
 import { crawl } from "@/data/crawl";
 import { RULES } from "@/data/rules-seed";
-import { PRODUCT_LABEL, type ProductId } from "@/lib/graph/types";
 import { recrawl } from "@/lib/server/ops";
 import { runValidation } from "@/lib/server/validate-run";
+import { listOrgs, retrieveBrand } from "@/lib/server/orgs";
 import { Button } from "@/components/ui/button";
 import { GraphCanvas } from "@/components/studio/GraphCanvas";
 import { Explore } from "@/components/studio/Explore";
@@ -27,14 +29,19 @@ import { Rules } from "@/components/studio/Rules";
 import { ConfigPanel } from "@/components/studio/ConfigPanel";
 import { Gate } from "@/components/studio/Gate";
 import { StatesPanel } from "@/components/studio/StatesPanel";
+import { Companies } from "@/components/studio/Companies";
 import { HSplit, VSplit } from "@/components/studio/SplitPane";
-import { useStudio, type StudioTab } from "@/store/studio";
+import { familyContextFrom, useStudio, type StudioTab } from "@/store/studio";
+import { familyPageCount, isSeedFamily, issueFitsFamily, productsForFamily } from "@/lib/org/catalog";
+import { productLabel } from "@/lib/graph/types";
 import { UserButton } from "@/lib/auth/gates";
 import { filterIssues, filterStates } from "@/lib/studio/query";
 import { statesData } from "@/data/states";
 import { loadNote, saveNote } from "@/lib/server/studio-db";
+import { RegisterFamilyModal } from "@/components/studio/RegisterFamilyModal";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
+  { id: "companies", label: "Companies", icon: Building2, hint: "Parent company, sub-brands, retrieve from URL, coverage." },
   { id: "graph", label: "Graph", icon: GitBranch, hint: "Brands and products. Issues live on the edges." },
   { id: "explore", label: "Explore", icon: Compass, hint: "Tree suggestions as a table. Analyse and export." },
   { id: "recommend", label: "Recommend", icon: Sparkles, hint: "Ideal graph, FDR vs Achieve, SERP and AI payoff." },
@@ -44,17 +51,6 @@ const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string
   { id: "issues", label: "Issues", icon: ListChecks, hint: "Website validation points to fix." },
   { id: "gate", label: "Gate", icon: Shield, hint: "Pass or fail before publish." },
   { id: "config", label: "Config", icon: Settings2, hint: "Where data lives and brand JSON." },
-];
-
-const PRODUCTS: Array<"all" | ProductId> = [
-  "all",
-  "debt-relief",
-  "settlement",
-  "heloc",
-  "hel",
-  "personal-loan",
-  "consolidation",
-  "glossary",
 ];
 
 export function Studio() {
@@ -75,13 +71,36 @@ export function Studio() {
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const setRegisterOpen = useStudio((s) => s.setRegisterOpen);
+  const applyFamilyContext = useStudio((s) => s.applyFamilyContext);
+  const selectParent = useStudio((s) => s.selectParent);
+  const parents = useStudio((s) => s.parents);
+  const parentId = useStudio((s) => s.parentId);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const allBrands = useStudio((s) => s.allBrands);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [crawlMsg, setCrawlMsg] = useState<string | null>(null);
   const [crawling, setCrawling] = useState(false);
   const [checking, setChecking] = useState(false);
   const [draft, setDraft] = useState("");
-  const openCount = RULES.filter((i) => i.status === "open").length;
-  const issueHits = filterIssues(RULES, { brand, product, layer, impact, query }).length;
-  const stateHits = filterStates(statesData.states, { brand, product, query }).length;
+  const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).filter((i) =>
+    issueFitsFamily(i, graphOrg, parentSlug),
+  );
+  const openCount = visibleIssues.filter((i) => i.status === "open").length;
+  const issueHits = visibleIssues.length;
+  const stateHits = seedFamily ? filterStates(statesData.states, { brand, product, query }).length : 0;
+  const familyPages = familyPageCount(graphOrg);
+  const productOptions = productsForFamily(graphOrg?.brands ?? [], brand);
+
+  useEffect(() => {
+    void listOrgs()
+      .then((d) => applyFamilyContext(familyContextFrom(d)))
+      .catch(() => {
+        /* seed graph still works */
+      });
+  }, [applyFamilyContext]);
 
   useEffect(() => {
     const key = selectedIssueId ?? tab;
@@ -94,10 +113,14 @@ export function Studio() {
     setCrawling(true);
     setCrawlMsg(null);
     try {
-      const res = await recrawl();
-      setCrawlMsg(
-        `Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve}`,
-      );
+      if (seedFamily) {
+        const res = await recrawl();
+        setCrawlMsg(`Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve}`);
+      } else {
+        const brands = allBrands.filter((b) => b.parentId === parentId && b.website);
+        for (const b of brands) await retrieveBrand({ data: { id: b.id } });
+        setCrawlMsg(`Retrieved ${brands.length} ${graphOrg?.parent?.name ?? "family"} homepage${brands.length === 1 ? "" : "s"}`);
+      }
     } catch (err) {
       setCrawlMsg(err instanceof Error ? err.message : "Crawl failed");
     } finally {
@@ -123,6 +146,7 @@ export function Studio() {
 
   const main = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {tab === "companies" ? <Companies /> : null}
       {tab === "graph" ? (
         <div className="min-h-0 flex-1 p-3">
           <GraphCanvas />
@@ -142,11 +166,86 @@ export function Studio() {
   return (
     <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-bg text-fg">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-border bg-bg px-4 py-3">
-        <div className="mr-2">
-          <p className="font-display text-2xl leading-none tracking-tight">Origin</p>
+        <div className="mr-1">
+          <p className="font-display text-2xl leading-none tracking-tight">
+            {graphOrg?.parent?.name ?? "Pantheon"}
+          </p>
           <p className="text-[10px] uppercase tracking-[0.2em] text-subtle">Content Graph Studio</p>
         </div>
-        <nav className="flex flex-wrap rounded-lg bg-surface p-1" aria-label="Primary">
+        <label className="flex items-center gap-2 text-xs text-muted" title="Holding company. Every tab and the inspector follow this family.">
+          <span>Family</span>
+          <select
+            value={parentId}
+            onChange={(e) => selectParent(e.target.value)}
+            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+          >
+            {(parents.length ? parents : [{ id: parentId, name: graphOrg?.parent?.name ?? "Pantheon" }]).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted" title="Sub-company under the selected parent.">
+          <span>Brand</span>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value as typeof brand)}
+            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+          >
+            <option value="all">All brands</option>
+            {(graphOrg?.brands ?? []).map((b) => (
+              <option key={b.slug} value={b.slug}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted" title="Product family on the site.">
+          <span>Product</span>
+          <select
+            value={product}
+            onChange={(e) => setProduct(e.target.value as typeof product)}
+            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+          >
+            {productOptions.length === 0 ? (
+              <option value="all">All products</option>
+            ) : (
+              <>
+                <option value="all">All products</option>
+                {productOptions.map((p) => (
+                  <option key={p} value={p}>
+                    {productLabel(p)}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+        </label>
+        <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted">
+          {seedFamily ? (
+            <>
+              <span className="font-mono tabular-nums">FDR {crawl.counts.fdr.toLocaleString()}</span>
+              <span className="text-subtle">·</span>
+              <span className="font-mono tabular-nums">Achieve {crawl.counts.achieve.toLocaleString()}</span>
+            </>
+          ) : (
+            <span className="font-mono tabular-nums">
+              {graphOrg?.parent?.name ?? "Family"} {familyPages.toLocaleString()} pages
+            </span>
+          )}
+          <span className="text-subtle">·</span>
+          <span className="font-mono tabular-nums">{openCount} open</span>
+          <Button size="sm" onClick={() => setRegisterOpen(true)}>
+            <Plus className="size-3.5" />
+            New family
+          </Button>
+          <UserButton />
+        </div>
+      </header>
+
+      <nav className="flex flex-wrap border-b border-border bg-bg px-4 py-2" aria-label="Primary">
+        <div className="flex flex-wrap rounded-lg bg-surface p-1">
           {TABS.map((t) => {
             const Icon = t.icon;
             const on = tab === t.id;
@@ -165,44 +264,10 @@ export function Studio() {
               </button>
             );
           })}
-        </nav>
-        <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span className="font-mono tabular-nums">FDR {crawl.counts.fdr.toLocaleString()}</span>
-          <span className="text-subtle">·</span>
-          <span className="font-mono tabular-nums">Achieve {crawl.counts.achieve.toLocaleString()}</span>
-          <span className="text-subtle">·</span>
-          <span className="font-mono tabular-nums">{openCount} open</span>
-          <UserButton />
         </div>
-      </header>
+      </nav>
 
-      <div className="sticky top-[57px] z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
-        <label className="flex items-center gap-2 text-xs text-muted" title="Which origin to show. Updates every list and the graph.">
-          <span>Brand</span>
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value as typeof brand)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
-          >
-            <option value="all">All</option>
-            <option value="fdr">Freedom Debt Relief</option>
-            <option value="achieve">Achieve</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-xs text-muted" title="Product family on the site: debt relief, HELOC, glossary, and so on.">
-          <span>Product</span>
-          <select
-            value={product}
-            onChange={(e) => setProduct(e.target.value as typeof product)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
-          >
-            {PRODUCTS.map((p) => (
-              <option key={p} value={p}>
-                {p === "all" ? "All" : PRODUCT_LABEL[p]}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
         <label
           className="flex items-center gap-2 text-xs text-muted"
           title="L1 is this page: headings, schema, copy. L2 is across brands: same slug, same ask, corporate sameAs."
@@ -269,7 +334,8 @@ export function Studio() {
         </Button>
       </div>
       <p className="border-b border-border px-4 py-1.5 font-mono text-[11px] text-muted">
-        Filters live · {issueHits} rules · {stateHits} states
+        {graphOrg?.parent?.name ?? "Family"} · {issueHits} issues
+        {seedFamily ? ` · ${stateHits} states` : ""}
         {crawlMsg ? ` · ${crawlMsg}` : ""}
       </p>
 
@@ -283,7 +349,7 @@ export function Studio() {
               <div className="flex h-full flex-col bg-surface p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-[10px] uppercase tracking-wide text-subtle">
-                    Write · {selectedIssueId ?? tab}
+                    Write · {selectedIssueId ?? graphOrg?.parent?.name ?? tab}
                   </p>
                   <Button
                     size="sm"
@@ -307,6 +373,7 @@ export function Studio() {
         }
         right={<Inspector />}
       />
+      <RegisterFamilyModal />
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { crawl } from "@/data/crawl";
 import { statesData } from "@/data/states";
 import { analyzeHtml, SEED_HTML } from "@/lib/html/semantic";
 import { analyzeJsonLd } from "@/lib/html/jsonld";
+import { seedOrgs } from "@/lib/server/orgs";
+import { SYSTEM_RULE_CODES } from "@/lib/org/system-rules";
 import { detectRuleConflicts, type RuleRow } from "@/lib/studio/rule-conflicts";
 
 const ruleInput = z.object({
@@ -14,7 +16,7 @@ const ruleInput = z.object({
   code: z.string().min(1),
   title: z.string().min(1),
   layer: z.enum(["L1", "L2"]),
-  domain: z.enum(["fdr", "achieve", "both", "system"]),
+  domain: z.enum(["fdr", "achieve", "both", "system"]).or(z.string().min(1)),
   product: z.string().min(1),
   statement: z.string().min(1),
   checkJson: z.string().optional(),
@@ -74,6 +76,7 @@ async function seedCatalog(userId: string) {
 async function seedIfEmpty(userId: string) {
   const sql = await getSql();
   await seedCatalog(userId);
+  await seedOrgs(userId);
   const foundN = await sql<{ n: number }>`select count(*)::int as n from studio_findings where user_id = ${userId}`;
   if ((foundN[0]?.n ?? 0) === 0) {
     for (const [url, html] of Object.entries(SEED_HTML)) {
@@ -101,6 +104,12 @@ async function seedIfEmpty(userId: string) {
       insert into studio_tasks (id, user_id, rule_id, title, notes, status)
       values (${`${userId}:task:${r.id}`}, ${userId}, ${id}, ${r.title}, ${r.fix}, ${"open"})
       on conflict (id) do nothing
+    `;
+  }
+  for (const code of SYSTEM_RULE_CODES) {
+    await sql`
+      update studio_rules set domain = 'system'
+      where user_id = ${userId} and code = ${code} and domain <> 'system'
     `;
   }
   for (const brand of ["fdr", "achieve"] as const) {
@@ -264,7 +273,7 @@ export const deleteTask = createServerFn({ method: "POST" })
 
 export const saveConfig = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ brand: z.enum(["fdr", "achieve"]), json: z.string().min(2) }))
+  .validator(z.object({ brand: z.string().min(1), json: z.string().min(2) }))
   .handler(async ({ context, data }) => {
     JSON.parse(data.json);
     const sql = await getSql();

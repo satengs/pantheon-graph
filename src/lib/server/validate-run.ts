@@ -14,15 +14,14 @@ import { BRAND_HOST } from "@/lib/graph/types";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
 
-export type RuleScope = "all" | "common" | "fdr" | "achieve";
+export type RuleScope = string;
 
-const scopeSchema = z.enum(["all", "common", "fdr", "achieve"]);
+const scopeSchema = z.string().min(1);
 
 function ruleApplies(domain: string, scope: RuleScope): boolean {
   if (scope === "all") return true;
-  if (scope === "common") return domain === "both" || domain === "system";
-  if (scope === "fdr") return domain === "fdr" || domain === "both" || domain === "system";
-  return domain === "achieve" || domain === "both" || domain === "system";
+  if (scope === "common" || scope === "system") return domain === "both" || domain === "system";
+  return domain === scope || domain === "both" || domain === "system";
 }
 
 function pageUrl(page: CrawlPage): string {
@@ -178,7 +177,7 @@ export const runValidation = createServerFn({ method: "POST" })
   .validator(
     z.object({
       scope: scopeSchema.default("all"),
-      brand: z.enum(["all", "fdr", "achieve"]).default("all"),
+      brand: z.string().default("all"),
       product: z.string().default("all"),
       live: z.boolean().optional(),
       limit: z.number().int().min(1).max(24).optional(),
@@ -189,6 +188,19 @@ export const runValidation = createServerFn({ method: "POST" })
     const configs = await loadConfigs(userId);
     const { crawl } = await import("@/data/crawl");
     const extra = RULES.flatMap((r) => r.urls).slice(0, 12);
+    try {
+      const sql = await getSql();
+      const sites = await sql<{ website: string; slug: string }>`
+        select website, slug from studio_orgs
+        where user_id = ${userId} and kind = 'brand' and website <> ''
+      `;
+      for (const s of sites) {
+        if (data.brand !== "all" && data.brand !== s.slug) continue;
+        extra.push(s.website);
+      }
+    } catch {
+      /* orgs table may be empty on first boot */
+    }
     const urls = pickValidationUrls(
       crawl.pages,
       extra,

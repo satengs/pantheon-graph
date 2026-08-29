@@ -29,6 +29,7 @@ function layoutOf(
 ): Map<string, Pt> {
   const pos = new Map<string, Pt>();
   const brands = nodes.filter((n) => n.kind === "brand");
+  const parents = nodes.filter((n) => n.kind === "parent");
   const hubs = nodes.filter((n) => n.kind === "product" || n.kind === "glossary");
   const pages = nodes.filter((n) => n.kind === "page");
   const issues = nodes.filter((n) => n.kind === "issue");
@@ -84,6 +85,16 @@ function layoutOf(
         pos.set(h.id, { x: r2(origin.x + (i - (list.length - 1) / 2) * 128), y: origin.y + 160 });
       });
     }
+  }
+
+  if (parents.length) {
+    const bxs = brands.map((b) => pos.get(b.id)?.x ?? 0);
+    const bys = brands.map((b) => pos.get(b.id)?.y ?? -230);
+    const cx = bxs.length ? (Math.min(...bxs) + Math.max(...bxs)) / 2 : 0;
+    const cy = (bys[0] ?? -230) - 180;
+    parents.forEach((p, i) => {
+      pos.set(p.id, { x: r2(cx + (i - (parents.length - 1) / 2) * 160), y: r2(cy) });
+    });
   }
 
   const pairIndex = new Map<string, number>();
@@ -158,6 +169,10 @@ export function GraphCanvas() {
   const graphFocusStack = useStudio((s) => s.graphFocusStack);
   const pushGraphFocus = useStudio((s) => s.pushGraphFocus);
   const popGraphFocus = useStudio((s) => s.popGraphFocus);
+  const includeParent = useStudio((s) => s.includeParent);
+  const setIncludeParent = useStudio((s) => s.setIncludeParent);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const svgRef = useRef<SVGSVGElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<null | {
@@ -215,8 +230,18 @@ export function GraphCanvas() {
   }, [graphFocusStack.length, full, graphLayout]);
 
   const graph = useMemo(
-    () => buildGraph({ explode, brand, product, layer, expandIds: graphFocusStack }),
-    [explode, brand, product, layer, graphFocusStack],
+    () =>
+      buildGraph({
+        explode,
+        brand,
+        product,
+        layer,
+        expandIds: graphFocusStack,
+        includeParent,
+        org: graphOrg ?? undefined,
+        ruleCodes: attachedRuleCodes,
+      }),
+    [explode, brand, product, layer, graphFocusStack, includeParent, graphOrg, attachedRuleCodes],
   );
   const base = useMemo(
     () => layoutOf(graphLayout, graph.nodes, graph.edges, explode),
@@ -264,11 +289,13 @@ export function GraphCanvas() {
       if (k === "sameAs") return "var(--color-accent)";
       return "var(--color-achieve)";
     }
+    if (n.kind === "parent") return "var(--color-accent)";
     if (n.brand === "fdr") return "var(--color-fdr)";
     if (n.brand === "achieve") return "var(--color-achieve)";
     return "color-mix(in oklab, var(--color-fg) 18%, transparent)";
   }
   function nodeR(n: GraphNode) {
+    if (n.kind === "parent") return 50;
     if (n.kind === "brand") return 44;
     if (n.kind === "page") return 7;
     if (n.kind === "issue") return 18;
@@ -312,6 +339,15 @@ export function GraphCanvas() {
         <span className="hidden px-2 text-xs text-subtle sm:inline">
           Drag to move · double-click a node to load hidden relations
         </span>
+        <label className="flex h-9 items-center gap-1.5 rounded-md bg-raised px-2.5 text-xs text-muted">
+          <input
+            type="checkbox"
+            checked={includeParent}
+            onChange={(e) => setIncludeParent(e.target.checked)}
+            className="size-3.5 accent-[var(--color-accent)]"
+          />
+          Parent
+        </label>
         <button
           type="button"
           disabled={!graphFocusStack.length}
@@ -462,13 +498,17 @@ export function GraphCanvas() {
               if (!p) return null;
               const radius = nodeR(n);
               const label =
-                n.kind === "brand"
-                  ? n.brand === "fdr"
-                    ? "FDR"
-                    : "Achieve"
-                  : n.kind === "page"
-                    ? ""
-                    : n.label;
+                n.kind === "parent"
+                  ? n.label
+                  : n.kind === "brand"
+                    ? n.brand === "fdr"
+                      ? "FDR"
+                      : n.brand === "achieve"
+                        ? "Achieve"
+                        : n.label
+                    : n.kind === "page"
+                      ? ""
+                      : n.label;
               return (
                 <g
                   key={n.id}
@@ -509,7 +549,7 @@ export function GraphCanvas() {
                       r={radius}
                       fill={nodeFill(n)}
                       stroke={nodeStroke(n)}
-                      strokeWidth={n.id === selectedNodeId ? 2.5 : n.kind === "brand" ? 2 : 1.4}
+                      strokeWidth={n.id === selectedNodeId ? 2.5 : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
                   )}
                   {label ? (
@@ -517,7 +557,7 @@ export function GraphCanvas() {
                       y={n.kind === "product" || n.kind === "glossary" ? radius + 12 : 4}
                       textAnchor="middle"
                       fill="var(--color-fg)"
-                      fontSize={n.kind === "brand" ? 12 : n.kind === "issue" ? 9 : 8}
+                      fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : n.kind === "issue" ? 9 : 8}
                       fontWeight={600}
                       fontFamily="IBM Plex Sans, sans-serif"
                     >
@@ -533,6 +573,9 @@ export function GraphCanvas() {
         <div className="min-h-0 flex-1 bg-bg" />
       )}
       <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wide text-subtle">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-full bg-accent" /> Parent
+        </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2 rounded-full bg-fdr" /> FDR
         </span>

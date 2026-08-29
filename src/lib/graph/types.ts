@@ -1,7 +1,7 @@
-export type BrandId = "fdr" | "achieve";
+export type BrandId = string;
 export type Layer = "L1" | "L2";
 export type IssueStatus = "open" | "studio" | "suggested";
-export type NodeKind = "brand" | "product" | "glossary" | "issue" | "page";
+export type NodeKind = "parent" | "brand" | "product" | "glossary" | "issue" | "page";
 export type ProductId =
   | "debt-relief"
   | "settlement"
@@ -62,7 +62,7 @@ export type BacklogItem = {
   code: string;
   title: string;
   layer: Layer;
-  domain: "fdr" | "achieve" | "both" | "system";
+  domain: "fdr" | "achieve" | "both" | "system" | string;
   product: ProductId | "all";
   reason: string;
   fix: string;
@@ -93,7 +93,7 @@ export type GraphEdge = {
   issueId?: string;
 };
 
-export const BRAND_HOST: Record<BrandId, string> = {
+export const BRAND_HOST: Record<string, string> = {
   fdr: "https://www.freedomdebtrelief.com",
   achieve: "https://www.achieve.com",
 };
@@ -109,7 +109,16 @@ export const PRODUCT_LABEL: Record<ProductId, string> = {
   other: "Other",
 };
 
-export const BRAND_LABEL: Record<BrandId, string> = {
+export const BRAND_LABEL: Record<string, string> = {
   fdr: "Freedom Debt Relief",
   achieve: "Achieve",
+  pantheon: "Pantheon",
 };
+
+export function brandLabel(id: string): string {
+  return BRAND_LABEL[id] ?? id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function productLabel(id: string): string {
+  return id in PRODUCT_LABEL ? PRODUCT_LABEL[id as ProductId] : id.replace(/-/g, " ");
+}

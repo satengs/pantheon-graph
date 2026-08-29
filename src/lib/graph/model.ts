@@ -8,7 +8,7 @@ import type {
   GraphNode,
   ProductId,
 } from "@/lib/graph/types";
-import { BRAND_LABEL, PRODUCT_LABEL } from "@/lib/graph/types";
+import { BRAND_HOST, brandLabel, PRODUCT_LABEL, productLabel } from "@/lib/graph/types";
 
 export const PRODUCT_ORDER: ProductId[] = [
   "debt-relief",
@@ -70,6 +70,7 @@ export const ACHIEVE_TONE = [
 ];
 
 export function toneRatio(text: string, brand: BrandId): { ratio: number; off: number; on: number } {
+  if (brand !== "fdr" && brand !== "achieve") return { ratio: 1, off: 0, on: 0 };
   const tokens = text.toLowerCase().split(/[^a-z0-9]+/);
   const mine = brand === "fdr" ? FDR_TONE : ACHIEVE_TONE;
   const theirs = brand === "fdr" ? ACHIEVE_TONE : FDR_TONE;
@@ -91,7 +92,7 @@ export function mcpShort(node: GraphNode): string {
     `# ${node.label}`,
     `@id: origin:${node.id}`,
     `@kind: ${node.kind}`,
-    node.brand ? `brand: ${BRAND_LABEL[node.brand]}` : null,
+    node.brand ? `brand: ${brandLabel(node.brand)}` : null,
     node.product ? `product: ${PRODUCT_LABEL[node.product]}` : null,
     node.count != null ? `pages: ${node.count}` : null,
     node.url ? `url: ${node.url}` : null,
@@ -102,6 +103,7 @@ export function mcpShort(node: GraphNode): string {
     node.kind === "glossary"
       ? `sameAs-policy: one canonical owner; stub the other with sameAs`
       : null,
+    node.kind === "parent" ? `role: holding company` : null,
   ];
   return lines.filter(Boolean).join("\n");
 }
@@ -109,29 +111,63 @@ export function mcpShort(node: GraphNode): string {
 const EXPLODE_CAP = 28;
 const EXPAND_PAGE_CAP = 10;
 
-function hubId(brand: BrandId, product: ProductId) {
+function hubId(brand: BrandId, product: string) {
   return `hub:${brand}:${product}`;
 }
 
 function parseBrandId(id: string): BrandId | null {
-  if (id === "brand:fdr" || id === "brand:achieve") return id.slice(6) as BrandId;
+  if (id.startsWith("brand:")) return id.slice(6);
   return null;
 }
 
 function parseHubId(id: string): { brand: BrandId; product: ProductId } | null {
-  const m = /^hub:(fdr|achieve):([a-z0-9-]+)$/.exec(id);
+  const m = /^hub:([a-z0-9-]+):([a-z0-9-]+)$/.exec(id);
   if (!m) return null;
   const product = m[2] as ProductId;
   if (!(product in PRODUCT_LABEL)) return null;
-  return { brand: m[1] as BrandId, product };
+  return { brand: m[1]!, product };
 }
+
+export type GraphOrgBrand = {
+  slug: string;
+  name: string;
+  url: string;
+  products: string[];
+  pageCount?: number;
+};
+
+export type GraphOrg = {
+  parent: { slug: string; name: string; url?: string } | null;
+  brands: GraphOrgBrand[];
+};
+
+const FALLBACK_ORG: GraphOrg = {
+  parent: { slug: "pantheon", name: "Pantheon" },
+  brands: [
+    {
+      slug: "fdr",
+      name: "Freedom Debt Relief",
+      url: "https://www.freedomdebtrelief.com/",
+      products: ["debt-relief", "settlement", "glossary"],
+    },
+    {
+      slug: "achieve",
+      name: "Achieve",
+      url: "https://www.achieve.com/",
+      products: ["heloc", "hel", "personal-loan", "glossary"],
+    },
+  ],
+};
 
 export function buildGraph(opts: {
   explode: boolean;
   brand: "all" | BrandId;
-  product: "all" | ProductId;
+  product: "all" | ProductId | string;
   layer: "all" | "L1" | "L2";
   expandIds?: string[];
+  includeParent?: boolean;
+  org?: GraphOrg;
+  ruleCodes?: string[];
 }): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
@@ -145,17 +181,23 @@ export function buildGraph(opts: {
   };
   const has = (id: string) => nodes.some((n) => n.id === id);
 
-  const brands: BrandId[] =
-    opts.brand === "all" ? ["fdr", "achieve"] : [opts.brand];
+  const family = opts.org ?? FALLBACK_ORG;
+  const orgBrands =
+    opts.brand === "all" || (family.parent && opts.brand === family.parent.slug)
+      ? family.brands
+      : family.brands.filter((b) => b.slug === opts.brand);
+  const brands: BrandId[] = (opts.org ? orgBrands : orgBrands.length ? orgBrands : FALLBACK_ORG.brands).map((b) => b.slug);
+  const meta = new Map(family.brands.map((b) => [b.slug, b]));
 
   const addBrand = (b: BrandId) => {
+    const info = meta.get(b);
     addN({
       id: `brand:${b}`,
-      label: BRAND_LABEL[b],
+      label: info?.name ?? brandLabel(b),
       kind: "brand",
       brand: b,
-      count: countPages(b),
-      url: b === "fdr" ? "https://www.freedomdebtrelief.com/" : "https://www.achieve.com/",
+      count: countPages(b) || info?.pageCount || 0,
+      url: info?.url || BRAND_HOST[b] || undefined,
     });
   };
 
@@ -163,7 +205,7 @@ export function buildGraph(opts: {
     const n = countPages(b, p);
     addN({
       id: hubId(b, p),
-      label: PRODUCT_LABEL[p],
+      label: productLabel(p),
       kind: p === "glossary" ? "glossary" : "product",
       brand: b,
       product: p,
@@ -180,6 +222,15 @@ export function buildGraph(opts: {
 
   function ensureNode(id: string) {
     if (has(id)) return;
+    if (id.startsWith("parent:") && family.parent) {
+      addN({
+        id: `parent:${family.parent.slug}`,
+        label: family.parent.name,
+        kind: "parent",
+        url: family.parent.url,
+      });
+      return;
+    }
     const brand = parseBrandId(id);
     if (brand) {
       addBrand(brand);
@@ -218,13 +269,54 @@ export function buildGraph(opts: {
       });
   }
 
+  if (opts.includeParent && family.parent && brands.length) {
+    addN({
+      id: `parent:${family.parent.slug}`,
+      label: family.parent.name,
+      kind: "parent",
+      url: family.parent.url,
+    });
+  }
+
   for (const b of brands) addBrand(b);
 
+  if (opts.includeParent && family.parent) {
+    for (const b of brands) {
+      addE({
+        id: `owns:parent:${b}`,
+        source: `parent:${family.parent.slug}`,
+        target: `brand:${b}`,
+        kind: "owns",
+        label: "owns",
+      });
+    }
+  }
+
   for (const b of brands) {
-    for (const p of PRODUCT_ORDER) {
+    const info = meta.get(b);
+    const plist = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
+    for (const p of plist) {
       if (opts.product !== "all" && opts.product !== p) continue;
-      if (countPages(b, p) === 0) continue;
-      addHub(b, p);
+      if (!(p in PRODUCT_LABEL) && p !== "other") {
+        addN({
+          id: hubId(b, p),
+          label: productLabel(p),
+          kind: "product",
+          brand: b,
+        });
+        addE({
+          id: `owns:${b}:${p}`,
+          source: `brand:${b}`,
+          target: hubId(b, p),
+          kind: "owns",
+          label: "owns",
+        });
+        continue;
+      }
+      const pid = p as ProductId;
+      if (opts.product !== "all" && opts.product !== pid) continue;
+      if (countPages(b, pid) === 0 && !(info?.products ?? []).includes(pid)) continue;
+      addHub(b, pid);
     }
   }
 
@@ -234,6 +326,7 @@ export function buildGraph(opts: {
   const issueShown = new Set<string>();
 
   function ruleVisible(code: string) {
+    if (opts.ruleCodes && !opts.ruleCodes.includes(code)) return false;
     const rule = RULES.find((r) => r.code === code);
     if (!rule) return false;
     if (rule.layer === "L1" && !showL1) return false;
@@ -283,7 +376,7 @@ export function buildGraph(opts: {
     if (!rule?.urls.length) return;
     rule.urls.slice(0, 4).forEach((url, i) => {
       const pid = `page:cite:${t.code}:${i}`;
-      const host = url.includes("achieve.com") ? "achieve" : "fdr";
+      const host = url.includes("achieve.com") ? "achieve" : url.includes("freedomdebtrelief") ? "fdr" : undefined;
       addN({
         id: pid,
         label:
@@ -322,10 +415,17 @@ export function buildGraph(opts: {
     }
     const brand = parseBrandId(id);
     if (brand) {
-      for (const p of PRODUCT_ORDER) {
-        if (countPages(brand, p) === 0) continue;
+      const info = meta.get(brand);
+      const plist = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
+      for (const p of plist) {
         if (opts.product !== "all" && opts.product !== p) continue;
-        ensureNode(hubId(brand, p));
+        if (p in PRODUCT_LABEL) {
+          const pid = p as ProductId;
+          if (countPages(brand, pid) === 0 && !(info?.products ?? []).includes(pid)) continue;
+          ensureNode(hubId(brand, pid));
+        } else {
+          ensureNode(hubId(brand, p));
+        }
       }
     }
   }

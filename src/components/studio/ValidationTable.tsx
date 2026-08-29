@@ -5,12 +5,14 @@ import { ISSUE_PROOFS } from "@/data/issue-proofs";
 import { ISSUE_ALIAS } from "@/lib/graph/aliases";
 import { Badge } from "@/components/ui/badge";
 import { useStudio } from "@/store/studio";
-import { PRODUCT_LABEL } from "@/lib/graph/types";
+import { productLabel } from "@/lib/graph/types";
 import { cmp, filterIssues } from "@/lib/studio/query";
 import type { BacklogItem } from "@/lib/graph/types";
 import { ValidatePanel } from "@/components/studio/ValidatePanel";
 import { crawl } from "@/data/crawl";
 import { crawlMetrics, pct } from "@/lib/studio/crawl-metrics";
+import { issueFitsFamily, isSeedFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 const COLS: { key: string; label: string }[] = [
   { key: "code", label: "ID" },
@@ -38,9 +40,16 @@ export function ValidationTable() {
   const setSort = useStudio((s) => s.setSort);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const metrics = crawlMetrics(crawl);
 
-  const rows = filterIssues(RULES, { brand, product, layer, impact, query }).slice().sort((a, b) => {
+  const rows = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes })
+    .filter((r) => issueFitsFamily(r, graphOrg, parentSlug))
+    .slice()
+    .sort((a, b) => {
     const aliasA = ISSUE_ALIAS[a.code] ?? a.code;
     const aliasB = ISSUE_ALIAS[b.code] ?? b.code;
     const map: Record<string, string> = {
@@ -63,6 +72,10 @@ export function ValidationTable() {
     };
     return cmp(map[sortKey] ?? a.code, mb[sortKey] ?? b.code, sortDir);
   });
+
+  if (!seedFamily) {
+    return <EmptyFamilyCrawl title={`No validation crawl for ${graphOrg?.parent?.name ?? "this family"}`} />;
+  }
 
   return (
     <div className={`min-h-0 flex-1 overflow-auto ${maximized === "validation" ? "fixed inset-0 z-50 bg-bg" : ""}`}>
@@ -127,7 +140,7 @@ export function ValidationTable() {
                     {i.domain === "both" ? "common" : i.domain}
                   </Badge>
                 </td>
-                <td className="px-2 py-3 text-muted">{i.product === "all" ? "all" : PRODUCT_LABEL[i.product]}</td>
+                <td className="px-2 py-3 text-muted">{i.product === "all" ? "all" : productLabel(i.product)}</td>
                 <td className="px-2 py-3">
                   {shot ? (
                     <span className="block">

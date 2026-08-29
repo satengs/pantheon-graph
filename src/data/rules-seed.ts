@@ -1,4 +1,5 @@
 import { ISSUES } from "@/data/issues";
+import { SYSTEM_RULE_SET } from "@/lib/org/system-rules";
 import type { BacklogItem } from "@/lib/graph/types";
 
 /** Content/schema rules from the last crawl, plus JSON-LD. */
@@ -32,7 +33,7 @@ export const RULE_CODES = [
 
 export const RULES: BacklogItem[] = ISSUES.filter((i) =>
   (RULE_CODES as readonly string[]).includes(i.code),
-);
+).map((i) => (SYSTEM_RULE_SET.has(i.code) ? { ...i, domain: "system" as const } : i));
 
 export function ruleStatement(i: BacklogItem): string {
   return i.reason;
@@ -48,7 +49,7 @@ export function ruleCheckJson(code: string): string {
   return JSON.stringify(map[code] ?? {});
 }
 
-export const DEFAULT_BRAND_CONFIG: Record<"fdr" | "achieve", Record<string, unknown>> = {
+export const DEFAULT_BRAND_CONFIG: Record<string, Record<string, unknown>> = {
   fdr: {
     host: "www.freedomdebtrelief.com",
     owns: ["debt-relief", "settlement"],

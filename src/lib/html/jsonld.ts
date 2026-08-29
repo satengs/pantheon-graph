@@ -42,7 +42,7 @@ const EXPECTED: Record<string, string[]> = {
 
 const LOAN_PROPS = ["interestRate", "annualPercentageRate", "loanTerm", "amount"];
 
-const DEFAULT_ORG: Record<BrandId, string> = {
+const DEFAULT_ORG: Record<string, string> = {
   fdr: "https://www.freedomdebtrelief.com/#organization",
   achieve: "https://www.achieve.com/#organization",
 };

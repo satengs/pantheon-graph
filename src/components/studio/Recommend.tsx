@@ -1,6 +1,8 @@
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useStudio } from "@/store/studio";
+import { isSeedFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import {
   AI_WINS,
   CATEGORIES,
@@ -15,6 +17,11 @@ const CAT_ORDER: RecCategory[] = ["identity", "ownership", "wrong-shelf", "same-
 export function Recommend() {
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  if (!isSeedFamily(graphOrg, parentSlug)) {
+    return <EmptyFamilyCrawl title={`No recommendations for ${graphOrg?.parent?.name ?? "this family"} yet`} />;
+  }
 
   return (
     <div className="min-h-0 flex-1 overflow-auto px-4 py-4">

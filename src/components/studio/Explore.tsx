@@ -12,6 +12,8 @@ import {
 import { runValidation } from "@/lib/server/validate-run";
 import { listStudio } from "@/lib/server/studio-db";
 import { cmp } from "@/lib/studio/query";
+import { isSeedFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 const COLS: { key: keyof SuggestionRow | "hits"; label: string }[] = [
   { key: "code", label: "ID" },
@@ -38,6 +40,9 @@ export function Explore() {
   const setSort = useStudio((s) => s.setSort);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [kind, setKind] = useState<"all" | "conflict" | "suggests" | "sameAs">("all");
   const [copied, setCopied] = useState<"md" | "json" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -76,6 +81,10 @@ export function Explore() {
 
   const selected = rows.filter((r) => selectedIssueIds.includes(r.code));
   const exportRows = selected.length ? selected : rows;
+
+  if (!seedFamily) {
+    return <EmptyFamilyCrawl title={`No explore crawl for ${graphOrg?.parent?.name ?? "this family"}`} />;
+  }
 
   function copy(fmt: "md" | "json") {
     const text = fmt === "md" ? formatSuggestionsMarkdown(exportRows) : formatSuggestionsJson(exportRows);

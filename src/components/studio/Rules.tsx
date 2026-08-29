@@ -7,6 +7,8 @@ import { filterIssues } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import type { RuleConflict } from "@/lib/studio/rule-conflicts";
+import { isSystemRule, SYSTEM_RULE_SET } from "@/lib/org/system-rules";
+import { isSeedFamily } from "@/lib/org/catalog";
 
 type Rule = {
   id: string;
@@ -22,7 +24,7 @@ const empty = {
   code: "",
   title: "",
   layer: "L1" as "L1" | "L2",
-  domain: "both" as "fdr" | "achieve" | "both" | "system",
+  domain: "system" as "fdr" | "achieve" | "both" | "system",
   product: "all",
   statement: "",
 };
@@ -35,6 +37,10 @@ export function Rules() {
   const query = useStudio((s) => s.query);
   const selectIssue = useStudio((s) => s.selectIssue);
   const hoverIssue = useStudio((s) => s.hoverIssue);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [rules, setRules] = useState<Rule[]>([]);
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState<string | null>(null);
@@ -42,8 +48,9 @@ export function Rules() {
   const [checkMsg, setCheckMsg] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [conflicts, setConflicts] = useState<RuleConflict[]>([]);
+  const [ruleScope, setRuleScope] = useState<"all" | "system" | "brand">("all");
 
-  const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query }).map((r) => r.code));
+  const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).map((r) => r.code));
 
   async function reload() {
     try {
@@ -61,6 +68,18 @@ export function Rules() {
   }, []);
 
   const visible = rules.filter((r) => {
+    if (attachedRuleCodes.length && !attachedRuleCodes.includes(r.code) && r.id !== editId) return false;
+    if (
+      !seedFamily &&
+      r.id !== editId &&
+      !attachedRuleCodes.includes(r.code) &&
+      !isSystemRule(r.code, r.domain)
+    ) {
+      return false;
+    }
+    const system = isSystemRule(r.code, r.domain);
+    if (ruleScope === "system" && !system) return false;
+    if (ruleScope === "brand" && system) return false;
     if (!seedIds.has(r.code) && (brand !== "all" || product !== "all" || layer !== "all" || query.trim())) {
       if (brand !== "all" && r.domain !== "both" && r.domain !== "system" && r.domain !== brand) return false;
       if (product !== "all" && r.product !== "all" && r.product !== product) return false;
@@ -73,9 +92,21 @@ export function Rules() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <p className="text-sm text-muted">
-        Create or edit a rule and save. The app checks the new rule against every other rule, then runs crawl validation.
-        Live URL check stays on the Validation tab.
+        Default system rules (schema, canonical, JSON-LD, article semantics) apply to every company. Brand rules stay on
+        FDR, Achieve, or a new origin you add. Save a rule, then recheck.
       </p>
+      <div className="flex flex-wrap gap-1.5">
+        {(["all", "system", "brand"] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setRuleScope(s)}
+            className={`h-8 rounded-md px-2.5 text-xs ${ruleScope === s ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+          >
+            {s === "all" ? "All rules" : s === "system" ? "System default" : "Brand-specific"}
+          </button>
+        ))}
+      </div>
       {err ? <p className="text-sm text-danger">{err}</p> : null}
       {checkMsg ? <p className="text-sm text-ok">{checkMsg}</p> : null}
       {conflicts.length ? (
@@ -154,10 +185,10 @@ export function Rules() {
             onChange={(e) => setForm({ ...form, domain: e.target.value as typeof form.domain })}
             className="mt-1 h-9 w-full rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
-            <option value="both">Common — both brands</option>
+            <option value="system">System — schema, canonical, semantics</option>
+            <option value="both">Common — both seed brands</option>
             <option value="fdr">FDR only</option>
             <option value="achieve">Achieve only</option>
-            <option value="system">System</option>
           </select>
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -234,8 +265,15 @@ export function Rules() {
               <span className="font-medium">{r.title}</span>
               <Badge>{r.layer}</Badge>
               <Badge tone={r.domain === "fdr" ? "fdr" : r.domain === "achieve" ? "achieve" : "neutral"}>
-                {r.domain === "both" ? "common" : r.domain}
+                {isSystemRule(r.code, r.domain)
+                  ? "system"
+                  : r.domain === "both"
+                    ? "common"
+                    : r.domain}
               </Badge>
+              {isSystemRule(r.code, r.domain) && SYSTEM_RULE_SET.has(r.code) ? (
+                <Badge>default</Badge>
+              ) : null}
             </div>
             <p className="mt-2 text-sm text-muted">{r.statement}</p>
             <div className="mt-2 flex gap-2">

@@ -14,6 +14,8 @@ import {
 import { useStudio } from "@/store/studio";
 import { cmp, filterStates } from "@/lib/studio/query";
 import { Link } from "@tanstack/react-router";
+import { isSeedFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 type CoverageFilter =
   | "all"
@@ -97,6 +99,8 @@ export function StatesPanel() {
   const [showMap, setShowMap] = useState(true);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
 
   const rows = useMemo(() => {
     const base = filterStates(statesData.states, { brand, product, query });
@@ -108,6 +112,10 @@ export function StatesPanel() {
       return cmp(av, bv, sortDir);
     });
   }, [brand, product, query, filter, sortKey, sortDir]);
+
+  if (!isSeedFamily(graphOrg, parentSlug)) {
+    return <EmptyFamilyCrawl title={`No state coverage for ${graphOrg?.parent?.name ?? "this family"}`} />;
+  }
 
   const fdrDirect = statesData.states.filter((s) => s.fdrSettlement === "direct").length;
   const fdrPartner = statesData.states.filter((s) => s.fdrSettlement === "partner").length;

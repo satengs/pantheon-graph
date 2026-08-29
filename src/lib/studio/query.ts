@@ -3,15 +3,18 @@ import type { StateRow } from "@/data/states";
 
 export type StudioFilters = {
   brand: "all" | BrandId;
-  product: "all" | ProductId;
+  product: "all" | ProductId | string;
   layer: "all" | "L1" | "L2";
   impact: "all" | "critical" | "high" | "medium" | "low";
   query: string;
+  codes?: string[] | null;
 };
 
 export function filterIssues(issues: BacklogItem[], f: StudioFilters): BacklogItem[] {
   const q = f.query.trim().toLowerCase();
   return issues.filter((i) => {
+    if (f.codes && f.codes.length > 0 && !f.codes.includes(i.code)) return false;
+    if (f.codes && f.codes.length === 0) return false;
     if (f.brand !== "all" && i.domain !== "both" && i.domain !== "system" && i.domain !== f.brand) {
       return false;
     }
@@ -27,19 +30,22 @@ export function filterIssues(issues: BacklogItem[], f: StudioFilters): BacklogIt
 }
 
 export function stateMatchesBrand(s: StateRow, brand: "all" | BrandId): boolean {
-  if (brand === "all") return true;
+  if (brand === "all" || brand === "pantheon") return true;
   if (brand === "fdr") {
     return s.fdrSettlement !== "none" || s.fdrNearMe || s.fdrCityPages > 0;
   }
-  return (
-    s.achieveHeloc !== "none" ||
-    s.achievePersonalLoan !== "none" ||
-    s.achieveDebtRelief !== "none" ||
-    s.achieveCollections
-  );
+  if (brand === "achieve") {
+    return (
+      s.achieveHeloc !== "none" ||
+      s.achievePersonalLoan !== "none" ||
+      s.achieveDebtRelief !== "none" ||
+      s.achieveCollections
+    );
+  }
+  return false;
 }
 
-export function stateMatchesProduct(s: StateRow, product: "all" | ProductId): boolean {
+export function stateMatchesProduct(s: StateRow, product: "all" | ProductId | string): boolean {
   if (product === "all") return true;
   if (product === "settlement" || product === "debt-relief") {
     return s.fdrSettlement !== "none" || s.achieveDebtRelief !== "none";

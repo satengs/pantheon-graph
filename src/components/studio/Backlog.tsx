@@ -7,6 +7,8 @@ import { analyzePage } from "@/lib/server/analyze-page";
 import { cmp, filterIssues } from "@/lib/studio/query";
 import { ISSUE_ALIAS } from "@/lib/graph/aliases";
 import { RULES } from "@/data/rules-seed";
+import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
+import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 
 type Finding = {
   id: string;
@@ -29,6 +31,10 @@ export function Backlog() {
   const selectFinding = useStudio((s) => s.selectFinding);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const hoverIssue = useStudio((s) => s.hoverIssue);
+  const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const graphOrg = useStudio((s) => s.graphOrg);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const sortKey = useStudio((s) => s.sortKey);
   const sortDir = useStudio((s) => s.sortDir);
   const setSort = useStudio((s) => s.setSort);
@@ -39,7 +45,10 @@ export function Backlog() {
   const [err, setErr] = useState<string | null>(null);
 
   const points = useMemo(() => {
-    const rules = filterIssues(RULES, { brand, product, layer, impact, query }).map((r) => ({
+    const rules = seedFamily
+      ? filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes })
+          .filter((r) => issueFitsFamily(r, graphOrg, parentSlug))
+          .map((r) => ({
       id: r.id,
       code: r.code,
       title: r.title,
@@ -51,9 +60,11 @@ export function Backlog() {
       domain: r.domain,
       product: r.product,
       url: r.urls[0] ?? "",
-    }));
+    }))
+      : [];
     const q = query.trim().toLowerCase();
     const html = findings
+      .filter((f) => (seedFamily ? true : urlInFamily(f.url, graphOrg)))
       .filter((f) => !q || `${f.title} ${f.why} ${f.url} ${f.code}`.toLowerCase().includes(q))
       .map((f) => ({
         id: f.id,
@@ -76,7 +87,7 @@ export function Backlog() {
       const bv = String((b as Record<string, string>)[sortKey] ?? b.code);
       return cmp(av, bv, sortDir);
     });
-  }, [brand, product, layer, impact, query, findings, sortKey, sortDir]);
+  }, [brand, product, layer, impact, query, findings, sortKey, sortDir, attachedRuleCodes, seedFamily, graphOrg, parentSlug]);
 
   async function reload() {
     try {
@@ -95,9 +106,14 @@ export function Backlog() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">
       <p className="text-sm text-muted">
-        Validation points for the websites — HTML outline mistakes and content rules. Click one to view the issue.
+        Validation points for this family — HTML outline mistakes and content rules. Click one to view the issue.
       </p>
       {err ? <p className="mt-2 text-sm text-danger">{err}</p> : null}
+      {!seedFamily && points.length === 0 ? (
+        <div className="mt-4">
+          <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
+        </div>
+      ) : null}
       <form
         className="mt-3 flex flex-wrap gap-2"
         onSubmit={(e) => {
