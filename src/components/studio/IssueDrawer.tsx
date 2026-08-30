@@ -131,9 +131,12 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
       <section className="g-figure">
         <p className="vh-kicker">Fix on this page</p>
         {fixPage ? (
-          <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page-hero mt-1 block hover:underline">
-            {fixPage.path}
-          </a>
+          <>
+            <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page-hero mt-1 block hover:underline">
+              {fixPage.path}
+            </a>
+            <EvidenceShot url={fixPage.url} label={fixPage.path} />
+          </>
         ) : null}
         <p className="vh-fix mt-2">{view.fix || "—"}</p>
       </section>
@@ -177,14 +180,17 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
               <p className="mt-2 text-sm text-fg text-pretty">“{c.quote}”</p>
               {c.whyReal ? <p className="mt-1 text-xs text-muted text-pretty">{c.whyReal}</p> : null}
               {c.url ? (
-                <a
-                  href={c.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-fdr hover:underline"
-                >
-                  {c.url.replace(/^https?:\/\//, "")} <ExternalLink className="size-3" />
-                </a>
+                <>
+                  {c.url !== fixPage?.url ? <EvidenceShot url={c.url} label={c.quote} /> : null}
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-fdr hover:underline"
+                  >
+                    {c.url.replace(/^https?:\/\//, "")} <ExternalLink className="size-3" />
+                  </a>
+                </>
               ) : null}
             </blockquote>
           ))}
@@ -208,6 +214,9 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
                     canonical → {row.canonical.replace(/^https:\/\//, "") || "(none)"}
                   </p>
                   {row.extra ? <p className="mt-1 text-[10px] text-subtle">{row.extra}</p> : null}
+                  {row.url && row.url !== fixPage?.url && !view.evidence.quotes.some((c) => c.url === row.url) ? (
+                    <EvidenceShot url={row.url} label={row.h1 || row.url} />
+                  ) : null}
                   <a
                     href={row.url}
                     target="_blank"
@@ -243,7 +252,18 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
   );
 }
 
-function FoundSuggested({ found, suggested }: { found: string; suggested: string }) {
+function EvidenceShot({ url, label }: { url: string; label?: string }) {
+  if (!url.startsWith("http")) return null;
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="mt-2 block overflow-hidden rounded-md bg-raised">
+      <img
+        src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=960`}
+        alt={label || url}
+        className="h-44 w-full object-cover object-top"
+      />
+    </a>
+  );
+}
   const lines = jsonLdDiff(found, suggested);
   return (
     <div className="mt-2 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] leading-relaxed">
