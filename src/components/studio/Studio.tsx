@@ -8,7 +8,6 @@ import {
   Settings2,
   Shield,
   Search,
-  Compass,
   Sparkles,
   Building2,
   Plus,
@@ -20,7 +19,6 @@ import { runValidation } from "@/lib/server/validate-run";
 import { listOrgs, retrieveBrand } from "@/lib/server/orgs";
 import { Button } from "@/components/ui/button";
 import { GraphCanvas } from "@/components/studio/GraphCanvas";
-import { Explore } from "@/components/studio/Explore";
 import { Recommend } from "@/components/studio/Recommend";
 import { Inspector } from "@/components/studio/Inspector";
 import { ValidationTable } from "@/components/studio/ValidationTable";
@@ -43,19 +41,18 @@ import { IssueDrawer } from "@/components/studio/IssueDrawer";
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
   { id: "companies", label: "Companies", icon: Building2, hint: "Parent company, sub-brands, retrieve from URL, coverage." },
   { id: "graph", label: "Graph", icon: GitBranch, hint: "Brands and products. Issues live on the edges." },
-  { id: "explore", label: "Explore", icon: Compass, hint: "Tree suggestions as a table. Analyse and export." },
   { id: "recommend", label: "Recommend", icon: Sparkles, hint: "Ideal graph, FDR vs Achieve, SERP and AI payoff." },
   { id: "states", label: "States", icon: MapPin, hint: "Where each product is offered or licensed." },
   { id: "validation", label: "Validation", icon: LayoutGrid, hint: "Table of website validation points." },
   { id: "rules", label: "Rules", icon: Scale, hint: "The checks the gate runs." },
-  { id: "issues", label: "Issues", icon: ListChecks, hint: "Website validation points to fix." },
+  { id: "issues", label: "Issues", icon: ListChecks, hint: "Categories, graph edges, validate a page, export." },
   { id: "gate", label: "Gate", icon: Shield, hint: "Pass or fail before publish." },
   { id: "config", label: "Config", icon: Settings2, hint: "Where data lives and brand JSON." },
 ];
 
 const TAB_GROUPS: { label: string; items: typeof TABS }[] = [
   { label: "Family", items: byId("companies") },
-  { label: "Map", items: byId("graph", "explore", "recommend", "states") },
+  { label: "Map", items: byId("graph", "recommend", "states") },
   { label: "Work", items: byId("issues", "validation", "gate", "rules") },
   { label: "Setup", items: byId("config") },
 ];
@@ -99,7 +96,7 @@ export function Studio() {
   const [checking, setChecking] = useState(false);
   const [draft, setDraft] = useState("");
   const [notesOpen, setNotesOpen] = useState(false);
-  const showFilters = tab === "issues" || tab === "validation" || tab === "explore" || tab === "graph" || tab === "states" || tab === "gate";
+  const showFilters = tab === "issues" || tab === "validation" || tab === "graph" || tab === "states" || tab === "gate";
   const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).filter((i) =>
     issueFitsFamily(i, graphOrg, parentSlug),
   );
@@ -178,12 +175,11 @@ export function Studio() {
           <GraphCanvas />
         </div>
       ) : null}
-      {tab === "explore" ? <Explore /> : null}
+      {tab === "explore" || tab === "issues" ? <Backlog /> : null}
       {tab === "recommend" ? <Recommend /> : null}
       {tab === "states" ? <StatesPanel /> : null}
       {tab === "validation" ? <ValidationTable /> : null}
       {tab === "rules" ? <Rules /> : null}
-      {tab === "issues" ? <Backlog /> : null}
       {tab === "gate" ? <Gate /> : null}
       {tab === "config" ? <ConfigPanel /> : null}
     </section>

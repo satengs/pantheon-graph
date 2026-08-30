@@ -1,16 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
+import { Check, Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
 import { listStudio, upsertTask } from "@/lib/server/studio-db";
-import { analyzePage } from "@/lib/server/analyze-page";
+import { runValidation } from "@/lib/server/validate-run";
 import { filterIssues, isHiddenUiCode } from "@/lib/studio/query";
 import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
-import { issueCategories, type FindingHit } from "@/lib/studio/rule-pages";
+import { issueCategories, type FindingHit, type IssueCategory } from "@/lib/studio/rule-pages";
 import { ValidatePage } from "@/components/studio/ValidatePage";
+import { TREE_SUGGESTIONS, formatSuggestionsJson, formatSuggestionsMarkdown, suggestionRows } from "@/lib/graph/suggestions";
+import type { GraphEdge } from "@/lib/graph/types";
 
 type Finding = FindingHit & { lane?: string; why: string; found?: string; suggested?: string };
+type KindFilter = "all" | GraphEdge["kind"];
+
+const KIND: Record<string, GraphEdge["kind"]> = Object.fromEntries(TREE_SUGGESTIONS.map((t) => [t.code, t.kind]));
+
+function exportMarkdown(cats: IssueCategory[]): string {
+  return cats
+    .map((c) => `### ${c.code} ${c.title}\n${KIND[c.code] ?? "check"} · ${c.pages.length} pages\n${c.statement}\n`)
+    .join("\n");
+}
 
 export function Backlog() {
   const brand = useStudio((s) => s.brand);
@@ -21,17 +34,21 @@ export function Backlog() {
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectIssue = useStudio((s) => s.selectIssue);
   const hoverIssue = useStudio((s) => s.hoverIssue);
-  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const selectedIssueIds = useStudio((s) => s.selectedIssueIds);
+  const toggleIssueSelect = useStudio((s) => s.toggleIssueSelect);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
+  const parentId = useStudio((s) => s.parentId);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [title, setTitle] = useState("");
-  const familyHome = graphOrg?.brands[0]?.url || graphOrg?.parent?.url || "https://www.freedomdebtrelief.com/debt-relief/";
-  const [url, setUrl] = useState(familyHome);
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [kind, setKind] = useState<KindFilter>("all");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"md" | "json" | null>(null);
+  const [sortKey, setSortKey] = useState<"code" | "pages" | "kind">("pages");
 
   const visibleRules = useMemo(
     () =>
@@ -50,47 +67,143 @@ export function Backlog() {
   );
 
   const categories = useMemo(() => {
-    const cats = issueCategories(familyFindings, visibleRules);
+    const cats = issueCategories(familyFindings, visibleRules).filter((c) => kind === "all" || KIND[c.code] === kind);
     const q = query.trim().toLowerCase();
-    if (!q) return cats;
-    return cats.filter((c) => `${c.code} ${c.title} ${c.statement}`.toLowerCase().includes(q) || c.pages.some((p) => p.path.toLowerCase().includes(q)));
-  }, [familyFindings, visibleRules, query]);
+    const filtered = q
+      ? cats.filter(
+          (c) =>
+            `${c.code} ${c.title} ${c.statement} ${KIND[c.code] ?? ""}`.toLowerCase().includes(q) ||
+            c.pages.some((p) => p.path.toLowerCase().includes(q)),
+        )
+      : cats;
+    return filtered.slice().sort((a, b) => {
+      if (sortKey === "pages") return b.pages.length - a.pages.length;
+      if (sortKey === "kind") return (KIND[a.code] ?? "").localeCompare(KIND[b.code] ?? "");
+      return a.code.localeCompare(b.code);
+    });
+  }, [familyFindings, visibleRules, query, kind, sortKey]);
+
+  async function reload() {
+    try {
+      const data = await listStudio();
+      setFindings(data.findings);
+      setErr(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not load issues");
+    }
+  }
 
   useEffect(() => {
-    void listStudio()
-      .then((d) => {
-        setFindings(d.findings);
-        setErr(null);
-      })
-      .catch((e) => setErr(e instanceof Error ? e.message : "Could not load issues"));
-  }, []);
+    void reload();
+  }, [note]);
+
+  const selectedCats = categories.filter((c) => selectedIssueIds.includes(c.code));
+  const exportCats = selectedCats.length ? selectedCats : categories;
+
+  function copy(fmt: "md" | "json") {
+    let text: string;
+    if (seedFamily) {
+      const codes = new Set(exportCats.map((c) => c.code));
+      const rows = suggestionRows().filter((r) => codes.has(r.code));
+      text = fmt === "md" ? formatSuggestionsMarkdown(rows) : formatSuggestionsJson(rows);
+    } else {
+      text = fmt === "md" ? exportMarkdown(exportCats) : JSON.stringify(exportCats, null, 2);
+    }
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(fmt);
+      window.setTimeout(() => setCopied(null), 1400);
+    });
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
       <ValidatePage />
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {(["all", "conflict", "suggests", "sameAs"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setKind(k)}
+            className={`h-8 rounded-md px-2 text-xs ${kind === k ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+          >
+            {k}
+          </button>
+        ))}
+        {(["pages", "code", "kind"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setSortKey(k)}
+            className={`h-8 rounded-md px-2 text-xs ${sortKey === k ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+          >
+            {k}
+          </button>
+        ))}
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            void runValidation({
+              data: { scope: brand === "all" ? "all" : brand, brand, live: false, limit: 16, parentId: parentId || undefined },
+            })
+              .then((res) => setNote(`Analysed ${res.pages} pages · ${res.fail} hits`))
+              .catch((e: unknown) => setNote(e instanceof Error ? e.message : "Analyse failed"))
+              .finally(() => setBusy(false));
+          }}
+        >
+          {busy ? "Analysing…" : "Analyse"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => copy("md")}>
+          {copied === "md" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          Markdown
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => copy("json")}>
+          {copied === "json" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          JSON
+        </Button>
+        <span className="vh-whisper ml-auto">
+          {categories.length} · {selectedCats.length || "all"} export
+        </span>
+      </div>
+      {note ? <p className="mb-2 text-xs text-muted">{note}</p> : null}
       {!seedFamily && categories.length === 0 ? (
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
       <div className="min-h-0 flex-1 overflow-auto rounded-lg bg-surface">
         {categories.map((c) => {
           const on = selectedIssueId === c.code;
+          const edge = KIND[c.code];
           return (
-            <button
+            <div
               key={c.code}
-              type="button"
-              className={`flex w-full items-center gap-3 border-t border-border/80 px-3 py-2.5 text-left hover:bg-raised/50 ${
-                on ? "bg-raised" : ""
-              }`}
-              onClick={() => {
-                selectIssue(c.code);
-                hoverIssue(c.code);
-              }}
+              className={`flex w-full items-center gap-2 border-t border-border/80 px-3 py-2 ${on ? "bg-raised" : ""}`}
             >
-              <span className="w-8 shrink-0 font-mono text-xs text-subtle">{c.code}</span>
-              <span className="min-w-0 flex-1 truncate text-sm text-fg">{c.title}</span>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted">{c.pages.length}</span>
-            </button>
+              <input
+                type="checkbox"
+                className="size-4 shrink-0 accent-[var(--color-accent)]"
+                checked={selectedIssueIds.includes(c.code)}
+                onChange={() => toggleIssueSelect(c.code)}
+                aria-label={`Select ${c.code}`}
+              />
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-3 text-left hover:text-fg"
+                onClick={() => {
+                  selectIssue(c.code);
+                  hoverIssue(c.code);
+                }}
+              >
+                <span className="w-8 shrink-0 font-mono text-xs text-subtle">{c.code}</span>
+                <span className="min-w-0 flex-1 truncate text-sm text-fg">{c.title}</span>
+                {edge ? (
+                  <Badge tone={edge === "conflict" ? "danger" : edge === "sameAs" ? "ok" : "warn"}>{edge}</Badge>
+                ) : null}
+                <span className="shrink-0 font-mono text-xs tabular-nums text-muted">{c.pages.length}</span>
+              </button>
+            </div>
           );
         })}
         {categories.length === 0 && seedFamily ? (
@@ -117,28 +230,6 @@ export function Backlog() {
             Add
           </Button>
         </form>
-        <div className="mt-2 flex flex-wrap items-end gap-2">
-          <input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="h-9 min-w-[220px] flex-1 rounded-md bg-surface px-3 text-sm shadow-[var(--shadow-border)]"
-          />
-          <Button
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              setBusy(true);
-              void analyzePage({ data: { url } })
-                .then((res) => {
-                  if (res.findings[0]) openIssueDrawer({ findingId: res.findings[0].id });
-                })
-                .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Analyze failed"))
-                .finally(() => setBusy(false));
-            }}
-          >
-            {busy ? "Checking…" : "Check URL"}
-          </Button>
-        </div>
       </details>
     </div>
   );
