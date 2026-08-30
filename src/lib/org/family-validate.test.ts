@@ -49,6 +49,6 @@ test("brandSlugForUrl matches host", () => {
 test("findingFitsFamilyRules keeps system and attached codes", () => {
   const attached = [...SYSTEM_RULE_CODES];
   assert.equal(findingFitsFamilyRules("S21", attached), true);
-  assert.equal(findingFitsFamilyRules("S01", attached), false);
+  assert.equal(findingFitsFamilyRules("S02", attached), false);
   assert.equal(findingFitsFamilyRules("S01", []), true);
 });

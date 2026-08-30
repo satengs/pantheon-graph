@@ -330,6 +330,7 @@ export function buildGraph(opts: {
     if (opts.ruleCodes && !opts.ruleCodes.includes(code)) return false;
     const rule = RULES.find((r) => r.code === code);
     if (!rule) return false;
+    if (rule.status === "pass" || rule.status === "studio") return false;
     // L1 page issues (S08 loan properties, S07 schema type) are not family edges.
     if (rule.layer === "L1" && opts.layer !== "L1") return false;
     if (rule.layer === "L2" && !showL2) return false;

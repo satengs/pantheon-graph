@@ -8,7 +8,7 @@ import { statesData } from "@/data/states";
 import { analyzeHtml, SEED_HTML } from "@/lib/html/semantic";
 import { analyzeJsonLd } from "@/lib/html/jsonld";
 import { seedOrgs } from "@/lib/server/orgs";
-import { SYSTEM_RULE_CODES } from "@/lib/org/system-rules";
+import { SYSTEM_RULE_CODES, SYSTEM_RULE_SET } from "@/lib/org/system-rules";
 import { detectRuleConflicts, type RuleRow } from "@/lib/studio/rule-conflicts";
 
 const ruleInput = z.object({
@@ -93,11 +93,20 @@ async function seedIfEmpty(userId: string) {
   const existing = await sql<{ code: string }>`select code from studio_rules where user_id = ${userId}`;
   const have = new Set(existing.map((r) => r.code));
   for (const r of RULES) {
-    if (have.has(r.code)) continue;
+    const domain = SYSTEM_RULE_SET.has(r.code) ? "system" : r.domain;
+    const statement = ruleStatement(r);
+    if (have.has(r.code)) {
+      await sql`
+        update studio_rules
+        set title = ${r.title}, layer = ${r.layer}, domain = ${domain}, product = ${r.product}, statement = ${statement}, check_json = ${ruleCheckJson(r.code)}
+        where user_id = ${userId} and code = ${r.code}
+      `;
+      continue;
+    }
     const id = `${userId}:${r.id}`;
     await sql`
       insert into studio_rules (id, user_id, code, title, layer, domain, product, statement, check_json)
-      values (${id}, ${userId}, ${r.code}, ${r.title}, ${r.layer}, ${r.domain}, ${r.product}, ${ruleStatement(r)}, ${ruleCheckJson(r.code)})
+      values (${id}, ${userId}, ${r.code}, ${r.title}, ${r.layer}, ${domain}, ${r.product}, ${statement}, ${ruleCheckJson(r.code)})
       on conflict (id) do nothing
     `;
     await sql`

@@ -55,7 +55,7 @@ export function Rules() {
   const [conflicts, setConflicts] = useState<RuleConflict[]>([]);
   const [ruleScope, setRuleScope] = useState<"all" | "system" | "brand">("all");
 
-  const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).map((r) => r.code));
+  const seedIds = new Set(filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes, openOnly: false }).map((r) => r.code));
 
   async function reload() {
     try {
@@ -278,7 +278,10 @@ export function Rules() {
       </form>
       <p className="text-xs text-subtle">Showing {visible.length} of {rules.length}</p>
       <ul className="space-y-2">
-        {visible.map((r) => (
+        {visible.map((r) => {
+          const seed = RULES.find((x) => x.code === r.code);
+          const verdict = seed?.status === "pass" ? "pass" : seed && (seed.status === "open" || seed.status === "suggested") ? "issue" : "rule";
+          return (
           <li
             key={r.id}
             className="rounded-xl bg-bg p-3 shadow-[var(--shadow-border)]"
@@ -302,6 +305,13 @@ export function Rules() {
               {isSystemRule(r.code, r.domain) && SYSTEM_RULE_SET.has(r.code) ? (
                 <Badge>default</Badge>
               ) : null}
+              {verdict === "pass" ? (
+                <Badge tone="ok">Passed</Badge>
+              ) : verdict === "issue" ? (
+                <Badge tone="danger">Issue</Badge>
+              ) : (
+                <Badge>Rule only</Badge>
+              )}
             </div>
             <p className="mt-2 text-sm text-muted">{r.statement}</p>
             <div className="mt-2 flex gap-2">
@@ -327,7 +337,8 @@ export function Rules() {
               </Button>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

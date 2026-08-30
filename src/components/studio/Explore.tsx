@@ -12,7 +12,7 @@ import {
 import { RULES } from "@/data/rules-seed";
 import { runValidation } from "@/lib/server/validate-run";
 import { listStudio } from "@/lib/server/studio-db";
-import { cmp } from "@/lib/studio/query";
+import { cmp, isOpenIssue } from "@/lib/studio/query";
 import { isSeedFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { IssueRow, issueRowFromRule } from "@/components/studio/IssueDrawer";
@@ -65,6 +65,8 @@ export function Explore() {
     return suggestionRows()
       .filter((r) => {
         if (kind !== "all" && r.kind !== kind) return false;
+        const seed = RULES.find((x) => x.code === r.code);
+        if (seed && !isOpenIssue(seed.status)) return false;
         if (layer !== "all" && r.layer !== layer) return false;
         if (impact !== "all" && r.impact !== impact) return false;
         if (brand === "fdr" && !/fdr|Freedom|both|common/i.test(`${r.from} ${r.to} ${r.code}`)) return false;

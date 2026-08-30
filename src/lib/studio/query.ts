@@ -8,6 +8,7 @@ export type StudioFilters = {
   impact: "all" | "critical" | "high" | "medium" | "low";
   query: string;
   codes?: string[] | null;
+  openOnly?: boolean;
 };
 
 export const HIDDEN_UI_CODES = new Set(["S14"]);
@@ -16,10 +17,15 @@ export function isHiddenUiCode(code: string | null | undefined): boolean {
   return Boolean(code && HIDDEN_UI_CODES.has(code));
 }
 
+export function isOpenIssue(status: BacklogItem["status"] | undefined): boolean {
+  return status === "open" || status === "suggested";
+}
+
 export function filterIssues(issues: BacklogItem[], f: StudioFilters): BacklogItem[] {
   const q = f.query.trim().toLowerCase();
   return issues.filter((i) => {
     if (isHiddenUiCode(i.code)) return false;
+    if (!isOpenIssue(i.status) && f.openOnly !== false) return false;
     if (f.codes && f.codes.length > 0 && !f.codes.includes(i.code)) return false;
     if (f.codes && f.codes.length === 0) return false;
     if (f.brand !== "all" && i.domain !== "both" && i.domain !== "system" && i.domain !== f.brand) {

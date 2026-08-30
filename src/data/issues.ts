@@ -210,7 +210,7 @@ export const ISSUES: BacklogItem[] = [
       "Achieve /heloc has no application/ld+json — not extra types. FDR /debt-relief/ has FAQPage + AggregateRating + FinancialService without one primary product type.",
     fix: "Add one primary @type (LoanOrCredit or Service). Nest FAQ. Do not invent types that are not in the HTML.",
     impact: "high",
-    status: "studio",
+    status: "open",
     urls: [
       "https://www.achieve.com/heloc",
       "https://www.freedomdebtrelief.com/debt-relief/",
@@ -595,7 +595,7 @@ export const ISSUES: BacklogItem[] = [
       "Recrawl 2026-08-30: title, H1, and og:title on the 401(k) article now match the question. The four-string split from 2026-08-26 is gone. Gate still required so they do not drift.",
     fix: "Keep one string in title, H1, og:title, and Article.headline. No page edit until they diverge again.",
     impact: "high",
-    status: "open",
+    status: "pass",
     urls: ["https://www.freedomdebtrelief.com/learn/credit-card-debt/401k-loan-credit-card-debt/"],
     citations: [
       {

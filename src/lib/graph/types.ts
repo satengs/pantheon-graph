@@ -1,6 +1,6 @@
 export type BrandId = string;
 export type Layer = "L1" | "L2";
-export type IssueStatus = "open" | "studio" | "suggested";
+export type IssueStatus = "open" | "studio" | "suggested" | "pass";
 export type NodeKind = "parent" | "brand" | "product" | "glossary" | "issue" | "page";
 export type ProductId =
   | "debt-relief"
