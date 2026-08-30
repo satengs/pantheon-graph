@@ -21,6 +21,7 @@ import { issueFitsFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { PageMeta } from "@/components/studio/PageMeta";
 import { useStudio } from "@/store/studio";
+import { IssueMindMap } from "@/components/studio/IssueMindMap";
 
 export function IssueDrawer() {
   const open = useStudio((s) => s.issueDrawerOpen);
@@ -140,6 +141,8 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
         ) : null}
         <p className="vh-fix mt-2">{view.fix || "—"}</p>
       </section>
+
+      <IssueMindMap code={view.code} />
 
       {related.length ? (
         <section className="g-ground">

@@ -18,6 +18,7 @@ import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { pagePath } from "@/lib/studio/issue-detail";
 import { pagesForRule } from "@/lib/studio/rule-pages";
+import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { PageMeta } from "@/components/studio/PageMeta";
 
 export function Inspector() {
@@ -165,6 +166,8 @@ export function Inspector() {
           <p className="vh-fix mt-1">{issue.fix}</p>
         </div>
       </header>
+
+      <IssueMindMap code={issue.code} />
 
       {catPages.length ? (
         <div>

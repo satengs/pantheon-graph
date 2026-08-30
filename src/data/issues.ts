@@ -182,10 +182,10 @@ export const ISSUES: BacklogItem[] = [
     domain: "both",
     product: "other",
     reason:
-      "The two organizations are related in the real world but the graphs do not declare it. Crawlers treat them as competitors stealing each other's entities.",
-    fix: "Add Organization.sameAs in both directions only for the corporate relationship. Do not sameAs product nodes. Keep product ownership exclusive.",
-    impact: "medium",
-    status: "suggested",
+      "Google AI Overview (2026-08-30) puts both brands under one “Debt Relief Services” node. Achieve is “affiliate of FDR” with the same NMLS ID 1248929. The corporate relationship is real. The product merge is the bug.",
+    fix: "Declare affiliate/parent on the about page only. Do not sameAs product URLs. FDR = settlement Service. Achieve = loans. Do not let a Debt Relief Services super-node own both.",
+    impact: "critical",
+    status: "open",
     urls: ["https://www.freedomdebtrelief.com/", "https://www.achieve.com/"],
     citations: [
       {
@@ -194,10 +194,10 @@ export const ISSUES: BacklogItem[] = [
         quote:
           "Freedom Debt Relief is a dedicated debt relief program that helps eligible customers reduce unsecured debt through negotiated settlements.",
         location: "about relationship page",
-        whyReal: "Public Achieve page already explains the relationship. Schema should mirror that, not the product graph.",
+        whyReal: "Public Achieve page already explains the relationship. Schema should mirror that, not the product graph. Google AI Overview still hangs both brands off one Debt Relief Services node with NMLS 1248929.",
       },
     ],
-    acceptance: acc(true, true, 84, "HIT", "pass"),
+    acceptance: acc(false, false, 84, "HIT", "fail"),
   },
   {
     id: "S07",
@@ -344,8 +344,8 @@ export const ISSUES: BacklogItem[] = [
     domain: "achieve",
     product: "personal-loan",
     reason:
-      "NMLS IDs and origination-fee language appear on debt-relief and glossary templates where no loan is offered. That's a compliance and entity-type error.",
-    fix: "NMLS + origination copy only on LoanOrCredit URLs (HEL, HELOC, personal loans). FDR settlement pages keep program-fee language, never NMLS.",
+      "NMLS IDs on debt-relief templates attach a loan license to a settlement product. Google AI Overview (2026-08-30) cites NMLS 1248929 for both FDR and Achieve under one Debt Relief Services entity.",
+    fix: "NMLS + origination copy only on LoanOrCredit URLs (HEL, HELOC, personal loans). FDR settlement and Achieve /debt-relief keep program-fee language, never NMLS.",
     impact: "critical",
     status: "open",
     urls: [
@@ -359,7 +359,7 @@ export const ISSUES: BacklogItem[] = [
         quote: "Manage Debt · Debt Relief · Debt Consolidation",
         location: "footer / disclosures",
         whyReal:
-          "Debt relief is not a loan product. NMLS IDs on this template attach the wrong regulated entity.",
+          "Debt relief is not a loan product. Google AI Overview 2026-08-30 still attaches NMLS 1248929 to both FDR and Achieve under one hub.",
       },
     ],
     acceptance: acc(false, false, 66, "DYNAMIC", "fail"),
@@ -423,8 +423,8 @@ export const ISSUES: BacklogItem[] = [
     domain: "both",
     product: "debt-relief",
     reason:
-      "Both brands sell debt relief. Achieve /debt-relief has Apply FREE and is not a pointer to FDR. Two live products on the same path.",
-    fix: "Do not 301 or canonical Achieve /debt-relief to FDR — that hides Achieve’s offer. Two Service nodes, two Organization @ids, labeled parent/sibling. Press stays NewsArticle.",
+      "Both brands sell debt relief. Google AI Overview still keeps one “Debt Relief Services” hub — Achieve’s product is folded into FDR as an affiliate, not a second Service.",
+    fix: "Do not 301 Achieve /debt-relief to FDR. Two Service nodes, two Organization @ids. Corporate affiliate lives on about, not on the product URL.",
     impact: "critical",
     status: "open",
     urls: [
