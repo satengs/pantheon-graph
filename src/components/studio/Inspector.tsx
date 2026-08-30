@@ -160,7 +160,10 @@ export function Inspector() {
         <p className="font-mono text-xs text-subtle">{issue.code}</p>
         <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
         <p className="vh-what mt-2">{issue.reason}</p>
-        <p className="vh-fix mt-3">{issue.fix}</p>
+        <div className="mt-3">
+          <p className="vh-kicker">Solution</p>
+          <p className="vh-fix mt-1">{issue.fix}</p>
+        </div>
       </header>
 
       {catPages.length ? (
@@ -186,6 +189,34 @@ export function Inspector() {
           </ul>
         </div>
       ) : null}
+
+      {issue.citations.length ? (
+        <div>
+          <p className="vh-kicker">Evidence</p>
+          <ul className="mt-2 space-y-3">
+            {issue.citations.map((c) => (
+              <li key={c.url + c.location}>
+                <p className="text-sm text-fg text-pretty">“{c.quote}”</p>
+                {c.whyReal ? <p className="vh-whisper mt-1">{c.whyReal}</p> : null}
+                <a href={c.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] text-muted hover:text-fg">
+                  {pagePath(c.url)} <ExternalLink className="size-3" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : proofView?.conflict ? (
+        <div>
+          <p className="vh-kicker">Evidence</p>
+          <p className="vh-what mt-2">{proofView.conflict}</p>
+        </div>
+      ) : null}
+
+      <div>
+        <Button size="sm" onClick={() => openIssueDrawer({ issueId: issue.id, pageUrl: focusUrl || issue.urls[0] })}>
+          View issue
+        </Button>
+      </div>
 
       {tab === "issues" ? null : (
         <>
