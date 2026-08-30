@@ -115,9 +115,7 @@ export function Backlog() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">
-      <p className="text-sm text-muted">
-        Each row is the problem. Under it is the page and the section.
-      </p>
+      <p className="vh-what">Page first. Then the section. Then what to fix — on this page, not the related URL.</p>
       {err ? <p className="mt-2 text-sm text-danger">{err}</p> : null}
       {!seedFamily && points.length === 0 ? (
         <div className="mt-4">

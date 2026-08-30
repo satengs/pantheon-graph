@@ -35,8 +35,7 @@ import { familyContextFrom, useStudio, type StudioTab } from "@/store/studio";
 import { familyPageCount, isSeedFamily, issueFitsFamily, productsForFamily } from "@/lib/org/catalog";
 import { productLabel } from "@/lib/graph/types";
 import { UserButton } from "@/lib/auth/gates";
-import { filterIssues, filterStates } from "@/lib/studio/query";
-import { statesData } from "@/data/states";
+import { filterIssues } from "@/lib/studio/query";
 import { loadNote, saveNote } from "@/lib/server/studio-db";
 import { RegisterFamilyModal } from "@/components/studio/RegisterFamilyModal";
 import { IssueDrawer } from "@/components/studio/IssueDrawer";
@@ -86,12 +85,12 @@ export function Studio() {
   const [crawling, setCrawling] = useState(false);
   const [checking, setChecking] = useState(false);
   const [draft, setDraft] = useState("");
+  const [notesOpen, setNotesOpen] = useState(false);
+  const showFilters = tab === "issues" || tab === "validation" || tab === "explore" || tab === "graph" || tab === "states" || tab === "gate";
   const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).filter((i) =>
     issueFitsFamily(i, graphOrg, parentSlug),
   );
   const openCount = visibleIssues.filter((i) => i.status === "open").length;
-  const issueHits = visibleIssues.length;
-  const stateHits = seedFamily ? filterStates(statesData.states, { brand, product, query }).length : 0;
   const familyPages = familyPageCount(graphOrg);
   const productOptions = productsForFamily(graphOrg?.brands ?? [], brand);
 
@@ -166,12 +165,12 @@ export function Studio() {
 
   return (
     <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-bg text-fg">
-      <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-border bg-bg px-4 py-3">
+      <header className="sticky top-0 z-20 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
         <div className="mr-1">
-          <p className="font-display text-2xl leading-none tracking-tight">
+          <p className="font-display text-xl leading-none tracking-tight">
             {graphOrg?.parent?.name ?? "Pantheon"}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-subtle">Content Graph Studio</p>
+          <p className="vh-kicker mt-0.5">{openCount} open</p>
         </div>
         <label className="flex items-center gap-2 text-xs text-muted" title="Holding company. Every tab and the inspector follow this family.">
           <span>Family</span>
@@ -245,8 +244,8 @@ export function Studio() {
         </div>
       </header>
 
-      <nav className="flex flex-wrap border-b border-border bg-bg px-4 py-2" aria-label="Primary">
-        <div className="flex flex-wrap rounded-lg bg-surface p-1">
+      <nav className="flex flex-wrap border-b border-border bg-bg px-4 py-1.5" aria-label="Primary">
+        <div className="flex flex-wrap rounded-md bg-surface p-0.5">
           {TABS.map((t) => {
             const Icon = t.icon;
             const on = tab === t.id;
@@ -256,8 +255,8 @@ export function Studio() {
                 type="button"
                 onClick={() => setTab(t.id)}
                 title={t.hint}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm ${
-                  on ? "bg-accent text-accent-fg" : "text-muted hover:bg-raised hover:text-fg"
+                className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs ${
+                  on ? "bg-accent text-accent-fg" : "text-subtle hover:bg-raised hover:text-fg"
                 }`}
               >
                 <Icon className="size-3.5" />
@@ -268,7 +267,8 @@ export function Studio() {
         </div>
       </nav>
 
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
+      {showFilters ? (
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-1.5">
         <label
           className="flex items-center gap-2 text-xs text-muted"
           title="L1 is this page: headings, schema, copy. L2 is across brands: same slug, same ask, corporate sameAs."
@@ -333,44 +333,53 @@ export function Studio() {
         <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
           {crawling ? "Crawling…" : "Live crawl"}
         </Button>
+        <Button variant="secondary" size="sm" onClick={() => setNotesOpen((v) => !v)}>
+          {notesOpen ? "Hide notes" : "Notes"}
+        </Button>
+        {crawlMsg ? <span className="vh-whisper max-w-[280px] truncate">{crawlMsg}</span> : null}
       </div>
-      <p className="border-b border-border px-4 py-1.5 font-mono text-[11px] text-muted">
-        {graphOrg?.parent?.name ?? "Family"} · {issueHits} issues
-        {seedFamily ? ` · ${stateHits} states` : ""}
-        {crawlMsg ? ` · ${crawlMsg}` : ""}
-      </p>
+      ) : (
+        <div className="flex items-center gap-2 border-b border-border px-4 py-1.5">
+          <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
+            {crawling ? "Crawling…" : "Live crawl"}
+          </Button>
+          {crawlMsg ? <span className="vh-whisper truncate">{crawlMsg}</span> : null}
+        </div>
+      )}
 
       <HSplit
         storageKey="origin.inspectorW"
         left={
-          <VSplit
-            storageKey="origin.writeH"
-            top={main}
-            bottom={
-              <div className="flex h-full flex-col bg-surface p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[10px] uppercase tracking-wide text-subtle">
-                    Write · {selectedIssueId ?? graphOrg?.parent?.name ?? tab}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() =>
-                      void saveNote({ data: { pageKey: selectedIssueId ?? tab, body: draft } })
-                    }
-                  >
-                    Save
-                  </Button>
+          notesOpen ? (
+            <VSplit
+              storageKey="origin.writeH"
+              top={main}
+              bottom={
+                <div className="flex h-full flex-col bg-surface p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="vh-kicker">Notes · {selectedIssueId ?? graphOrg?.parent?.name ?? tab}</p>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        void saveNote({ data: { pageKey: selectedIssueId ?? tab, body: draft } })
+                      }
+                    >
+                      Save
+                    </Button>
+                  </div>
+                  <textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="Draft the page copy or fix notes for this selection"
+                    className="min-h-0 flex-1 resize-none rounded-md bg-bg p-2 text-sm text-fg shadow-[var(--shadow-border)]"
+                  />
                 </div>
-                <textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Draft the page copy or fix notes for this selection"
-                  className="min-h-0 flex-1 resize-none rounded-md bg-bg p-2 text-sm text-fg shadow-[var(--shadow-border)]"
-                />
-              </div>
-            }
-          />
+              }
+            />
+          ) : (
+            main
+          )
         }
         right={<Inspector />}
       />

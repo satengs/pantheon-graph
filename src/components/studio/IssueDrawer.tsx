@@ -91,20 +91,21 @@ export function IssueDrawer() {
       aria-labelledby={titleId}
       className="drawer-in fixed inset-y-0 right-0 z-[70] flex h-full w-[min(520px,100vw)] max-w-full flex-col border-l border-border bg-surface shadow-[var(--shadow-border)]"
     >
-      <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+      <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">Live gate</p>
-          <h2
-            id={titleId}
-            className={`mt-1 font-display text-2xl leading-tight text-balance ${
-              view?.gate.blocks ? "text-danger" : "text-ok"
-            }`}
-          >
-            {view?.gate.label ?? "Doesn't block live"}
+          <p className="vh-kicker">Issue on</p>
+          <h2 id={titleId} className="vh-page mt-1">
+            {view?.page.path || "No live URL"}
           </h2>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <p className="vh-what mt-1">
+            {view?.section || PAGE_LEVEL}
+            {view?.what ? ` · ${view.what}` : ""}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {view?.gate ? (
+              <Badge tone={view.gate.blocks ? "danger" : "ok"}>{view.gate.label}</Badge>
+            ) : null}
             {view?.code ? <Badge>{view.code}</Badge> : null}
-            {view?.layer ? <Badge>{view.layer}</Badge> : null}
             {view?.impact ? (
               <Badge tone={view.impact === "critical" ? "danger" : view.impact === "high" ? "warn" : "neutral"}>
                 {view.impact}
@@ -126,33 +127,27 @@ export function IssueDrawer() {
 }
 
 function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatIssueDetail>> }) {
-  const page = view.page.url ? view.page : null;
   const related = view.relatedPages.filter((p) => p.url);
-  const fixPage = view.fixPage.url ? view.fixPage : page;
+  const fixPage = view.fixPage.url ? view.fixPage : view.page.url ? view.page : null;
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Issue on</h3>
-        {page ? (
-          <a href={page.url} target="_blank" rel="noreferrer" className="mt-1 block font-mono text-sm text-fg hover:underline">
-            {page.path}
+        <p className="vh-kicker">Fix on this page</p>
+        {fixPage ? (
+          <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page mt-1 block hover:underline">
+            {fixPage.path}
           </a>
-        ) : (
-          <p className="mt-1 text-sm text-muted">No live URL</p>
-        )}
-        <p className="mt-1 text-xs text-muted">
-          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
-          {view.section || PAGE_LEVEL}
-        </p>
+        ) : null}
+        <p className="vh-fix mt-2">{view.fix || "—"}</p>
       </section>
 
       {related.length ? (
         <section>
-          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Related page — mentioned, not the edit</h3>
+          <p className="vh-kicker">Related — do not edit</p>
           <ul className="mt-1 space-y-1">
             {related.map((p) => (
               <li key={p.url}>
-                <a href={p.url} target="_blank" rel="noreferrer" className="font-mono text-sm text-muted hover:text-fg hover:underline">
+                <a href={p.url} target="_blank" rel="noreferrer" className="vh-whisper block font-mono hover:text-muted hover:underline">
                   {p.path}
                 </a>
               </li>
@@ -160,21 +155,6 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
           </ul>
         </section>
       ) : null}
-
-      <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Fix on</h3>
-        {fixPage ? (
-          <a href={fixPage.url} target="_blank" rel="noreferrer" className="mt-1 block font-mono text-sm text-fg hover:underline">
-            {fixPage.path}
-          </a>
-        ) : null}
-        <p className="mt-2 text-base leading-relaxed text-fg text-pretty">{view.fix || "—"}</p>
-      </section>
-
-      <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">What</h3>
-        <p className="mt-1 text-base leading-relaxed text-fg text-pretty">{view.what}</p>
-      </section>
 
       <section>
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Why</h3>
@@ -315,30 +295,23 @@ export function IssueRow({
       }`}
     >
       {leading}
+      <span
+        className={`mt-1.5 size-2 shrink-0 rounded-full ${
+          row.impact === "critical" ? "bg-danger" : row.impact === "high" ? "bg-warn" : "bg-subtle"
+        }`}
+        title={row.impact || "impact"}
+      />
       <div className="min-w-0 flex-1">
-        <p className="text-base font-medium leading-snug text-fg text-pretty">{row.what}</p>
-        <p className="mt-1.5 truncate text-xs text-muted">
-          <span className="font-medium uppercase tracking-wide text-subtle">Issue on </span>
-          <span className="font-mono text-fg">{row.pagePath}</span>
-          <span className="text-subtle"> · </span>
-          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
-          <span>{row.section || PAGE_LEVEL}</span>
+        <p className="vh-page truncate">{row.pagePath}</p>
+        <p className="vh-what mt-0.5">
+          {row.section || PAGE_LEVEL}
+          {row.what ? ` · ${row.what}` : ""}
         </p>
-        <p className="mt-0.5 truncate text-xs text-subtle">
-          <span className="font-medium uppercase tracking-wide">Fix on </span>
-          <span className="font-mono">this page</span>
-          {row.relatedPath ? (
-            <>
-              <span> · </span>
-              <span className="font-medium uppercase tracking-wide">Related </span>
-              <span className="font-mono">{row.relatedPath}</span>
-            </>
-          ) : null}
+        <p className="vh-whisper mt-0.5 truncate">
+          Fix this page
+          {row.relatedPath ? ` · related ${row.relatedPath}` : ""}
         </p>
       </div>
-      {row.impact ? (
-        <Badge tone={row.impact === "critical" ? "danger" : row.impact === "high" ? "warn" : "neutral"}>{row.impact}</Badge>
-      ) : null}
     </div>
   );
 }

@@ -76,3 +76,37 @@
 .drawer-in {
   animation: drawer-in var(--motion-fast) var(--ease-out) both;
 }
+
+/* Visual hierarchy — four levels. Loudest thing is the page to edit. */
+.vh-kicker {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-subtle);
+}
+.vh-page {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-fg);
+  overflow-wrap: anywhere;
+}
+.vh-what {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+.vh-whisper {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-subtle);
+}
+.vh-fix {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}

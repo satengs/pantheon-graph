@@ -7,7 +7,7 @@ import { buildGraph, toneRatio } from "@/lib/graph/model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
-import { BRAND_LABEL, productLabel } from "@/lib/graph/types";
+import { BRAND_LABEL } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
 import { listStudio } from "@/lib/server/studio-db";
 import { analyzePage } from "@/lib/server/analyze-page";
@@ -154,75 +154,61 @@ export function Inspector() {
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
-        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-subtle">
-          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "View the issue"}
+        <p className="vh-kicker">
+          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Issue on"}
         </p>
-        <h2 className="mt-1 font-display text-xl leading-tight text-fg text-balance">
-          {finding && selectedFindingId ? finding.title : `${issue.code} · ${issue.title}`}
+        <h2 className="vh-page mt-1">
+          {issue.urls[0] ? pagePath(issue.urls[0]) : "No live URL"}
         </h2>
-        <div className="mt-2">
-          <Button size="sm" onClick={() => openIssueDrawer()}>
-            View issue
-          </Button>
-        </div>
+        <p className="vh-what mt-1">
+          {finding && selectedFindingId ? finding.title : issue.title}
+        </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          <Badge tone={issue.layer === "L2" ? "warn" : "neutral"}>{issue.layer}</Badge>
-          <Badge
-            tone={
-              issue.domain === "fdr" ? "fdr" : issue.domain === "achieve" ? "achieve" : "neutral"
-            }
-          >
-            {issue.domain}
-          </Badge>
-          <Badge>{issue.product === "all" ? "all products" : productLabel(issue.product)}</Badge>
           <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
             {issue.impact}
           </Badge>
+          <Badge>{issue.code}</Badge>
         </div>
       </header>
 
       {issue.urls[0] ? (
-        <div className="overflow-hidden rounded-lg bg-raised">
-          <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="block">
-            <img
-              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
-              alt=""
-              className="h-36 w-full object-cover object-top"
-            />
-          </a>
-          <div className="space-y-1 px-3 py-2 text-sm">
-            <p>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Issue on </span>
-              <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="font-mono text-fdr hover:underline">
-                {pagePath(issue.urls[0])}
+        <section className="rounded-lg bg-raised px-3 py-3">
+          <p className="vh-kicker">Fix on this page</p>
+          <p className="vh-page mt-1">{pagePath(issue.urls[0])}</p>
+          <p className="vh-fix mt-2">{issue.fix}</p>
+          {issue.urls[1] ? (
+            <p className="vh-whisper mt-3">
+              Related — do not edit{" "}
+              <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="font-mono hover:underline">
+                {pagePath(issue.urls[1])}
               </a>
             </p>
-            <p>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Fix on </span>
-              <span className="font-mono text-fg">{pagePath(issue.urls[0])}</span>
-              <span className="text-subtle"> · do not edit the related URL</span>
-            </p>
-            {issue.urls[1] ? (
-              <p>
-                <span className="text-[10px] font-medium uppercase tracking-wide text-subtle">Related </span>
-                <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="font-mono text-muted hover:text-fg hover:underline">
-                  {pagePath(issue.urls[1])}
-                </a>
-              </p>
-            ) : null}
-          </div>
-        </div>
+          ) : null}
+        </section>
       ) : (
         <Link to="/empty" search={{ q: issue.code }} className="text-sm text-fdr hover:underline">
           No live URL — open empty-data page
         </Link>
       )}
 
+      {issue.urls[0] ? (
+        <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="overflow-hidden rounded-lg bg-raised">
+          <img
+            src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
+            alt=""
+            className="h-24 w-full object-cover object-top opacity-80"
+          />
+        </a>
+      ) : null}
+
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Reason</h3>
-        <p className="mt-1 text-sm leading-relaxed text-muted text-pretty">{issue.reason}</p>
-        <h3 className="mt-3 text-[11px] font-medium uppercase tracking-wide text-subtle">Fix</h3>
-        <p className="mt-1 text-sm leading-relaxed text-fg text-pretty">{issue.fix}</p>
+        <p className="vh-kicker">Why</p>
+        <p className="vh-what mt-1">{issue.reason}</p>
+        <div className="mt-3">
+          <Button size="sm" variant="secondary" onClick={() => openIssueDrawer()}>
+            Full evidence
+          </Button>
+        </div>
       </section>
 
       {proofView ? (
