@@ -229,7 +229,7 @@ export const useStudio = create<StudioState>((set, get) => ({
       selectedIssueId,
       selectedFindingId: null,
       issueDrawerOpen: false,
-      drawerPageUrl: pageUrl ?? null,
+      drawerPageUrl: pageUrl === undefined ? null : pageUrl,
       selectedNodeId: selectedIssueId ? `issue:${selectedIssueId}` : null,
       selectedState: null,
     }),

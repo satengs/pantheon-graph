@@ -155,70 +155,40 @@ export function Inspector() {
   }
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
-      <div className="g-figure">
-        <p className="vh-kicker">
-          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Category"}
-        </p>
-        <h2 className="vh-page-hero mt-1">{issue.title}</h2>
-        <p className="vh-what mt-1">{issue.reason}</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
-            {issue.impact}
-          </Badge>
-          <Badge>{issue.code}</Badge>
-          <Badge>{catPages.length} pages</Badge>
-        </div>
-      </div>
+    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
+      <header>
+        <p className="font-mono text-xs text-subtle">{issue.code}</p>
+        <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
+        <p className="vh-what mt-2">{issue.reason}</p>
+        <p className="vh-fix mt-3">{issue.fix}</p>
+      </header>
 
       {catPages.length ? (
-        <div className="g-ground">
-          <p className="vh-kicker">Pages with this issue</p>
-          <ul className="mt-2 space-y-1">
-            {catPages.map((p) => (
-              <li key={p.url}>
-                <button
-                  type="button"
-                  className={`block w-full truncate text-left font-mono text-xs hover:underline ${
-                    focusUrl === p.url ? "text-fg" : "text-muted"
-                  }`}
-                  onClick={() => selectIssue(issue.code, p.url)}
-                >
-                  {p.path}
-                </button>
-              </li>
-            ))}
+        <div>
+          <p className="vh-kicker">{catPages.length} pages</p>
+          <ul className="mt-2">
+            {catPages.map((p) => {
+              const on = focusUrl === p.url;
+              return (
+                <li key={p.url}>
+                  <button
+                    type="button"
+                    className={`block w-full truncate px-0 py-1.5 text-left font-mono text-[13px] hover:text-fg ${
+                      on ? "text-fg" : "text-muted"
+                    }`}
+                    onClick={() => selectIssue(issue.code, on ? null : p.url)}
+                  >
+                    {p.path}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
 
-      {focusUrl ? (
-        <div className="g-figure">
-          <p className="vh-kicker">Fix on this page</p>
-          <a href={focusUrl} target="_blank" rel="noreferrer" className="vh-page mt-1 block hover:underline">
-            {pagePath(focusUrl)}
-          </a>
-          <p className="vh-fix mt-2">{issue.fix}</p>
-          <a href={focusUrl} target="_blank" rel="noreferrer" className="-mx-1 mt-3 block overflow-hidden rounded-md">
-            <img
-              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(focusUrl)}?w=720`}
-              alt=""
-              className="h-24 w-full object-cover object-top opacity-80"
-            />
-          </a>
-        </div>
-      ) : null}
-
-      <div className="g-ground">
-        <p className="vh-kicker">Why it matters</p>
-        <p className="vh-what mt-1">{issue.reason}</p>
-        <div className="mt-3">
-          <Button size="sm" variant="secondary" onClick={() => openIssueDrawer()}>
-            Full evidence
-          </Button>
-        </div>
-      </div>
-
+      {tab === "issues" ? null : (
+        <>
       {proofView ? (
         <section className="rounded-lg bg-raised p-3">
           <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Proof · last crawl + captured HTML</h3>
@@ -400,6 +370,8 @@ export function Inspector() {
           ))}
         </div>
       ) : null}
+        </>
+      )}
     </aside>
   );
 }
