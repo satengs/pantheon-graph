@@ -130,8 +130,8 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
   const related = view.relatedPages.filter((p) => p.url);
   const fixPage = view.fixPage.url ? view.fixPage : view.page.url ? view.page : null;
   return (
-    <div className="flex flex-col gap-5">
-      <section>
+    <div className="flex flex-col gap-4">
+      <section className="g-figure">
         <p className="vh-kicker">Fix on this page</p>
         {fixPage ? (
           <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page mt-1 block hover:underline">
@@ -142,7 +142,7 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
       </section>
 
       {related.length ? (
-        <section>
+        <section className="g-ground">
           <p className="vh-kicker">Related — do not edit</p>
           <ul className="mt-1 space-y-1">
             {related.map((p) => (
@@ -288,29 +288,31 @@ export function IssueRow({
       }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 py-3 text-left hover:bg-raised/70 ${
-        selected
-          ? "bg-[color-mix(in_oklab,var(--color-accent)_16%,var(--color-surface))] shadow-[inset_4px_0_0_var(--color-accent)]"
-          : ""
+      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 py-2.5 text-left hover:bg-raised/70 ${
+        selected ? "g-rail" : ""
       }`}
     >
       {leading}
       <span
-        className={`mt-1.5 size-2 shrink-0 rounded-full ${
+        className={`mt-2 size-2 shrink-0 rounded-full ${
           row.impact === "critical" ? "bg-danger" : row.impact === "high" ? "bg-warn" : "bg-subtle"
         }`}
         title={row.impact || "impact"}
       />
       <div className="min-w-0 flex-1">
-        <p className="vh-page truncate">{row.pagePath}</p>
-        <p className="vh-what mt-0.5">
-          {row.section || PAGE_LEVEL}
-          {row.what ? ` · ${row.what}` : ""}
-        </p>
-        <p className="vh-whisper mt-0.5 truncate">
-          Fix this page
-          {row.relatedPath ? ` · related ${row.relatedPath}` : ""}
-        </p>
+        <div className="g-figure py-2">
+          <p className="vh-page truncate">{row.pagePath}</p>
+          <p className="vh-what mt-0.5">
+            {row.section || PAGE_LEVEL}
+            {row.what ? ` · ${row.what}` : ""}
+          </p>
+          <p className="vh-whisper mt-1">Fix this page</p>
+        </div>
+        {row.relatedPath ? (
+          <div className="g-ground mt-1.5">
+            <p className="vh-whisper truncate">Related · {row.relatedPath}</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

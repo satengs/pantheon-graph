@@ -45,7 +45,6 @@ export function Companies() {
   const setBrand = useStudio((s) => s.setBrand);
   const familyEpoch = useStudio((s) => s.familyEpoch);
   const parentId = useStudio((s) => s.parentId);
-  const selectParent = useStudio((s) => s.selectParent);
   const selectIssue = useStudio((s) => s.selectIssue);
 
   const [family, setFamily] = useState<Family>(emptyFamily);
@@ -110,23 +109,6 @@ export function Companies() {
 
       {err ? <p className="text-sm text-danger">{err}</p> : null}
       {msg ? <p className="text-sm text-ok">{msg}</p> : null}
-
-      {family.parents.length > 1 ? (
-        <label className="flex items-center gap-2 text-xs text-muted">
-          Active parent
-          <select
-            value={parent?.id ?? ""}
-            onChange={(e) => selectParent(e.target.value)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
-          >
-            {family.parents.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
 
       <section className="rounded-xl bg-raised p-4">
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wide text-subtle">

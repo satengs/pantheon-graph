@@ -53,6 +53,17 @@ const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string
   { id: "config", label: "Config", icon: Settings2, hint: "Where data lives and brand JSON." },
 ];
 
+const TAB_GROUPS: { label: string; items: typeof TABS }[] = [
+  { label: "Family", items: byId("companies") },
+  { label: "Map", items: byId("graph", "explore", "recommend", "states") },
+  { label: "Work", items: byId("issues", "validation", "gate", "rules") },
+  { label: "Setup", items: byId("config") },
+];
+
+function byId(...ids: StudioTab[]) {
+  return ids.map((id) => TABS.find((t) => t.id === id)!);
+}
+
 export function Studio() {
   const tab = useStudio((s) => s.tab);
   const setTab = useStudio((s) => s.setTab);
@@ -172,12 +183,13 @@ export function Studio() {
           </p>
           <p className="vh-kicker mt-0.5">{openCount} open</p>
         </div>
+        <div className="g-cluster" role="group" aria-label="Family context">
         <label className="flex items-center gap-2 text-xs text-muted" title="Holding company. Every tab and the inspector follow this family.">
           <span>Family</span>
           <select
             value={parentId}
             onChange={(e) => selectParent(e.target.value)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            className="h-8 rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             {(parents.length ? parents : [{ id: parentId, name: graphOrg?.parent?.name ?? "Pantheon" }]).map((p) => (
               <option key={p.id} value={p.id}>
@@ -191,7 +203,7 @@ export function Studio() {
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value as typeof brand)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            className="h-8 rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             <option value="all">All brands</option>
             {(graphOrg?.brands ?? []).map((b) => (
@@ -206,7 +218,7 @@ export function Studio() {
           <select
             value={product}
             onChange={(e) => setProduct(e.target.value as typeof product)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            className="h-8 rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             {productOptions.length === 0 ? (
               <option value="all">All products</option>
@@ -222,20 +234,17 @@ export function Studio() {
             )}
           </select>
         </label>
-        <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted">
+        </div>
+        <div className="ml-auto g-cluster" role="group" aria-label="Family actions">
           {seedFamily ? (
-            <>
-              <span className="font-mono tabular-nums">FDR {crawl.counts.fdr.toLocaleString()}</span>
-              <span className="text-subtle">·</span>
-              <span className="font-mono tabular-nums">Achieve {crawl.counts.achieve.toLocaleString()}</span>
-            </>
+            <span className="vh-whisper font-mono tabular-nums">
+              FDR {crawl.counts.fdr.toLocaleString()} · Achieve {crawl.counts.achieve.toLocaleString()}
+            </span>
           ) : (
-            <span className="font-mono tabular-nums">
-              {graphOrg?.parent?.name ?? "Family"} {familyPages.toLocaleString()} pages
+            <span className="vh-whisper font-mono tabular-nums">
+              {familyPages.toLocaleString()} pages
             </span>
           )}
-          <span className="text-subtle">·</span>
-          <span className="font-mono tabular-nums">{openCount} open</span>
           <Button size="sm" onClick={() => setRegisterOpen(true)}>
             <Plus className="size-3.5" />
             New family
@@ -244,31 +253,37 @@ export function Studio() {
         </div>
       </header>
 
-      <nav className="flex flex-wrap border-b border-border bg-bg px-4 py-1.5" aria-label="Primary">
-        <div className="flex flex-wrap rounded-md bg-surface p-0.5">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const on = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                title={t.hint}
-                className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs ${
-                  on ? "bg-accent text-accent-fg" : "text-subtle hover:bg-raised hover:text-fg"
-                }`}
-              >
-                <Icon className="size-3.5" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+      <nav className="flex flex-wrap items-end gap-3 border-b border-border bg-bg px-4 py-1.5" aria-label="Primary">
+        {TAB_GROUPS.map((group) => (
+          <div key={group.label} className="g-cluster g-cluster-flat" role="group" aria-label={group.label}>
+            <span className="vh-kicker px-1">{group.label}</span>
+            <div className="flex flex-wrap rounded-md bg-surface p-0.5">
+              {group.items.map((t) => {
+                const Icon = t.icon;
+                const on = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    title={t.hint}
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs ${
+                      on ? "bg-accent text-accent-fg" : "text-subtle hover:bg-raised hover:text-fg"
+                    }`}
+                  >
+                    <Icon className="size-3.5" />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {showFilters ? (
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-1.5">
+        <div className="g-cluster min-w-0 flex-1" role="group" aria-label="Filters">
         <label
           className="flex items-center gap-2 text-xs text-muted"
           title="L1 is this page: headings, schema, copy. L2 is across brands: same slug, same ask, corporate sameAs."
@@ -277,7 +292,7 @@ export function Studio() {
           <select
             value={layer}
             onChange={(e) => setLayer(e.target.value as typeof layer)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            className="h-8 rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             <option value="all">All — page and cross-brand</option>
             <option value="L1">L1 — this page (HTML, schema, copy)</option>
@@ -289,7 +304,7 @@ export function Studio() {
           <select
             value={impact}
             onChange={(e) => setImpact(e.target.value as typeof impact)}
-            className="h-9 rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+            className="h-8 rounded-md bg-bg px-2 text-sm text-fg shadow-[var(--shadow-border)]"
           >
             <option value="all">All</option>
             <option value="critical">Critical</option>
@@ -298,17 +313,20 @@ export function Studio() {
             <option value="low">Low</option>
           </select>
         </label>
-        <label className="relative min-w-[160px] flex-1">
+        <label className="relative min-w-[140px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-subtle" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search issues or states"
             suppressHydrationWarning
-            className="h-9 w-full rounded-md bg-surface pl-8 pr-3 text-sm text-fg shadow-[var(--shadow-border)] placeholder:text-subtle"
+            className="h-8 w-full rounded-md bg-bg pl-8 pr-3 text-sm text-fg shadow-[var(--shadow-border)] placeholder:text-subtle"
           />
         </label>
-        <label className="flex h-9 items-center gap-2 rounded-md bg-surface px-3 text-sm text-muted shadow-[var(--shadow-border)]">
+        </div>
+        <div className="g-cluster" role="group" aria-label="Actions">
+        {tab === "graph" ? (
+        <label className="flex h-8 items-center gap-2 px-1 text-sm text-muted">
           <input
             type="checkbox"
             checked={explode}
@@ -318,6 +336,7 @@ export function Studio() {
           />
           Explode pages
         </label>
+        ) : null}
         {(tab === "graph" || tab === "states" || tab === "validation") && (
           <Button
             variant="secondary"
@@ -337,6 +356,7 @@ export function Studio() {
           {notesOpen ? "Hide notes" : "Notes"}
         </Button>
         {crawlMsg ? <span className="vh-whisper max-w-[280px] truncate">{crawlMsg}</span> : null}
+        </div>
       </div>
       ) : (
         <div className="flex items-center gap-2 border-b border-border px-4 py-1.5">

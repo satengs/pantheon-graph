@@ -152,8 +152,8 @@ export function Inspector() {
   }
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
-      <header>
+    <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
+      <div className="g-figure">
         <p className="vh-kicker">
           {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Issue on"}
         </p>
@@ -169,39 +169,33 @@ export function Inspector() {
           </Badge>
           <Badge>{issue.code}</Badge>
         </div>
-      </header>
+        {issue.urls[0] ? (
+          <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="-mx-1 mt-3 block overflow-hidden rounded-md">
+            <img
+              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
+              alt=""
+              className="h-24 w-full object-cover object-top opacity-80"
+            />
+          </a>
+        ) : null}
+        <p className="vh-kicker mt-3">Fix on this page</p>
+        <p className="vh-fix mt-1">{issue.fix}</p>
+      </div>
 
-      {issue.urls[0] ? (
-        <section className="rounded-lg bg-raised px-3 py-3">
-          <p className="vh-kicker">Fix on this page</p>
-          <p className="vh-page mt-1">{pagePath(issue.urls[0])}</p>
-          <p className="vh-fix mt-2">{issue.fix}</p>
-          {issue.urls[1] ? (
-            <p className="vh-whisper mt-3">
-              Related — do not edit{" "}
-              <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="font-mono hover:underline">
-                {pagePath(issue.urls[1])}
-              </a>
-            </p>
-          ) : null}
-        </section>
-      ) : (
+      {issue.urls[1] ? (
+        <div className="g-ground">
+          <p className="vh-kicker">Related — do not edit</p>
+          <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="vh-whisper mt-1 block font-mono hover:underline">
+            {pagePath(issue.urls[1])}
+          </a>
+        </div>
+      ) : !issue.urls[0] ? (
         <Link to="/empty" search={{ q: issue.code }} className="text-sm text-fdr hover:underline">
           No live URL — open empty-data page
         </Link>
-      )}
-
-      {issue.urls[0] ? (
-        <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="overflow-hidden rounded-lg bg-raised">
-          <img
-            src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
-            alt=""
-            className="h-24 w-full object-cover object-top opacity-80"
-          />
-        </a>
       ) : null}
 
-      <section>
+      <div className="g-ground">
         <p className="vh-kicker">Why</p>
         <p className="vh-what mt-1">{issue.reason}</p>
         <div className="mt-3">
@@ -209,7 +203,7 @@ export function Inspector() {
             Full evidence
           </Button>
         </div>
-      </section>
+      </div>
 
       {proofView ? (
         <section className="rounded-lg bg-raised p-3">

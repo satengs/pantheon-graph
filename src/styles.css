@@ -110,3 +110,35 @@
   color: var(--color-fg);
   text-wrap: pretty;
 }
+
+/* Gestalt: common region, proximity, figure–ground */
+.g-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0.2rem 0.5rem;
+  box-shadow: var(--shadow-border);
+}
+.g-cluster-flat {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  gap: 0.35rem;
+}
+.g-figure {
+  border-radius: var(--radius-md);
+  background: var(--color-raised);
+  padding: 0.7rem 0.85rem;
+}
+.g-ground {
+  border-radius: var(--radius-md);
+  border: 1px dashed rgb(236 236 232 / 18%);
+  padding: 0.5rem 0.75rem;
+}
+.g-rail {
+  box-shadow: inset 3px 0 0 var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent) 14%, var(--color-surface));
+}
