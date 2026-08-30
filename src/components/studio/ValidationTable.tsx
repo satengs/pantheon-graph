@@ -11,6 +11,7 @@ import { crawlMetrics, pct } from "@/lib/studio/crawl-metrics";
 import { issueFitsFamily, isSeedFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { IssueRow, issueRowFromRule } from "@/components/studio/IssueDrawer";
+import { VirtualList } from "@/components/studio/VirtualList";
 
 const SORTS: { key: string; label: string }[] = [
   { key: "page", label: "Page" },
@@ -87,7 +88,7 @@ export function ValidationTable() {
   }
 
   return (
-    <div className={`min-h-0 flex-1 overflow-auto ${maximized === "validation" ? "fixed inset-0 z-50 bg-bg" : ""}`}>
+    <div className={`flex min-h-0 flex-1 flex-col ${maximized === "validation" ? "fixed inset-0 z-50 bg-bg" : ""}`}>
       <ValidatePanel />
       <div className="grid grid-cols-2 gap-2 border-b border-border px-3 py-2 sm:grid-cols-4">
         <Metric label="Overlap error" value={pct(metrics.glossary.overlapRate)} hint={`${metrics.glossary.overlap} of ${metrics.glossary.fdr} FDR glossary slugs also on Achieve`} />
@@ -117,12 +118,16 @@ export function ValidationTable() {
           </button>
         </span>
       </p>
-      <div>
-        {rows.map((i) => {
+      <VirtualList
+        className="min-h-0 flex-1 overflow-auto"
+        items={rows}
+        rowHeight={72}
+        getKey={(i) => i.id}
+        selectedIndex={rows.findIndex((i) => i.id === selectedIssueId)}
+        renderRow={(i) => {
           const row = issueRowFromRule(i, graphOrg);
           return (
             <IssueRow
-              key={i.id}
               row={row}
               selected={selectedIssueId === i.id}
               onOpen={() => selectIssue(i.id)}
@@ -140,8 +145,8 @@ export function ValidationTable() {
               }
             />
           );
-        })}
-      </div>
+        }}
+      />
       {rows.length === 0 ? (
         <div className="p-8 text-center">
           <p className="text-sm text-muted">No rules match these filters.</p>

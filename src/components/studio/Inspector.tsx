@@ -19,6 +19,7 @@ import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { pagePath } from "@/lib/studio/issue-detail";
 import { pagesForRule } from "@/lib/studio/rule-pages";
 import { IssueMindMap } from "@/components/studio/IssueMindMap";
+import { VirtualList } from "@/components/studio/VirtualList";
 import { recForCode } from "@/data/recommend";
 import { PageMeta } from "@/components/studio/PageMeta";
 
@@ -200,24 +201,27 @@ export function Inspector() {
       {catPages.length ? (
         <div>
           <p className="vh-kicker">{catPages.length} pages</p>
-          <ul className="mt-2">
-            {catPages.map((p) => {
+          <VirtualList
+            className="mt-2 h-[min(320px,40vh)] overflow-auto"
+            items={catPages}
+            rowHeight={32}
+            getKey={(p) => p.url}
+            selectedIndex={catPages.findIndex((p) => p.url === focusUrl)}
+            renderRow={(p) => {
               const on = focusUrl === p.url;
               return (
-                <li key={p.url}>
-                  <button
-                    type="button"
-                    className={`block w-full truncate px-0 py-1.5 text-left font-mono text-[13px] hover:text-fg ${
-                      on ? "text-fg" : "text-muted"
-                    }`}
-                    onClick={() => selectIssue(issue.code, on ? null : p.url)}
-                  >
-                    {p.path}
-                  </button>
-                </li>
+                <button
+                  type="button"
+                  className={`block h-8 w-full truncate px-0 text-left font-mono text-[13px] hover:text-fg ${
+                    on ? "text-fg" : "text-muted"
+                  }`}
+                  onClick={() => selectIssue(issue.code, on ? null : p.url)}
+                >
+                  {p.path}
+                </button>
               );
-            })}
-          </ul>
+            }}
+          />
         </div>
       ) : null}
 

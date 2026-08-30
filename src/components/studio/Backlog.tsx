@@ -11,6 +11,7 @@ import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { issueCategories, type FindingHit, type IssueCategory } from "@/lib/studio/rule-pages";
 import { ValidatePage } from "@/components/studio/ValidatePage";
+import { VirtualList } from "@/components/studio/VirtualList";
 import { TREE_SUGGESTIONS, formatSuggestionsJson, formatSuggestionsMarkdown, suggestionRows } from "@/lib/graph/suggestions";
 import type { GraphEdge } from "@/lib/graph/types";
 import { CATEGORIES, IDEAL_TREE, recCategoryForCode, type RecCategory } from "@/data/recommend";
@@ -268,7 +269,7 @@ export function Backlog() {
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
 
-      <section className="min-h-0 flex-1 overflow-auto rounded-lg bg-surface">
+      <section className="flex min-h-0 flex-1 flex-col rounded-lg bg-surface">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
         <p className="vh-whisper px-3 pb-2">One selected. Click a column to sort.</p>
         <div className="flex items-center gap-3 border-b border-border px-3 py-1.5">
@@ -286,17 +287,21 @@ export function Backlog() {
             </button>
           ))}
         </div>
-        <div role="radiogroup" aria-label="Issues">
-          {categories.map((c) => {
+        <VirtualList
+          className="min-h-0 flex-1 overflow-auto"
+          items={categories}
+          rowHeight={48}
+          getKey={(c) => c.code}
+          selectedIndex={categories.findIndex((c) => c.code === selectedIssueId)}
+          renderRow={(c) => {
             const on = selectedIssueId === c.code;
             const edge = KIND[c.code];
             return (
               <button
-                key={c.code}
                 type="button"
                 role="radio"
                 aria-checked={on}
-                className={`flex w-full items-center gap-3 border-t border-border/80 px-3 py-2.5 text-left ${
+                className={`flex h-12 w-full items-center gap-3 border-t border-border/80 px-3 text-left ${
                   on ? "bg-raised" : "hover:bg-raised/40"
                 }`}
                 onClick={() => {
@@ -317,8 +322,8 @@ export function Backlog() {
                 <span className="w-16 shrink-0 font-mono text-xs tabular-nums text-muted">{c.pages.length}</span>
               </button>
             );
-          })}
-        </div>
+          }}
+        />
         {categories.length === 0 && seedFamily ? (
           <p className="px-3 py-8 text-center text-sm text-muted">No issues match these filters.</p>
         ) : null}
