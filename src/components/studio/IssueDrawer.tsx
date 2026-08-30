@@ -264,6 +264,8 @@ function EvidenceShot({ url, label }: { url: string; label?: string }) {
     </a>
   );
 }
+
+function FoundSuggested({ found, suggested }: { found: string; suggested: string }) {
   const lines = jsonLdDiff(found, suggested);
   return (
     <div className="mt-2 overflow-x-auto rounded-md bg-bg p-2 font-mono text-[11px] leading-relaxed">
