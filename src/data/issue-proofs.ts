@@ -48,7 +48,7 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S02: {
     conflict:
-      "Issue is on /debt-relief/. FAQ “What are the pros and cons of debt settlement?” does not link the related page /debt-solutions/debt-settlement/ — it links debt-settlement-pros-and-cons instead. Both URLs self-canonical. Fix the FAQ on the relief page; keep the settlement page.",
+      "Crawled href on /debt-relief/ FAQ “What are the pros and cons of debt settlement?” → /debt-solutions/debt-settlement-pros-and-cons/. Expected → /debt-solutions/debt-settlement/. Both pages self-canonical.",
     rows: [
       {
         brand: "fdr",

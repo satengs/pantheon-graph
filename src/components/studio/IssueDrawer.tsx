@@ -154,7 +154,7 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
       ) : null}
 
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Why</h3>
+        <h3 className="vh-kicker">Why it matters</h3>
         <p className="mt-1 text-base leading-relaxed text-muted text-pretty">{view.why || "—"}</p>
       </section>
 

@@ -196,7 +196,7 @@ export function Inspector() {
       ) : null}
 
       <div className="g-ground">
-        <p className="vh-kicker">Why</p>
+        <p className="vh-kicker">Why it matters</p>
         <p className="vh-what mt-1">{issue.reason}</p>
         <div className="mt-3">
           <Button size="sm" variant="secondary" onClick={() => openIssueDrawer()}>
