@@ -72,7 +72,7 @@ type StudioState = {
   setLayer: (v: "all" | "L1" | "L2") => void;
   setImpact: (v: "all" | "critical" | "high" | "medium" | "low") => void;
   selectNode: (id: string | null) => void;
-  selectIssue: (id: string | null) => void;
+  selectIssue: (id: string | null, pageUrl?: string | null) => void;
   selectState: (code: string | null) => void;
   hoverIssue: (id: string | null) => void;
   selectFinding: (id: string | null) => void;
@@ -224,11 +224,12 @@ export const useStudio = create<StudioState>((set, get) => ({
       });
     }
   },
-  selectIssue: (selectedIssueId) =>
+  selectIssue: (selectedIssueId, pageUrl) =>
     set({
       selectedIssueId,
       selectedFindingId: null,
       issueDrawerOpen: false,
+      drawerPageUrl: pageUrl ?? null,
       selectedNodeId: selectedIssueId ? `issue:${selectedIssueId}` : null,
       selectedState: null,
     }),

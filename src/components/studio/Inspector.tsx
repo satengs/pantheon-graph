@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { RULES } from "@/data/rules-seed";
@@ -18,6 +17,7 @@ import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { pagePath } from "@/lib/studio/issue-detail";
+import { pagesForRule } from "@/lib/studio/rule-pages";
 import { PageMeta } from "@/components/studio/PageMeta";
 
 export function Inspector() {
@@ -31,6 +31,7 @@ export function Inspector() {
   const tab = useStudio((s) => s.tab);
   const hoveredIssueId = useStudio((s) => s.hoveredIssueId);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
+  const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const selectIssue = useStudio((s) => s.selectIssue);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const [psiLive, setPsiLive] = useState<number | null>(null);
@@ -74,6 +75,8 @@ export function Inspector() {
   const tone = toneRatio(toneText, toneBrand);
   const finding = familyFindings.find((f) => f.id === selectedFindingId);
   const proofView = issue ? ISSUE_PROOFS[issue.code] : undefined;
+  const catPages = issue ? pagesForRule(issue, familyFindings) : [];
+  const focusUrl = drawerPageUrl || finding?.url || (catPages.length === 1 ? catPages[0]?.url : "") || "";
 
   useEffect(() => {
     void listStudio()
@@ -155,44 +158,55 @@ export function Inspector() {
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
       <div className="g-figure">
         <p className="vh-kicker">
-          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Issue on"}
+          {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Category"}
         </p>
-        <h2 className="vh-page-hero mt-1">
-          {issue.urls[0] ? pagePath(issue.urls[0]) : "No live URL"}
-        </h2>
-        <p className="vh-what mt-1">
-          {finding && selectedFindingId ? finding.title : issue.title}
-        </p>
+        <h2 className="vh-page-hero mt-1">{issue.title}</h2>
+        <p className="vh-what mt-1">{issue.reason}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
             {issue.impact}
           </Badge>
           <Badge>{issue.code}</Badge>
+          <Badge>{catPages.length} pages</Badge>
         </div>
-        {issue.urls[0] ? (
-          <a href={issue.urls[0]} target="_blank" rel="noreferrer" className="-mx-1 mt-3 block overflow-hidden rounded-md">
+      </div>
+
+      {catPages.length ? (
+        <div className="g-ground">
+          <p className="vh-kicker">Pages with this issue</p>
+          <ul className="mt-2 space-y-1">
+            {catPages.map((p) => (
+              <li key={p.url}>
+                <button
+                  type="button"
+                  className={`block w-full truncate text-left font-mono text-xs hover:underline ${
+                    focusUrl === p.url ? "text-fg" : "text-muted"
+                  }`}
+                  onClick={() => selectIssue(issue.code, p.url)}
+                >
+                  {p.path}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {focusUrl ? (
+        <div className="g-figure">
+          <p className="vh-kicker">Fix on this page</p>
+          <a href={focusUrl} target="_blank" rel="noreferrer" className="vh-page mt-1 block hover:underline">
+            {pagePath(focusUrl)}
+          </a>
+          <p className="vh-fix mt-2">{issue.fix}</p>
+          <a href={focusUrl} target="_blank" rel="noreferrer" className="-mx-1 mt-3 block overflow-hidden rounded-md">
             <img
-              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(issue.urls[0])}?w=720`}
+              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(focusUrl)}?w=720`}
               alt=""
               className="h-24 w-full object-cover object-top opacity-80"
             />
           </a>
-        ) : null}
-        <p className="vh-kicker mt-3">Fix on this page</p>
-        <p className="vh-fix mt-1">{issue.fix}</p>
-      </div>
-
-      {issue.urls[1] ? (
-        <div className="g-ground">
-          <p className="vh-kicker">Related — do not edit</p>
-          <a href={issue.urls[1]} target="_blank" rel="noreferrer" className="vh-whisper mt-1 block font-mono hover:underline">
-            {pagePath(issue.urls[1])}
-          </a>
         </div>
-      ) : !issue.urls[0] ? (
-        <Link to="/empty" search={{ q: issue.code }} className="text-sm text-fdr hover:underline">
-          No live URL — open empty-data page
-        </Link>
       ) : null}
 
       <div className="g-ground">

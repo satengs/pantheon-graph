@@ -32,6 +32,34 @@ export const RULE_CODES = [
 ] as const;
 
 /** Generic check — any origin. Instance findings stay on ISSUES.reason. */
+export const RULE_TITLE: Record<string, string> = {
+  S01: "One canonical owner per glossary slug",
+  S02: "Program and method stay separate entities",
+  S03: "Glossary links the matching product",
+  S04: "Near-duplicate glossary slugs",
+  S05: "Stable Organization @id",
+  S06: "Corporate sameAs only",
+  S07: "One primary schema type per URL",
+  S08: "LoanOrCredit required properties",
+  S09: "Sibling products do not share outlines",
+  S10: "Unique use-case modules per product",
+  S11: "Breadcrumbs match the real parent",
+  S12: "NMLS only on loan URLs",
+  S13: "Ratings bind to this brand",
+  S21: "JSON-LD exists and matches the page",
+  S22: "Sibling brands may both sell a product",
+  S23: "Origin does not mint another product type",
+  S24: "Press is NewsArticle, not a second Service",
+  S25: "Glossary meaning, not automatic 301",
+  S26: "Glossary emits DefinedTerm",
+  S27: "Complete Article schema",
+  S28: "Title, H1, og:title, and headline match",
+  S29: "One author Person per article",
+  S30: "Published vs modified dates",
+  S31: "Article image @id is this page",
+  S32: "Revolving line vs closed-end loan",
+};
+
 export const RULE_SCOPE: Record<string, string> = {
   S01: "One DefinedTerm owner per glossary slug among sibling sites in a family. Self-canonical on both origins is two owners, not a valid canonical.",
   S02: "A program URL and a method URL must stay two entities. Copy, nav, and FAQ must not treat them as synonyms. Do not retarget an FAQ whose question names a different article.",
@@ -62,7 +90,12 @@ export const RULE_SCOPE: Record<string, string> = {
 
 export const RULES: BacklogItem[] = ISSUES.filter((i) =>
   (RULE_CODES as readonly string[]).includes(i.code),
-).map((i) => (SYSTEM_RULE_SET.has(i.code) ? { ...i, domain: "system" as const } : i));
+).map((i) => ({
+  ...i,
+  domain: SYSTEM_RULE_SET.has(i.code) ? ("system" as const) : i.domain,
+  title: RULE_TITLE[i.code] ?? i.title,
+  reason: RULE_SCOPE[i.code] ?? i.reason,
+}));
 
 export function ruleStatement(i: BacklogItem): string {
   return RULE_SCOPE[i.code] ?? i.reason;
