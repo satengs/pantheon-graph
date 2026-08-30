@@ -56,13 +56,13 @@ export const ISSUES: BacklogItem[] = [
   {
     id: "S02",
     code: "S02",
-    title: "FAQ on debt-relief links the wrong settlement URL",
+    title: "Debt relief and settlement are still the same program",
     layer: "L2",
     domain: "fdr",
     product: "debt-relief",
     reason:
-      "Two live URLs are one program in the graph. /debt-relief/ is the overview. /debt-solutions/debt-settlement/ is the method. When the overview FAQ names settlement but points at a blog URL, search and AI collapse both pages into one entity. Settlement loses a canonical owner; relief’s FAQ answers a different product.",
-    fix: "On /debt-relief/, in the FAQ “What are the pros and cons of debt settlement?”, change the answer link to /debt-solutions/debt-settlement/. Leave the settlement page alone. Do not 301 either URL.",
+      "Relief is the program. Settlement is one method. /debt-relief/ and /debt-solutions/debt-settlement/ both self-canonical, but copy and nav treat them as interchangeable. Search and AI then keep one entity instead of two.",
+    fix: "Keep the FAQ “What are the pros and cons of debt settlement?” pointed at /debt-solutions/debt-settlement-pros-and-cons/ — that question is about pros and cons. Add a separate labeled link (or FAQ “What is debt settlement?”) from /debt-relief/ to /debt-solutions/debt-settlement/. Distinct H1 and schema. Do not 301 either URL. Do not retarget the pros-and-cons FAQ.",
     impact: "critical",
     status: "open",
     urls: [
@@ -75,14 +75,15 @@ export const ISSUES: BacklogItem[] = [
         brand: "fdr",
         quote: "What are the pros and cons of debt settlement?",
         location: "FAQ",
-        whyReal: "Crawled FAQ answer. href is /debt-solutions/debt-settlement-pros-and-cons/, not the settlement product URL.",
+        whyReal:
+          "This FAQ is about pros and cons. Its href to /debt-solutions/debt-settlement-pros-and-cons/ is the right article. It is not a link to the settlement product page.",
       },
       {
         url: "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement/",
         brand: "fdr",
         quote: "What Is Debt Settlement? | Freedom Debt Relief",
         location: "title",
-        whyReal: "Separate live page. Self-canonical. This is the URL the FAQ should use.",
+        whyReal: "The method page. Related, not the FAQ target. Still missing a labeled product link from /debt-relief/.",
       },
     ],
     acceptance: acc(false, false, 68, "HIT", "fail"),

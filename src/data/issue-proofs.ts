@@ -48,7 +48,7 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S02: {
     conflict:
-      "Crawled href on /debt-relief/ FAQ “What are the pros and cons of debt settlement?” → /debt-solutions/debt-settlement-pros-and-cons/. Expected → /debt-solutions/debt-settlement/. Both pages self-canonical.",
+      "FAQ “What are the pros and cons of debt settlement?” correctly links /debt-solutions/debt-settlement-pros-and-cons/. There is no separate product link from /debt-relief/ to /debt-solutions/debt-settlement/. Both pages self-canonical; copy still aliases the two.",
     rows: [
       {
         brand: "fdr",
