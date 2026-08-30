@@ -65,9 +65,9 @@ export function Inspector() {
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
   const wantedId =
-    hoveredIssueId ??
-    (node?.kind === "issue" ? node.issueId : undefined) ??
-    (!node || node.kind === "issue" ? selectedIssueId : null);
+    tab === "issues"
+      ? hoveredIssueId ?? selectedIssueId
+      : null;
   const rawIssue = RULES.find((i) => i.id === wantedId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ?? null;
   const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
   const familyFindings = findings.filter((f) => (seedFamily ? true : urlInFamily(f.url, graphOrg)));
@@ -100,9 +100,11 @@ export function Inspector() {
   }
 
   const row = selectedState ? stateByCode(selectedState) : undefined;
-  if (row) return <StateInspector row={row} />;
-  if (tab === "states") return <StatesOverview />;
-  if (node && node.kind !== "issue" && !issue) {
+  if (tab === "states") {
+    if (row) return <StateInspector row={row} />;
+    return <StatesOverview />;
+  }
+  if (tab === "graph" && node && node.kind !== "issue") {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
         <p className="text-[10px] uppercase tracking-wide text-subtle">{node.kind}</p>
@@ -116,16 +118,14 @@ export function Inspector() {
         {node.kind === "page" || node.url ? <PageMeta url={node.url} /> : null}
         {node.kind !== "page" ? (
           <p className="text-sm text-muted">
-            {seedFamily
-              ? "Pick an issue on an edge to inspect proof."
-              : "No crawled issues for this company yet."}
+            {seedFamily ? "This node in the family graph." : "No crawled pages for this company yet."}
           </p>
         ) : null}
         {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
       </aside>
     );
   }
-  if (!issue && finding) {
+  if (tab === "issues" && !issue && finding) {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
         <div className="flex items-start justify-between gap-3">
@@ -144,14 +144,14 @@ export function Inspector() {
       </aside>
     );
   }
-  if (!issue) {
+  if (tab !== "issues" || !issue) {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto">
         <EmptyFamilyCrawl
           title={seedFamily ? "Nothing selected" : undefined}
           detail={
             seedFamily
-              ? "Pick an issue from the graph, Issues, or Validation. This panel follows the family selected at the top."
+              ? "Pick an issue from the list."
               : undefined
           }
         />

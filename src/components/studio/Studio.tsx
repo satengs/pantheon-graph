@@ -80,6 +80,8 @@ export function Studio() {
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const selectIssue = useStudio((s) => s.selectIssue);
+  const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const maximized = useStudio((s) => s.maximized);
   const setMaximized = useStudio((s) => s.setMaximized);
   const graphOrg = useStudio((s) => s.graphOrg);
@@ -112,6 +114,19 @@ export function Studio() {
         /* seed graph still works */
       });
   }, [applyFamilyContext]);
+
+  const firstIssueCode = visibleIssues[0]?.code ?? null;
+  const issueFitsSelection = Boolean(selectedIssueId && visibleIssues.some((i) => i.code === selectedIssueId || i.id === selectedIssueId));
+  const showInspector =
+    tab === "issues" ||
+    tab === "states" ||
+    (tab === "graph" && Boolean(selectedNodeId) && !selectedNodeId?.startsWith("issue:"));
+
+  useEffect(() => {
+    if (tab !== "issues") return;
+    if (issueFitsSelection) return;
+    selectIssue(firstIssueCode);
+  }, [tab, firstIssueCode, parentId, issueFitsSelection, selectIssue]);
 
   useEffect(() => {
     const key = selectedIssueId ?? tab;
@@ -401,7 +416,7 @@ export function Studio() {
             main
           )
         }
-        right={<Inspector />}
+        right={showInspector ? <Inspector /> : null}
       />
       <RegisterFamilyModal />
       <IssueDrawer />

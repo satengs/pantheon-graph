@@ -165,7 +165,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   layer: "all",
   impact: "all",
   selectedNodeId: null,
-  selectedIssueId: "S01",
+  selectedIssueId: null,
   selectedIssueIds: [],
   selectedState: null,
   hoveredIssueId: null,
@@ -187,7 +187,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   attachedRuleCodes: [],
   parents: [],
   allBrands: [],
-  setTab: (tab) => set({ tab }),
+  setTab: (tab) => set({ tab, issueDrawerOpen: false, hoveredIssueId: null }),
   setExplode: (explode) => set({ explode }),
   setBrand: (brand) =>
     set((s) => {

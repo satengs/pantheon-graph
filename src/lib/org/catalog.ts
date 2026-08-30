@@ -2,6 +2,7 @@ import { RULES } from "@/data/rules-seed";
 import { SYSTEM_RULE_CODES, isSystemRule } from "@/lib/org/system-rules";
 import type { ProductId } from "@/lib/graph/types";
 import type { GraphOrg } from "@/lib/graph/model";
+import { isOpenIssue } from "@/lib/studio/query";
 
 export { SYSTEM_RULE_CODES, SYSTEM_RULE_SET, isSystemRule } from "@/lib/org/system-rules";
 
@@ -201,11 +202,14 @@ export function pickIssueForFamily(
   org?: GraphOrg | null,
   parentSlug?: string,
 ): string | null {
-  if (!current || !codes.includes(current)) return null;
-  const issue = RULES.find((r) => r.code === current);
-  if (!issue) return null;
-  if (!issueFitsFamily(issue, org ?? null, parentSlug)) return null;
-  return current;
+  const pool = RULES.filter(
+    (r) =>
+      isOpenIssue(r.status) &&
+      (!codes.length || codes.includes(r.code)) &&
+      issueFitsFamily(r, org ?? null, parentSlug),
+  );
+  if (current && pool.some((r) => r.code === current || r.id === current)) return current;
+  return pool[0]?.code ?? null;
 }
 
 export function brandSeedRules(): Array<{ code: string; title: string; why: string; domain: string }> {

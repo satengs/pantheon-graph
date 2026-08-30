@@ -19,7 +19,7 @@ export function HSplit({
   min?: number;
   max?: number;
   left: ReactNode;
-  right: ReactNode;
+  right?: ReactNode | null;
 }) {
   const [w, setW] = useState(initial);
   const drag = useRef(false);
@@ -48,6 +48,9 @@ export function HSplit({
     };
   }, [onMove, onUp]);
 
+  if (!right) {
+    return <div className="flex min-h-[70vh] min-w-0 flex-1 flex-col">{left}</div>;
+  }
   return (
     <div className="flex min-h-[70vh] min-w-0 flex-1 flex-col lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">{left}</div>
