@@ -153,7 +153,6 @@ nav .vh-kicker {
   border-radius: var(--radius-md);
   background: var(--color-raised);
   padding: 0.7rem 0.85rem;
-  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 .g-ground {
   border-radius: var(--radius-md);
@@ -166,8 +165,4 @@ nav .vh-kicker {
 .g-ground .vh-page,
 .g-ground a {
   color: var(--color-subtle);
-}
-.g-rail {
-  box-shadow: inset 4px 0 0 var(--color-accent);
-  background: color-mix(in oklab, var(--color-accent) 12%, var(--color-bg));
 }

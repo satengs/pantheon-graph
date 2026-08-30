@@ -286,7 +286,7 @@ export function IssueRow({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
-        selected ? "g-rail py-3" : "py-2"
+        selected ? "bg-raised/80 py-3" : "py-2"
       }`}
     >
       {leading}
