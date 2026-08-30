@@ -35,10 +35,9 @@ export function ValidatePage() {
 
   return (
     <section className="mb-3 rounded-lg bg-surface p-3 shadow-[var(--shadow-border)]">
-      <p className="text-sm text-fg">Validate a page</p>
+      <h2 className="text-sm text-fg">Validate a page</h2>
       <p className="vh-whisper mt-1">
-        Fetch HTML, run schema/title engines, then Grok (xAI grok-4) for copy/entity and custom rules. One model call —
-        not a crew of agents.
+        Fetch HTML, run schema/title engines, then Grok (grok-4) for copy/entity and custom rules.
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         <input
@@ -73,16 +72,17 @@ export function ValidatePage() {
           {busy ? "Validating…" : "Validate"}
         </Button>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1">
+      <div className="mt-2 flex flex-wrap items-center gap-1">
+        <span className="vh-kicker mr-1">Rules</span>
         <button
           type="button"
           className="h-7 rounded-md px-2 text-[11px] text-muted hover:text-fg"
           onClick={() => setPicked(pool.map((r) => r.code))}
         >
-          All
+          Select all
         </button>
         <button type="button" className="h-7 rounded-md px-2 text-[11px] text-muted hover:text-fg" onClick={() => setPicked([])}>
-          None
+          Clear
         </button>
         {pool.map((r) => {
           const on = picked.includes(r.code);
