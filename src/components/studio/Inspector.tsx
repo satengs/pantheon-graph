@@ -157,7 +157,7 @@ export function Inspector() {
         <p className="vh-kicker">
           {hoveredIssueId && hoveredIssueId !== selectedIssueId ? "Hover preview" : "Issue on"}
         </p>
-        <h2 className="vh-page mt-1">
+        <h2 className="vh-page-hero mt-1">
           {issue.urls[0] ? pagePath(issue.urls[0]) : "No live URL"}
         </h2>
         <p className="vh-what mt-1">

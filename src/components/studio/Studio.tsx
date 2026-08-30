@@ -178,7 +178,7 @@ export function Studio() {
     <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-bg text-fg">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
         <div className="mr-1">
-          <p className="font-display text-xl leading-none tracking-tight">
+          <p className="font-display text-lg leading-none tracking-tight">
             {graphOrg?.parent?.name ?? "Pantheon"}
           </p>
           <p className="vh-kicker mt-0.5">{openCount} open</p>

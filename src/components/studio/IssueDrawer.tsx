@@ -94,7 +94,7 @@ export function IssueDrawer() {
       <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-3">
         <div className="min-w-0">
           <p className="vh-kicker">Issue on</p>
-          <h2 id={titleId} className="vh-page mt-1">
+          <h2 id={titleId} className="vh-page-hero mt-1">
             {view?.page.path || "No live URL"}
           </h2>
           <p className="vh-what mt-1">
@@ -134,7 +134,7 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
       <section className="g-figure">
         <p className="vh-kicker">Fix on this page</p>
         {fixPage ? (
-          <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page mt-1 block hover:underline">
+          <a href={fixPage.url} target="_blank" rel="noreferrer" className="vh-page-hero mt-1 block hover:underline">
             {fixPage.path}
           </a>
         ) : null}
@@ -288,31 +288,42 @@ export function IssueRow({
       }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 py-2.5 text-left hover:bg-raised/70 ${
-        selected ? "g-rail" : ""
+      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
+        selected ? "g-rail py-3" : "py-2"
       }`}
     >
       {leading}
       <span
-        className={`mt-2 size-2 shrink-0 rounded-full ${
+        className={`shrink-0 rounded-full ${selected ? "mt-2 size-2" : "mt-1.5 size-1.5"} ${
           row.impact === "critical" ? "bg-danger" : row.impact === "high" ? "bg-warn" : "bg-subtle"
         }`}
         title={row.impact || "impact"}
       />
       <div className="min-w-0 flex-1">
-        <div className="g-figure py-2">
-          <p className="vh-page truncate">{row.pagePath}</p>
-          <p className="vh-what mt-0.5">
-            {row.section || PAGE_LEVEL}
-            {row.what ? ` · ${row.what}` : ""}
-          </p>
-          <p className="vh-whisper mt-1">Fix this page</p>
-        </div>
-        {row.relatedPath ? (
-          <div className="g-ground mt-1.5">
-            <p className="vh-whisper truncate">Related · {row.relatedPath}</p>
-          </div>
-        ) : null}
+        {selected ? (
+          <>
+            <div className="g-figure py-2">
+              <p className="vh-page-hero">{row.pagePath}</p>
+              <p className="vh-what mt-1">
+                {row.section || PAGE_LEVEL}
+                {row.what ? ` · ${row.what}` : ""}
+              </p>
+            </div>
+            {row.relatedPath ? (
+              <div className="g-ground mt-1.5">
+                <p className="vh-whisper truncate">Related · {row.relatedPath}</p>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <p className="vh-page-quiet truncate">{row.pagePath}</p>
+            <p className="vh-whisper mt-0.5 truncate">
+              {row.section || PAGE_LEVEL}
+              {row.what ? ` · ${row.what}` : ""}
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
