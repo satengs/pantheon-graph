@@ -128,15 +128,19 @@ export function Inspector() {
   if (!issue && finding) {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
-        <p className="text-[10px] uppercase tracking-wide text-subtle">HTML finding</p>
-        <h2 className="font-display text-xl text-fg text-balance">{finding.title}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-subtle">HTML finding</p>
+            <h2 className="font-display text-xl text-fg text-balance">{finding.title}</h2>
+          </div>
+          <Button size="sm" onClick={() => openIssueDrawer({ findingId: finding.id, issueId: null })}>
+            View issue
+          </Button>
+        </div>
         <p className="font-mono text-xs text-fg rounded-md bg-raised px-2 py-1 shadow-[var(--shadow-border)]">
           {finding.url.replace(/^https?:\/\//, "")}
         </p>
         <p className="text-sm text-muted text-pretty">{finding.why}</p>
-        <Button size="sm" onClick={() => openIssueDrawer({ findingId: finding.id, issueId: null })}>
-          View issue
-        </Button>
       </aside>
     );
   }
@@ -158,13 +162,25 @@ export function Inspector() {
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
-        <p className="font-mono text-xs text-subtle">{issue.code}</p>
-        <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
-        <p className="vh-what mt-2">{issue.reason}</p>
-        <div className="mt-3">
-          <p className="vh-kicker">Solution</p>
-          <p className="vh-fix mt-1">{issue.fix}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-xs text-subtle">{issue.code}</p>
+            <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
+          </div>
+          <Button size="sm" onClick={() => openIssueDrawer({ issueId: issue.id, pageUrl: focusUrl || issue.urls[0] })}>
+            View issue
+          </Button>
         </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
+            {issue.impact}
+          </Badge>
+          <Badge>{issue.layer}</Badge>
+        </div>
+        <p className="vh-kicker mt-4">Why</p>
+        <p className="vh-what mt-1">{issue.reason}</p>
+        <p className="vh-kicker mt-4">Solution</p>
+        <p className="vh-fix mt-1">{issue.fix}</p>
       </header>
 
       <IssueMindMap code={issue.code} />
@@ -192,34 +208,6 @@ export function Inspector() {
           </ul>
         </div>
       ) : null}
-
-      {issue.citations.length ? (
-        <div>
-          <p className="vh-kicker">Evidence</p>
-          <ul className="mt-2 space-y-3">
-            {issue.citations.map((c) => (
-              <li key={c.url + c.location}>
-                <p className="text-sm text-fg text-pretty">“{c.quote}”</p>
-                {c.whyReal ? <p className="vh-whisper mt-1">{c.whyReal}</p> : null}
-                <a href={c.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] text-muted hover:text-fg">
-                  {pagePath(c.url)} <ExternalLink className="size-3" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : proofView?.conflict ? (
-        <div>
-          <p className="vh-kicker">Evidence</p>
-          <p className="vh-what mt-2">{proofView.conflict}</p>
-        </div>
-      ) : null}
-
-      <div>
-        <Button size="sm" onClick={() => openIssueDrawer({ issueId: issue.id, pageUrl: focusUrl || issue.urls[0] })}>
-          View issue
-        </Button>
-      </div>
 
       {tab === "issues" ? null : (
         <>
