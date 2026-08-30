@@ -8,6 +8,7 @@ import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { issueCategories, type FindingHit } from "@/lib/studio/rule-pages";
+import { ValidatePage } from "@/components/studio/ValidatePage";
 
 type Finding = FindingHit & { lane?: string; why: string; found?: string; suggested?: string };
 
@@ -67,6 +68,7 @@ export function Backlog() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
+      <ValidatePage />
       {!seedFamily && categories.length === 0 ? (
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
