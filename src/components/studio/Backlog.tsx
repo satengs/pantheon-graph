@@ -13,6 +13,7 @@ import { issueCategories, type FindingHit, type IssueCategory } from "@/lib/stud
 import { ValidatePage } from "@/components/studio/ValidatePage";
 import { TREE_SUGGESTIONS, formatSuggestionsJson, formatSuggestionsMarkdown, suggestionRows } from "@/lib/graph/suggestions";
 import type { GraphEdge } from "@/lib/graph/types";
+import { CATEGORIES, IDEAL_TREE, recCategoryForCode, type RecCategory } from "@/data/recommend";
 
 type Finding = FindingHit & { lane?: string; why: string; found?: string; suggested?: string };
 type KindFilter = "all" | GraphEdge["kind"];
@@ -49,6 +50,7 @@ export function Backlog() {
   const [note, setNote] = useState<string | null>(null);
   const [copied, setCopied] = useState<"md" | "json" | null>(null);
   const [sortKey, setSortKey] = useState<"code" | "pages" | "kind">("pages");
+  const [roadmap, setRoadmap] = useState<"all" | RecCategory>("all");
 
   const visibleRules = useMemo(
     () =>
@@ -67,7 +69,11 @@ export function Backlog() {
   );
 
   const categories = useMemo(() => {
-    const cats = issueCategories(familyFindings, visibleRules).filter((c) => kind === "all" || KIND[c.code] === kind);
+    const cats = issueCategories(familyFindings, visibleRules).filter((c) => {
+      if (kind !== "all" && KIND[c.code] !== kind) return false;
+      if (roadmap !== "all" && recCategoryForCode(c.code) !== roadmap) return false;
+      return true;
+    });
     const q = query.trim().toLowerCase();
     const filtered = q
       ? cats.filter(
@@ -81,7 +87,7 @@ export function Backlog() {
       if (sortKey === "kind") return (KIND[a.code] ?? "").localeCompare(KIND[b.code] ?? "");
       return a.code.localeCompare(b.code);
     });
-  }, [familyFindings, visibleRules, query, kind, sortKey]);
+  }, [familyFindings, visibleRules, query, kind, sortKey, roadmap]);
 
   async function reload() {
     try {
@@ -119,6 +125,25 @@ export function Backlog() {
     <div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
       <ValidatePage />
+      {seedFamily ? (
+        <details className="mb-2 rounded-lg bg-surface p-3">
+          <summary className="cursor-pointer text-sm text-fg">Ideal graph · SERP / AI payoff</summary>
+          <p className="vh-whisper mt-1">Parent named once. Brands do not sell each other’s products.</p>
+          <div className="mt-3 flex flex-col items-center">
+            <div className="rounded-lg bg-raised px-3 py-1.5 text-xs">{IDEAL_TREE.parent}</div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex w-full gap-2">
+              {IDEAL_TREE.brands.map((b) => (
+                <div key={b.id} className="min-w-0 flex-1 rounded-md bg-raised p-2">
+                  <p className={`text-sm ${b.id === "fdr" ? "text-fdr" : "text-achieve"}`}>{b.name}</p>
+                  <p className="text-[11px] text-muted">{b.role}</p>
+                  <p className="mt-1 text-[11px] text-fg">{b.products.join(" · ")}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </details>
+      ) : null}
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         {(["all", "conflict", "suggests", "sameAs"] as const).map((k) => (
           <button
@@ -130,6 +155,18 @@ export function Backlog() {
             {k}
           </button>
         ))}
+        {seedFamily
+          ? (["all", "identity", "ownership", "wrong-shelf", "same-page", "ai-recipe"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setRoadmap(k)}
+                className={`h-8 rounded-md px-2 text-xs ${roadmap === k ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+              >
+                {k === "all" ? "roadmap" : CATEGORIES[k].label}
+              </button>
+            ))
+          : null}
         {(["pages", "code", "kind"] as const).map((k) => (
           <button
             key={k}

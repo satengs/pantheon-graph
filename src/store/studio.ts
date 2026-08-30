@@ -187,7 +187,12 @@ export const useStudio = create<StudioState>((set, get) => ({
   attachedRuleCodes: [],
   parents: [],
   allBrands: [],
-  setTab: (tab) => set({ tab: tab === "explore" ? "issues" : tab, issueDrawerOpen: false, hoveredIssueId: null }),
+  setTab: (tab) =>
+    set({
+      tab: tab === "explore" || tab === "recommend" ? "issues" : tab,
+      issueDrawerOpen: false,
+      hoveredIssueId: null,
+    }),
   setExplode: (explode) => set({ explode }),
   setBrand: (brand) =>
     set((s) => {

@@ -120,6 +120,14 @@ export const IDEAL_TREE = {
   ],
 };
 
+export function recForCode(code: string): RecItem | undefined {
+  return RECS.find((r) => r.codes.includes(code));
+}
+
+export function recCategoryForCode(code: string): RecCategory | undefined {
+  return recForCode(code)?.category;
+}
+
 export const SERP_WINS = [
   { label: "Featured snippets", detail: "One brand owns each definition. Snippets stop swapping week to week." },
   { label: "No cannibalization", detail: "FDR and Achieve no longer compete for the same slug in the same query." },

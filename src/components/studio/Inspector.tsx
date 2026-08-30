@@ -19,6 +19,7 @@ import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { pagePath } from "@/lib/studio/issue-detail";
 import { pagesForRule } from "@/lib/studio/rule-pages";
 import { IssueMindMap } from "@/components/studio/IssueMindMap";
+import { recForCode } from "@/data/recommend";
 import { PageMeta } from "@/components/studio/PageMeta";
 
 export function Inspector() {
@@ -159,6 +160,8 @@ export function Inspector() {
     );
   }
 
+  const rec = recForCode(issue.code);
+
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
       <header>
@@ -182,6 +185,15 @@ export function Inspector() {
         <p className="vh-kicker mt-4">Solution</p>
         <p className="vh-fix mt-1">{issue.fix}</p>
       </header>
+
+      {seedFamily && rec ? (
+        <div>
+          <p className="vh-kicker">SERP</p>
+          <p className="vh-what mt-1">{rec.serp}</p>
+          <p className="vh-kicker mt-3">AI</p>
+          <p className="vh-what mt-1">{rec.ai}</p>
+        </div>
+      ) : null}
 
       <IssueMindMap code={issue.code} />
 
