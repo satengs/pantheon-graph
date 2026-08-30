@@ -61,7 +61,7 @@ export function HSplit({
       />
       <div
         style={{ width: w }}
-        className="flex min-h-[240px] min-w-0 w-full flex-col border-t border-border lg:min-h-0 lg:w-auto lg:border-t-0 lg:border-l"
+        className="flex min-h-[240px] min-w-0 w-full flex-col border-t border-border bg-surface lg:min-h-0 lg:w-auto lg:border-t-0 lg:border-l"
       >
         {right}
       </div>

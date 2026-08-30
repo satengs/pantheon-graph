@@ -2,20 +2,20 @@
 
 @theme {
   --color-bg: #0b0c0e;
-  --color-surface: #14151a;
-  --color-raised: #1c1d22;
-  --color-fg: #ecece8;
-  --color-muted: #8b8d93;
-  --color-subtle: #6a6c73;
-  --color-accent: #d7d2c8;
+  --color-surface: #17181e;
+  --color-raised: #262830;
+  --color-fg: #f3f3ee;
+  --color-muted: #c2c4ca;
+  --color-subtle: #9a9ca4;
+  --color-accent: #e4dfd4;
   --color-accent-fg: #0b0c0e;
-  --color-border: rgb(236 236 232 / 12%);
-  --color-fdr: #3d9b8f;
-  --color-achieve: #c4a574;
-  --color-danger: #c45c4a;
-  --color-ok: #6a9a72;
-  --color-warn: #c4a050;
-  --color-ring: #d7d2c8;
+  --color-border: rgb(236 236 232 / 20%);
+  --color-fdr: #5ec4b6;
+  --color-achieve: #d4b57a;
+  --color-danger: #e07a68;
+  --color-ok: #86c08c;
+  --color-warn: #d4b056;
+  --color-ring: #e4dfd4;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -23,7 +23,7 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
-  --shadow-border: 0 0 0 1px rgb(236 236 232 / 10%);
+  --shadow-border: 0 0 0 1px rgb(236 236 232 / 16%);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-quick: 150ms;
   --motion-fast: 250ms;
@@ -87,7 +87,16 @@
 }
 nav .vh-kicker {
   font-size: 9px;
-  opacity: 0.55;
+  letter-spacing: 0.18em;
+  color: var(--color-subtle);
+}
+.vh-page-quiet {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
 }
 .vh-page {
   font-family: var(--font-mono);
@@ -103,14 +112,6 @@ nav .vh-kicker {
   font-weight: 600;
   line-height: 1.25;
   color: var(--color-fg);
-  overflow-wrap: anywhere;
-}
-.vh-page-quiet {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.3;
-  color: var(--color-muted);
   overflow-wrap: anywhere;
 }
 .vh-what {
@@ -152,13 +153,21 @@ nav .vh-kicker {
   border-radius: var(--radius-md);
   background: var(--color-raised);
   padding: 0.7rem 0.85rem;
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 .g-ground {
   border-radius: var(--radius-md);
-  border: 1px dashed rgb(236 236 232 / 18%);
+  background: color-mix(in oklab, var(--color-bg) 55%, var(--color-surface));
+  border: 1px dashed rgb(236 236 232 / 32%);
   padding: 0.5rem 0.75rem;
+  color: var(--color-subtle);
+}
+.g-ground .vh-whisper,
+.g-ground .vh-page,
+.g-ground a {
+  color: var(--color-subtle);
 }
 .g-rail {
-  box-shadow: inset 3px 0 0 var(--color-accent);
-  background: color-mix(in oklab, var(--color-accent) 14%, var(--color-surface));
+  box-shadow: inset 4px 0 0 var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent) 12%, var(--color-bg));
 }

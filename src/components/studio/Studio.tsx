@@ -268,7 +268,7 @@ export function Studio() {
                     onClick={() => setTab(t.id)}
                     title={t.hint}
                     className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs ${
-                      on ? "bg-accent text-accent-fg" : "text-subtle hover:bg-raised hover:text-fg"
+                      on ? "bg-accent text-accent-fg" : "text-muted hover:bg-raised hover:text-fg"
                     }`}
                   >
                     <Icon className="size-3.5" />

@@ -15,11 +15,11 @@ export function Badge({
       className={cn(
         "inline-flex h-5 items-center rounded-sm px-1.5 text-[10px] font-medium uppercase tracking-wide",
         tone === "neutral" && "bg-raised text-muted",
-        tone === "fdr" && "bg-fdr/15 text-fdr",
-        tone === "achieve" && "bg-achieve/15 text-achieve",
-        tone === "danger" && "bg-danger/15 text-danger",
-        tone === "ok" && "bg-ok/15 text-ok",
-        tone === "warn" && "bg-warn/15 text-warn",
+        tone === "fdr" && "bg-fdr/20 text-fdr",
+        tone === "achieve" && "bg-achieve/20 text-achieve",
+        tone === "danger" && "bg-danger/20 text-danger",
+        tone === "ok" && "bg-ok/20 text-ok",
+        tone === "warn" && "bg-warn/20 text-warn",
         className,
       )}
     >
