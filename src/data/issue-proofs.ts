@@ -48,7 +48,7 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S02: {
     conflict:
-      "FAQ “What are the pros and cons of debt settlement?” correctly links /debt-solutions/debt-settlement-pros-and-cons/. There is no separate product link from /debt-relief/ to /debt-solutions/debt-settlement/. Both pages self-canonical; copy still aliases the two.",
+      "FAQ “What are the pros and cons of debt settlement?” correctly links the pros-and-cons article. Recommended reads already links /debt-solutions/debt-settlement/ as “Debt Solutions”. Remaining issue is copy treating settlement as a synonym of relief.",
     rows: [
       {
         brand: "fdr",
@@ -68,7 +68,7 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S03: {
     conflict:
-      "Glossary HELOC self-canonicals to the glossary URL, not to /heloc. Product /heloc is a separate node. No JSON-LD on either Achieve URL.",
+      "Glossary HELOC definition links the word HELOC to /home-equity-loan, not /heloc. Keep the glossary self-canonical. Do not canonical the definition to the product.",
     rows: [
       {
         brand: "achieve",
