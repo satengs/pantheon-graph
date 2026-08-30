@@ -26,15 +26,16 @@ import { ConfigPanel } from "@/components/studio/ConfigPanel";
 import { Gate } from "@/components/studio/Gate";
 import { StatesPanel } from "@/components/studio/StatesPanel";
 import { Companies } from "@/components/studio/Companies";
-import { HSplit, VSplit } from "@/components/studio/SplitPane";
+import { HSplit } from "@/components/studio/SplitPane";
 import { familyContextFrom, useStudio, type StudioTab } from "@/store/studio";
 import { familyPageCount, isSeedFamily, issueFitsFamily, productsForFamily } from "@/lib/org/catalog";
 import { productLabel } from "@/lib/graph/types";
 import { UserButton } from "@/lib/auth/gates";
 import { filterIssues } from "@/lib/studio/query";
-import { loadNote, saveNote } from "@/lib/server/studio-db";
+import { loadNote } from "@/lib/server/studio-db";
 import { RegisterFamilyModal } from "@/components/studio/RegisterFamilyModal";
 import { IssueDrawer } from "@/components/studio/IssueDrawer";
+import { NotesDrawer } from "@/components/studio/NotesDrawer";
 
 const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string }[] = [
   { id: "companies", label: "Companies", icon: Building2, hint: "Parent company, sub-brands, retrieve from URL, coverage." },
@@ -182,7 +183,7 @@ export function Studio() {
   );
 
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-bg text-fg">
+    <div className="flex h-dvh min-w-0 flex-col overflow-hidden bg-bg text-fg">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2">
         <div className="mr-1">
           <p className="font-display text-lg leading-none tracking-tight">
@@ -248,10 +249,14 @@ export function Studio() {
               FDR {crawl.counts.fdr.toLocaleString()} · Achieve {crawl.counts.achieve.toLocaleString()}
             </span>
           ) : (
-            <span className="vh-whisper font-mono tabular-nums">
-              {familyPages.toLocaleString()} pages
-            </span>
+            <span className="vh-whisper font-mono tabular-nums">{familyPages.toLocaleString()} pages</span>
           )}
+          <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
+            {crawling ? "Crawling…" : "Crawl"}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setNotesOpen((v) => !v)}>
+            {notesOpen ? "Hide notes" : "Notes"}
+          </Button>
           <Button size="sm" onClick={() => setRegisterOpen(true)}>
             <Plus className="size-3.5" />
             New family
@@ -259,6 +264,11 @@ export function Studio() {
           <UserButton />
         </div>
       </header>
+      {crawlMsg ? (
+        <p className="border-b border-border px-4 py-1 text-xs text-muted" role="status">
+          {crawlMsg}
+        </p>
+      ) : null}
 
       <nav className="flex flex-wrap items-end gap-3 border-b border-border bg-bg px-4 py-1.5" aria-label="Primary">
         {TAB_GROUPS.map((group) => (
@@ -356,62 +366,24 @@ export function Studio() {
         <Button variant="secondary" size="sm" onClick={() => void onCheck()} disabled={checking || crawling}>
           {checking ? "Checking…" : "Run checks"}
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
-          {crawling ? "Crawling…" : "Live crawl"}
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => setNotesOpen((v) => !v)}>
-          {notesOpen ? "Hide notes" : "Notes"}
-        </Button>
-        {crawlMsg ? <span className="vh-whisper max-w-[280px] truncate">{crawlMsg}</span> : null}
         </div>
       </div>
-      ) : (
-        <div className="flex items-center gap-2 border-b border-border px-4 py-1.5">
-          <Button variant="secondary" size="sm" onClick={() => void onCrawl()} disabled={crawling}>
-            {crawling ? "Crawling…" : "Live crawl"}
-          </Button>
-          {crawlMsg ? <span className="vh-whisper truncate">{crawlMsg}</span> : null}
-        </div>
-      )}
+      ) : null}
 
       <HSplit
         storageKey="origin.inspectorW"
-        left={
-          notesOpen ? (
-            <VSplit
-              storageKey="origin.writeH"
-              top={main}
-              bottom={
-                <div className="flex h-full flex-col bg-surface p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="vh-kicker">Notes · {selectedIssueId ?? graphOrg?.parent?.name ?? tab}</p>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        void saveNote({ data: { pageKey: selectedIssueId ?? tab, body: draft } })
-                      }
-                    >
-                      Save
-                    </Button>
-                  </div>
-                  <textarea
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="Draft the page copy or fix notes for this selection"
-                    className="min-h-0 flex-1 resize-none rounded-md bg-bg p-2 text-sm text-fg shadow-[var(--shadow-border)]"
-                  />
-                </div>
-              }
-            />
-          ) : (
-            main
-          )
-        }
+        left={main}
         right={showInspector ? <Inspector /> : null}
       />
       <RegisterFamilyModal />
       <IssueDrawer />
+      <NotesDrawer
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        pageKey={selectedIssueId ?? graphOrg?.parent?.name ?? tab}
+        draft={draft}
+        onDraft={setDraft}
+      />
     </div>
   );
 }
