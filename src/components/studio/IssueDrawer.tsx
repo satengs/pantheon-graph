@@ -64,10 +64,7 @@ export function IssueDrawer() {
     RULES.find((i) => i.id === selectedIssueId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ??
     null;
   const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
-  const finding =
-    findings.find((f) => f.id === selectedFindingId) ??
-    (issue ? findings.find((f) => f.url === issue.urls[0] || f.code === issue.code) : undefined) ??
-    null;
+  const finding = selectedFindingId ? findings.find((f) => f.id === selectedFindingId) ?? null : null;
 
   const view = useMemo(
     () =>

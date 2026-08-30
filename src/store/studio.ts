@@ -227,12 +227,20 @@ export const useStudio = create<StudioState>((set, get) => ({
   selectIssue: (selectedIssueId) =>
     set({
       selectedIssueId,
+      selectedFindingId: null,
+      issueDrawerOpen: false,
       selectedNodeId: selectedIssueId ? `issue:${selectedIssueId}` : null,
       selectedState: null,
     }),
   selectState: (selectedState) => set({ selectedState, selectedNodeId: null }),
   hoverIssue: (hoveredIssueId) => set({ hoveredIssueId }),
-  selectFinding: (selectedFindingId) => set({ selectedFindingId, selectedState: null }),
+  selectFinding: (selectedFindingId) =>
+    set({
+      selectedFindingId,
+      selectedIssueId: null,
+      issueDrawerOpen: false,
+      selectedState: null,
+    }),
   openIssueDrawer: (opts) =>
     set((s) => {
       const fromIssue = Boolean(opts && "issueId" in opts);

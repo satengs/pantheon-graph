@@ -42,7 +42,7 @@ export function Explore() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
   const parentId = useStudio((s) => s.parentId);
-  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const selectIssue = useStudio((s) => s.selectIssue);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const [kind, setKind] = useState<"all" | "conflict" | "suggests" | "sameAs">("all");
   const [copied, setCopied] = useState<"md" | "json" | null>(null);
@@ -171,7 +171,7 @@ export function Explore() {
               key={`${r.code}:${r.fromId}:${r.toId}`}
               row={row}
               selected={selectedIssueId === r.code}
-              onOpen={() => openIssueDrawer({ issueId: rule?.id ?? r.code, findingId: null })}
+              onOpen={() => selectIssue(rule?.id ?? r.code)}
               onHover={(on) => hoverIssue(on ? r.code : null)}
               leading={
                 <span className="flex items-start gap-2 pt-1" onClick={(e) => e.stopPropagation()}>

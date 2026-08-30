@@ -295,11 +295,11 @@ export function formatIssueDetail(input: {
   }
 
   return {
-    id: finding?.id || issue?.id || "",
-    code: finding?.code || issue?.code || "",
+    id: issue?.id || finding?.id || "",
+    code: issue?.code || finding?.code || "",
     kind: issue ? "rule" : "html",
-    what: (finding?.title || issue?.title || "").trim(),
-    why: (finding?.why || issue?.reason || "").trim(),
+    what: (issue?.title || finding?.title || "").trim(),
+    why: (issue?.reason || finding?.why || "").trim(),
     fix: (issue?.fix || finding?.suggested || "").trim(),
     section: issueSection({
       citations: issue?.citations,

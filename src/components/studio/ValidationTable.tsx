@@ -39,7 +39,7 @@ export function ValidationTable() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
-  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const selectIssue = useStudio((s) => s.selectIssue);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const metrics = crawlMetrics(crawl);
 
@@ -125,7 +125,7 @@ export function ValidationTable() {
               key={i.id}
               row={row}
               selected={selectedIssueId === i.id}
-              onOpen={() => openIssueDrawer({ issueId: i.id, findingId: null })}
+              onOpen={() => selectIssue(i.id)}
               onHover={(on) => hoverIssue(on ? i.id : null)}
               leading={
                 <span className="pt-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>

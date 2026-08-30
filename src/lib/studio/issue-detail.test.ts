@@ -199,3 +199,41 @@ test("pageUrl pins the selected row and drops other-page evidence", () => {
   assert.equal(view.evidence.proofRows.length, 1);
   assert.equal(view.evidence.proofRows[0]?.url, FDR);
 });
+
+test("rule issue copy wins over a same-page HTML finding", () => {
+  const finding = {
+    id: "html-faq",
+    code: "FAQ",
+    title: "FAQ questions sit at the same heading level as the page title siblings",
+    url: "https://www.freedomdebtrelief.com/debt-relief/",
+    why: "heading clash",
+    found: "",
+    suggested: "",
+  };
+  const s02 = {
+    id: "S02",
+    code: "S02",
+    title: "Stop aliasing debt-relief as settlement",
+    reason: "FAQ on relief names settlement.",
+    fix: "Edit the FAQ on /debt-relief/ only.",
+    urls: ["https://www.freedomdebtrelief.com/debt-relief/"],
+    citations: [
+      {
+        url: "https://www.freedomdebtrelief.com/debt-relief/",
+        brand: "fdr",
+        quote: "pros and cons",
+        location: "FAQ",
+      },
+    ],
+    domain: "fdr",
+    product: "debt-relief",
+    impact: "critical",
+    layer: "L2",
+  };
+  const view = formatIssueDetail({ issue: s02, finding });
+  assert.ok(view);
+  assert.equal(view.what, s02.title);
+  assert.equal(view.why, s02.reason);
+  assert.equal(view.fix, s02.fix);
+  assert.equal(view.code, "S02");
+});

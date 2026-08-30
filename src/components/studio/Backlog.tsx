@@ -43,6 +43,8 @@ export function Backlog() {
   const query = useStudio((s) => s.query);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
+  const selectIssue = useStudio((s) => s.selectIssue);
+  const selectFinding = useStudio((s) => s.selectFinding);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const hoverIssue = useStudio((s) => s.hoverIssue);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
@@ -109,8 +111,8 @@ export function Backlog() {
   }, []);
 
   function openPoint(p: Point) {
-    if (p.kind === "html") openIssueDrawer({ findingId: p.id, pageUrl: p.row.pageUrl });
-    else openIssueDrawer({ issueId: p.id, pageUrl: p.row.pageUrl });
+    if (p.kind === "html") selectFinding(p.id);
+    else selectIssue(p.id);
   }
 
   return (

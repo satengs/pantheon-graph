@@ -25,7 +25,7 @@ const PHASE_TONE: Record<string, string> = {
 export function Gate() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
-  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const selectIssue = useStudio((s) => s.selectIssue);
   if (!isSeedFamily(graphOrg, parentSlug)) {
     return <EmptyFamilyCrawl title={`No gate data for ${graphOrg?.parent?.name ?? "this family"}`} />;
   }
@@ -105,7 +105,7 @@ export function Gate() {
             <IssueRow
               key={i.id}
               row={issueRowFromRule(i, graphOrg)}
-              onOpen={() => openIssueDrawer({ issueId: i.id, findingId: null })}
+              onOpen={() => selectIssue(i.id)}
             />
           ))}
         </div>

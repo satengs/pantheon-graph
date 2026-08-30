@@ -72,7 +72,7 @@ export function Inspector() {
   const toneText = issue ? `${issue.title} ${issue.reason} ${issue.fix}` : "";
   const toneBrand = issue?.domain === "achieve" ? "achieve" : "fdr";
   const tone = toneRatio(toneText, toneBrand);
-  const finding = familyFindings.find((f) => f.id === selectedFindingId) ?? (issue ? familyFindings.find((f) => f.url === issue.urls[0]) : undefined);
+  const finding = familyFindings.find((f) => f.id === selectedFindingId);
   const proofView = issue ? ISSUE_PROOFS[issue.code] : undefined;
 
   useEffect(() => {
