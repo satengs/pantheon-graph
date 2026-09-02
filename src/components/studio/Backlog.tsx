@@ -288,7 +288,9 @@ export function Backlog() {
             const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             return {
               className: "overflow-visible",
-              style: on ? { overflow: "visible", background: "#c4b8a4" } : { overflow: "visible" },
+              style: on
+                ? { overflow: "visible", background: "#c4b8a4", color: "#1c1814" }
+                : { overflow: "visible" },
             };
           }}
           renderRow={(c) => {

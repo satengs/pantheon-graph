@@ -252,6 +252,7 @@ export function IssueRow({
   onHover?: (on: boolean) => void;
   leading?: ReactNode;
 }) {
+  const ink = "#1c1814";
   return (
     <div
       role="button"
@@ -259,7 +260,7 @@ export function IssueRow({
       aria-current={selected ? "true" : undefined}
       style={
         selected
-          ? { borderLeft: "3px solid #c4b8a4", background: "#c4b8a4" }
+          ? { borderLeft: "3px solid #a89880", background: "#c4b8a4", color: ink }
           : { borderLeft: "3px solid transparent" }
       }
       onClick={onOpen}
@@ -271,31 +272,37 @@ export function IssueRow({
       }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
+      className={`flex h-full min-h-0 cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
         selected
-          ? "border-l-[3px] border-l-[#c4b8a4] bg-[#c4b8a4] py-3"
+          ? "border-l-[3px] border-l-[#a89880] bg-[#c4b8a4] py-3"
           : "border-l-[3px] border-l-transparent py-2 hover:bg-raised/50"
       }`}
     >
       {leading}
       <span
         className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
-          row.impact === "critical" ? "bg-danger" : row.impact === "high" ? "bg-warn" : "bg-subtle"
+          selected
+            ? "bg-[#3a3530]"
+            : row.impact === "critical"
+              ? "bg-danger"
+              : row.impact === "high"
+                ? "bg-warn"
+                : "bg-subtle"
         }`}
         title={row.impact || "impact"}
       />
       <div className="min-w-0 flex-1">
-        <p className={`truncate font-mono text-xs ${selected ? "text-fg" : "text-muted"}`}>
-          <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+        <p className={`truncate font-mono text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
+          <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Page </span>
           {row.pagePath}
         </p>
-        <p className="mt-0.5 truncate text-xs text-muted">
-          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+        <p className={`mt-0.5 truncate text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
+          <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Section </span>
           {row.section || PAGE_LEVEL}
         </p>
-        <p className={`mt-1 text-pretty ${selected ? "text-base font-medium text-fg" : "text-sm text-muted"}`}>{row.what}</p>
+        <p className={`mt-1 text-pretty ${selected ? "text-base font-medium" : "text-sm text-muted"}`} style={selected ? { color: ink } : undefined}>{row.what}</p>
         {selected && row.relatedPath ? (
-          <p className="vh-whisper mt-1 truncate">Related · {row.relatedPath}</p>
+          <p className="mt-1 truncate text-xs" style={{ color: ink }}>Related · {row.relatedPath}</p>
         ) : null}
       </div>
     </div>
