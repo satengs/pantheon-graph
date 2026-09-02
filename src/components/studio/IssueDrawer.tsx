@@ -259,30 +259,18 @@ export function IssueRow({
         title={row.impact || "impact"}
       />
       <div className="min-w-0 flex-1">
-        {selected ? (
-          <>
-            <div className="g-figure py-2">
-              <p className="vh-page-hero">{row.pagePath}</p>
-              <p className="vh-what mt-1">
-                {row.section || PAGE_LEVEL}
-                {row.what ? ` · ${row.what}` : ""}
-              </p>
-            </div>
-            {row.relatedPath ? (
-              <div className="g-ground mt-1.5">
-                <p className="vh-whisper truncate">Related · {row.relatedPath}</p>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <p className="vh-page-quiet truncate">{row.pagePath}</p>
-            <p className="vh-whisper mt-0.5 truncate">
-              {row.section || PAGE_LEVEL}
-              {row.what ? ` · ${row.what}` : ""}
-            </p>
-          </>
-        )}
+        <p className={`truncate font-mono text-xs ${selected ? "text-fg" : "text-muted"}`}>
+          <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+          {row.pagePath}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-muted">
+          <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+          {row.section || PAGE_LEVEL}
+        </p>
+        <p className={`mt-1 text-pretty ${selected ? "text-base font-medium text-fg" : "text-sm text-muted"}`}>{row.what}</p>
+        {selected && row.relatedPath ? (
+          <p className="vh-whisper mt-1 truncate">Related · {row.relatedPath}</p>
+        ) : null}
       </div>
     </div>
   );

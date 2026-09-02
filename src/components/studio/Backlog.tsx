@@ -12,6 +12,8 @@ import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
 import { issueCategories, type FindingHit, type IssueCategory } from "@/lib/studio/rule-pages";
 import { ValidatePage } from "@/components/studio/ValidatePage";
 import { VirtualList } from "@/components/studio/VirtualList";
+import { IssueRow } from "@/components/studio/IssueDrawer";
+import { PAGE_LEVEL } from "@/lib/studio/issue-detail";
 import { TREE_SUGGESTIONS, formatSuggestionsJson, formatSuggestionsMarkdown, suggestionRows } from "@/lib/graph/suggestions";
 import type { GraphEdge } from "@/lib/graph/types";
 import { CATEGORIES, IDEAL_TREE, recCategoryForCode, type RecCategory } from "@/data/recommend";
@@ -67,6 +69,7 @@ export function Backlog() {
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectIssue = useStudio((s) => s.selectIssue);
   const hoverIssue = useStudio((s) => s.hoverIssue);
+  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
@@ -271,58 +274,44 @@ export function Backlog() {
 
       <section className="flex min-h-0 flex-1 flex-col rounded-lg bg-surface">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
-        <p className="vh-whisper px-3 pb-2">One selected. Click a column to sort.</p>
-        <div className="flex items-center gap-3 border-b border-border px-3 py-1.5">
-          {cols.map((col) => (
-            <button
-              key={col.key}
-              type="button"
-              onClick={() => clickSort(col.key)}
-              className={`text-left text-[10px] uppercase tracking-wide ${col.width ?? "min-w-0 flex-1"} ${
-                sortKey === col.key ? "text-fg" : "text-subtle"
-              }`}
-            >
-              {col.label}
-              {sortKey === col.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-            </button>
-          ))}
-        </div>
+        <p className="vh-whisper px-3 pb-2">Page, then section, then the problem. One selected.</p>
         <VirtualList
           className="min-h-0 flex-1 overflow-auto"
           items={categories}
-          rowHeight={48}
+          rowHeight={88}
           getKey={(c) => c.code}
           selectedIndex={categories.findIndex((c) => c.code === selectedIssueId)}
           renderRow={(c) => {
             const on = selectedIssueId === c.code;
-            const edge = KIND[c.code];
+            const page = c.pages[0];
             return (
-              <button
-                type="button"
-                role="radio"
-                aria-checked={on}
-                className={`flex h-12 w-full items-center gap-3 border-t border-border/80 px-3 text-left ${
-                  on
-                    ? "bg-[color-mix(in_oklab,var(--color-accent)_14%,var(--color-surface))] shadow-[inset_3px_0_0_var(--color-accent)]"
-                    : "hover:bg-raised/40"
-                }`}
-                onClick={() => {
-                  selectIssue(c.code);
+              <IssueRow
+                selected={on}
+                onHover={(h) => hoverIssue(h ? c.code : null)}
+                onOpen={() => {
+                  const rule = RULES.find((r) => r.code === c.code);
+                  selectIssue(c.code, page?.url ?? null);
                   hoverIssue(c.code);
+                  openIssueDrawer({ issueId: rule?.id ?? c.code, pageUrl: page?.url ?? null });
                 }}
-              >
-                <span className="w-14 shrink-0 font-mono text-xs text-subtle">{c.code}</span>
-                <span className="min-w-0 flex-1 truncate text-sm text-fg">{c.title}</span>
-                <span className="w-24 shrink-0">
-                  {edge ? (
-                    <Badge tone={edge === "conflict" ? "danger" : edge === "sameAs" ? "ok" : "warn"}>{edge}</Badge>
-                  ) : (
-                    <span className="text-xs text-subtle">—</span>
-                  )}
-                </span>
-                <span className="w-20 shrink-0 text-xs text-muted">{c.impact}</span>
-                <span className="w-16 shrink-0 font-mono text-xs tabular-nums text-muted">{c.pages.length}</span>
-              </button>
+                row={{
+                  id: c.code,
+                  code: c.code,
+                  kind: "rule",
+                  pageUrl: page?.url ?? "",
+                  pagePath: page?.path ?? "(no URL)",
+                  brand: "",
+                  brandLabel: "",
+                  product: "",
+                  productLabel: "",
+                  section: page?.note || PAGE_LEVEL,
+                  what: c.title,
+                  impact: c.impact,
+                  layer: c.layer,
+                  relatedPath: c.pages[1]?.path ?? "",
+                  relatedCount: Math.max(0, c.pages.length - 1),
+                }}
+              />
             );
           }}
         />

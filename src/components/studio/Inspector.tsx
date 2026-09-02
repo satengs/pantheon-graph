@@ -16,7 +16,7 @@ import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone,
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
-import { pagePath } from "@/lib/studio/issue-detail";
+import { PAGE_LEVEL, pagePath } from "@/lib/studio/issue-detail";
 import { pagesForRule } from "@/lib/studio/rule-pages";
 import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { VirtualList } from "@/components/studio/VirtualList";
@@ -180,7 +180,15 @@ export function Inspector() {
       <Fold title="Identity" defaultOpen>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-mono text-xs text-subtle">{issue.code}</p>
+            <p className="font-mono text-xs text-fg">
+              <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+              {pagePath(focusUrl || issue.urls[0] || "")}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+              {PAGE_LEVEL}
+            </p>
+            <p className="font-mono mt-2 text-xs text-subtle">{issue.code}</p>
             <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
           </div>
           <Button size="sm" onClick={() => openIssueDrawer({ issueId: issue.id, pageUrl: focusUrl || issue.urls[0] })}>
