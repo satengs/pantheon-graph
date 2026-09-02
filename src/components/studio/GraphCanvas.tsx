@@ -349,16 +349,17 @@ export function GraphCanvas() {
     return [...ids];
   }
 
+  // Fit from layout positions only. Drag offsets must not retarget the
+  // camera — otherwise a hull drag looks stationary (viewBox follows).
   const vb = useMemo(() => {
     const pts: Pt[] = [];
     for (const n of graph.nodes) {
       const p = base.get(n.id);
       if (!p) continue;
-      const o = offsets[n.id];
-      pts.push(o ? { x: p.x + o.x, y: p.y + o.y } : p);
+      pts.push(p);
     }
     return fitView(pts, full ? 96 : 72);
-  }, [graph.nodes, base, offsets, full]);
+  }, [graph.nodes, base, full]);
 
   function clientToSvg(e: RE<SVGSVGElement> | PointerEvent): Pt {
     const el = svgRef.current;

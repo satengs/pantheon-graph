@@ -65,8 +65,8 @@ export function VirtualList<T>({
                 height: rowHeight,
                 left: 0,
                 right: 0,
-                overflow: "visible",
                 ...rowWrapper?.(item, index)?.style,
+                overflow: "visible",
               }}
             >
               {renderRow(item, index)}
