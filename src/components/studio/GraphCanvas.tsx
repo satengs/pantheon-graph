@@ -32,6 +32,9 @@ function controlPoint(a: Pt, b: Pt, idx: number, kind: GraphEdge["kind"], explod
   if (kind === "owns" || kind === "cites") {
     return { x: r2(mx), y: r2(my - 8) };
   }
+  if (kind === "sameAs" && my > 0) {
+    return { x: r2(mx), y: r2(my + 80) };
+  }
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -105,8 +108,19 @@ function layoutOf(
     }
     for (const [brand, list] of byBrand) {
       const origin = pos.get(`brand:${brand}`) ?? { x: 0, y: 0 };
-      list.forEach((h, i) => {
-        pos.set(h.id, { x: r2(origin.x + (i - (list.length - 1) / 2) * 128), y: origin.y + 160 });
+      const products = list.filter((h) => h.kind !== "glossary" && h.product !== "glossary");
+      const gloss = list.filter((h) => h.kind === "glossary" || h.product === "glossary");
+      products.forEach((h, i) => {
+        pos.set(h.id, {
+          x: r2(origin.x + (i - (products.length - 1) / 2) * 128),
+          y: origin.y + 160,
+        });
+      });
+      gloss.forEach((h, i) => {
+        pos.set(h.id, {
+          x: r2(origin.x + (i - (gloss.length - 1) / 2) * 80),
+          y: origin.y + 300,
+        });
       });
     }
   }
@@ -512,7 +526,7 @@ export function GraphCanvas() {
               const idx = edgePairIndex.get(e.id) ?? 0;
               const c = controlPoint(a, b, idx, e.kind, explode);
               const issueNode = e.issueId ? graph.nodes.some((n) => n.id === `issue:${e.issueId}`) : false;
-              const showLabel = Boolean(e.label) && !issueNode && (conflict || sameAs);
+              const showLabel = Boolean(e.label) && (conflict || sameAs);
               const pairTitle = `${nodeLabel(e.source)} ↔ ${nodeLabel(e.target)}${e.label ? ` · ${e.label}` : ""}`;
               const hovered = hoverEdgeId === e.id;
               return (
@@ -575,7 +589,7 @@ export function GraphCanvas() {
               );
             })}
             {graph.nodes.map((n) => {
-              if (n.kind === "issue" && n.issueId !== "S01") return null;
+              if (n.kind === "issue") return null;
               const p = at(n.id);
               if (!p) return null;
               const radius = nodeR(n);
@@ -595,7 +609,7 @@ export function GraphCanvas() {
               const r = on ? radius * 1.3 : radius;
               const brandFill = nodeStroke(n);
               const fill =
-                on && n.kind !== "parent" && n.kind !== "issue"
+                on && n.kind !== "parent"
                   ? brandFill
                   : selectedNodeId && !on
                     ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
@@ -623,7 +637,6 @@ export function GraphCanvas() {
                   onDoubleClick={(ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();
-                    expandNode(n);
                   }}
                 >
                   {on && n.kind === "glossary" ? (
@@ -639,13 +652,10 @@ export function GraphCanvas() {
                       strokeWidth={3}
                     />
                   ) : null}
-                  {on && n.kind !== "glossary" ? (
-                    <circle
-                      r={r + (n.kind === "page" ? 6 : 4)}
-                      fill="none"
-                      stroke="#e4dfd4"
-                      strokeWidth={n.kind === "page" ? 4 : 3}
-                    />
+                  {on && n.kind === "page" ? (
+                    <circle r={r + 6} fill="none" stroke="#d7d2c8" strokeWidth={4} />
+                  ) : on && n.kind !== "glossary" ? (
+                    <circle r={r + 4} fill="none" stroke={brandFill} strokeWidth={3} />
                   ) : null}
                   {n.kind === "glossary" ? (
                     <rect
@@ -663,8 +673,8 @@ export function GraphCanvas() {
                     <circle
                       r={r}
                       fill={fill}
-                      stroke={on && n.kind === "page" ? "#e4dfd4" : nodeStroke(n)}
-                      strokeWidth={on ? (n.kind === "page" ? 2 : 2.2) : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
+                      stroke={on && n.kind === "page" ? "none" : nodeStroke(n)}
+                      strokeWidth={on ? (n.kind === "page" ? 0 : 2.2) : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
                   )}
                   {label ? (
@@ -672,7 +682,7 @@ export function GraphCanvas() {
                       y={n.kind === "product" || n.kind === "glossary" ? r + 12 : 4}
                       textAnchor="middle"
                       fill="var(--color-fg)"
-                      fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : n.kind === "issue" ? 9 : 8}
+                      fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : 8}
                       fontWeight={600}
                       fontFamily="IBM Plex Sans, sans-serif"
                     >
