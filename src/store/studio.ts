@@ -56,6 +56,7 @@ type StudioState = {
   graphLayout: GraphLayout;
   maximized: Maximized;
   graphFocusStack: string[];
+  collapsedClusters: string[];
   includeParent: boolean;
   parentSlug: string;
   parentId: string;
@@ -86,6 +87,7 @@ type StudioState = {
   setMaximized: (v: Maximized) => void;
   pushGraphFocus: (id: string) => void;
   popGraphFocus: () => void;
+  toggleCluster: (id: string) => void;
   setIncludeParent: (v: boolean) => void;
   setParentSlug: (v: string) => void;
   setGraphOrg: (v: GraphOrg | null) => void;
@@ -178,6 +180,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   graphLayout: "tree",
   maximized: null,
   graphFocusStack: [],
+  collapsedClusters: [],
   includeParent: true,
   parentSlug: "pantheon",
   parentId: "",
@@ -193,7 +196,7 @@ export const useStudio = create<StudioState>((set, get) => ({
       issueDrawerOpen: false,
       hoveredIssueId: null,
     }),
-  setExplode: (explode) => set({ explode }),
+  setExplode: (explode) => set({ explode, collapsedClusters: explode ? [] : get().collapsedClusters }),
   setBrand: (brand) =>
     set((s) => {
       const pool =
@@ -281,6 +284,22 @@ export const useStudio = create<StudioState>((set, get) => ({
   pushGraphFocus: (id) =>
     set((s) => (s.graphFocusStack.includes(id) ? s : { graphFocusStack: [...s.graphFocusStack, id] })),
   popGraphFocus: () => set((s) => ({ graphFocusStack: s.graphFocusStack.slice(0, -1) })),
+  toggleCluster: (id) =>
+    set((s) => {
+      const expanded = s.graphFocusStack.includes(id);
+      const collapsed = s.collapsedClusters.includes(id);
+      const showing = expanded || (s.explode && !collapsed);
+      if (showing) {
+        return {
+          graphFocusStack: s.graphFocusStack.filter((x) => x !== id),
+          collapsedClusters: collapsed ? s.collapsedClusters : [...s.collapsedClusters, id],
+        };
+      }
+      return {
+        graphFocusStack: [...s.graphFocusStack, id],
+        collapsedClusters: s.collapsedClusters.filter((x) => x !== id),
+      };
+    }),
   setIncludeParent: (includeParent) =>
     set((s) => ({
       includeParent,
@@ -316,6 +335,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         issueDrawerOpen: false,
   drawerPageUrl: null,
         graphFocusStack: [],
+  collapsedClusters: [],
       };
     }),
   selectParent: (parentId) => {

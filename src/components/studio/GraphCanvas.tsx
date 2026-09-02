@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RE } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import { buildGraph } from "@/lib/graph/model";
 import { nodeLabel, TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import { useStudio, type GraphLayout } from "@/store/studio";
@@ -193,6 +193,8 @@ export function GraphCanvas() {
   const graphFocusStack = useStudio((s) => s.graphFocusStack);
   const pushGraphFocus = useStudio((s) => s.pushGraphFocus);
   const popGraphFocus = useStudio((s) => s.popGraphFocus);
+  const toggleCluster = useStudio((s) => s.toggleCluster);
+  const collapsedClusters = useStudio((s) => s.collapsedClusters);
   const includeParent = useStudio((s) => s.includeParent);
   const setIncludeParent = useStudio((s) => s.setIncludeParent);
   const parentId = useStudio((s) => s.parentId);
@@ -264,11 +266,12 @@ export function GraphCanvas() {
         product,
         layer,
         expandIds: graphFocusStack,
+        collapsedIds: collapsedClusters,
         includeParent,
         org: graphOrg ?? undefined,
         ruleCodes: attachedRuleCodes,
       }),
-    [explode, brand, product, layer, graphFocusStack, includeParent, graphOrg, attachedRuleCodes],
+    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes],
   );
   const base = useMemo(
     () => layoutOf(graphLayout, graph.nodes, graph.edges, explode),
@@ -343,6 +346,11 @@ export function GraphCanvas() {
 
   function expandNode(n: GraphNode) {
     if (n.kind === "page") return;
+    if (n.kind === "product" || n.kind === "glossary" || n.kind === "brand") {
+      toggleCluster(n.id);
+      selectNode(n.id);
+      return;
+    }
     pushGraphFocus(n.id);
     if (n.issueId) selectIssue(n.issueId);
     else selectNode(n.id);
@@ -375,7 +383,7 @@ export function GraphCanvas() {
           </button>
         ))}
         <span className="hidden px-2 text-xs text-subtle sm:inline">
-          Drag to move · double-click a node to load hidden relations
+          Drag to move · double-click a brand or product to show or hide its pages
         </span>
         <label className="flex h-9 items-center gap-1.5 rounded-md bg-raised px-2.5 text-xs text-muted">
           <input
@@ -390,22 +398,6 @@ export function GraphCanvas() {
           />
           Parent
         </label>
-        <button
-          type="button"
-          title="Zoom out"
-          onClick={() => setZoom((z) => Math.max(0.45, z / 1.2))}
-          className="inline-flex size-9 items-center justify-center rounded-md bg-raised text-muted"
-        >
-          <ZoomOut className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          title="Zoom in"
-          onClick={() => setZoom((z) => Math.min(2.8, z * 1.2))}
-          className="inline-flex size-9 items-center justify-center rounded-md bg-raised text-muted"
-        >
-          <ZoomIn className="size-3.5" />
-        </button>
         <button
           type="button"
           disabled={!graphFocusStack.length}
@@ -592,7 +584,14 @@ export function GraphCanvas() {
                       ? ""
                       : n.label;
               const on = n.id === selectedNodeId;
-              const halo = Math.max(5, radius * 0.28);
+              const r = on ? radius * 1.3 : radius;
+              const brandFill = nodeStroke(n);
+              const fill =
+                on && n.kind !== "parent" && n.kind !== "issue"
+                  ? brandFill
+                  : selectedNodeId && !on
+                    ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
+                    : nodeFill(n);
               return (
                 <g
                   key={n.id}
@@ -621,48 +620,43 @@ export function GraphCanvas() {
                 >
                   {on && n.kind === "glossary" ? (
                     <rect
-                      x={-(radius + halo)}
-                      y={-(radius + halo)}
-                      width={(radius + halo) * 2}
-                      height={(radius + halo) * 2}
+                      x={-(r + 4)}
+                      y={-(r + 4)}
+                      width={(r + 4) * 2}
+                      height={(r + 4) * 2}
                       rx={4}
                       transform="rotate(45)"
-                      fill="color-mix(in oklab, var(--color-accent) 22%, transparent)"
+                      fill="none"
                       stroke="var(--color-accent)"
-                      strokeWidth={2.5}
+                      strokeWidth={3}
                     />
                   ) : null}
                   {on && n.kind !== "glossary" ? (
-                    <circle
-                      r={radius + halo}
-                      fill="color-mix(in oklab, var(--color-accent) 22%, transparent)"
-                      stroke="var(--color-accent)"
-                      strokeWidth={2.5}
-                    />
+                    <circle r={r + 4} fill="none" stroke="var(--color-accent)" strokeWidth={3} />
                   ) : null}
                   {n.kind === "glossary" ? (
                     <rect
-                      x={-radius}
-                      y={-radius}
-                      width={radius * 2}
-                      height={radius * 2}
+                      x={-r}
+                      y={-r}
+                      width={r * 2}
+                      height={r * 2}
                       rx={3}
                       transform="rotate(45)"
-                      fill={nodeFill(n)}
+                      fill={fill}
                       stroke={nodeStroke(n)}
                       strokeWidth={on ? 2.2 : 1.5}
                     />
                   ) : (
                     <circle
-                      r={radius}
-                      fill={nodeFill(n)}
+                      r={r}
+                      fill={fill}
                       stroke={nodeStroke(n)}
                       strokeWidth={on ? 2.2 : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
                   )}
                   {label ? (
                     <text
-                      y={n.kind === "product" || n.kind === "glossary" ? radius + 12 : 4}
+                      y={n.kind === "product" || n.kind === "glossary" ? r + 12 : 4}
                       textAnchor="middle"
                       fill="var(--color-fg)"
                       fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : n.kind === "issue" ? 9 : 8}
@@ -680,6 +674,35 @@ export function GraphCanvas() {
       ) : (
         <div className="min-h-0 flex-1 bg-bg" />
       )}
+      <div className="absolute bottom-3 right-3 z-10 flex gap-1">
+        <button
+          type="button"
+          title="Zoom out"
+          onClick={() => setZoom((z) => Math.max(0.45, z / 1.2))}
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+        >
+          −
+        </button>
+        <button
+          type="button"
+          title="Zoom in"
+          onClick={() => setZoom((z) => Math.min(2.8, z * 1.2))}
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          title="Fit"
+          onClick={() => {
+            setZoom(1);
+            setPan({ x: 0, y: 0 });
+          }}
+          className="inline-flex h-8 items-center justify-center rounded-md bg-surface px-2 text-xs text-fg shadow-[var(--shadow-border)]"
+        >
+          Fit
+        </button>
+      </div>
       <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wide text-subtle">
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2 rounded-full bg-accent" /> Parent

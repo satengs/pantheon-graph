@@ -22,6 +22,7 @@ import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { VirtualList } from "@/components/studio/VirtualList";
 import { recForCode } from "@/data/recommend";
 import { PageMeta } from "@/components/studio/PageMeta";
+import { Fold } from "@/components/studio/Fold";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -46,6 +47,7 @@ export function Inspector() {
   const [analyzeBusy, setAnalyzeBusy] = useState(false);
 
   const graphFocusStack = useStudio((s) => s.graphFocusStack);
+  const collapsedClusters = useStudio((s) => s.collapsedClusters);
   const includeParent = useStudio((s) => s.includeParent);
   const graphOrg = useStudio((s) => s.graphOrg);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
@@ -60,11 +62,12 @@ export function Inspector() {
         product,
         layer,
         expandIds: graphFocusStack,
+        collapsedIds: collapsedClusters,
         includeParent,
         org: graphOrg ?? undefined,
         ruleCodes: attachedRuleCodes,
       }),
-    [explode, brand, product, layer, graphFocusStack, includeParent, graphOrg, attachedRuleCodes],
+    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
   const wantedId =
@@ -108,19 +111,30 @@ export function Inspector() {
     return <StatesOverview />;
   }
   if (tab === "graph" && node && node.kind !== "issue") {
+    const kindLabel = node.kind === "page" ? "PAGE" : node.kind.toUpperCase();
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
-        <p className="text-[10px] uppercase tracking-wide text-subtle">{node.kind}</p>
-        <h2 className="font-display text-xl text-fg">{node.label}</h2>
-        {node.kind === "page" && node.url ? (
-          <a href={node.url} target="_blank" rel="noreferrer" className="font-mono text-xs text-muted hover:text-fg">
-            {node.url}
-          </a>
-        ) : null}
-        {node.count != null && node.kind !== "page" ? (
-          <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p>
-        ) : null}
-        {node.kind === "page" ? <PageMeta url={node.url} /> : <EntityChildren node={node} graph={graph} onSelect={selectNode} />}
+        <Fold title="Identity" defaultOpen>
+          <p className="text-[10px] uppercase tracking-wide text-subtle">{kindLabel}</p>
+          <h2 className="font-display text-xl text-fg">{node.label}</h2>
+          {node.kind === "page" && node.url ? (
+            <a href={node.url} target="_blank" rel="noreferrer" className="font-mono text-xs text-muted hover:text-fg">
+              {node.url}
+            </a>
+          ) : null}
+          {node.count != null && node.kind !== "page" ? (
+            <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p>
+          ) : null}
+        </Fold>
+        {node.kind === "page" ? (
+          <Fold title="Canonical + metadata" defaultOpen>
+            <PageMeta url={node.url} />
+          </Fold>
+        ) : (
+          <Fold title="Children">
+            <EntityChildren node={node} graph={graph} onSelect={selectNode} />
+          </Fold>
+        )}
         {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
       </aside>
     );
@@ -163,7 +177,7 @@ export function Inspector() {
 
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
-      <header>
+      <Fold title="Identity" defaultOpen>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-mono text-xs text-subtle">{issue.code}</p>
@@ -179,11 +193,13 @@ export function Inspector() {
           </Badge>
           <Badge>{issue.layer}</Badge>
         </div>
-        <p className="vh-kicker mt-4">Why</p>
-        <p className="vh-what mt-1">{issue.reason}</p>
-        <p className="vh-kicker mt-4">Solution</p>
-        <p className="vh-fix mt-1">{issue.fix}</p>
-      </header>
+      </Fold>
+      <Fold title="Why">
+        <p className="vh-what">{issue.reason}</p>
+      </Fold>
+      <Fold title="What">
+        <p className="vh-fix">{issue.fix}</p>
+      </Fold>
 
       {seedFamily && rec ? (
         <div>
@@ -197,8 +213,7 @@ export function Inspector() {
       <IssueMindMap code={issue.code} />
 
       {catPages.length ? (
-        <div>
-          <p className="vh-kicker">{catPages.length} pages</p>
+        <Fold title={`${catPages.length} pages`}>
           <VirtualList
             className="mt-2 h-[min(320px,40vh)] overflow-auto"
             items={catPages}
@@ -220,7 +235,7 @@ export function Inspector() {
               );
             }}
           />
-        </div>
+        </Fold>
       ) : null}
 
       {tab === "issues" ? null : (
