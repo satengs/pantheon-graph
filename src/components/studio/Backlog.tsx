@@ -302,7 +302,9 @@ export function Backlog() {
                 role="radio"
                 aria-checked={on}
                 className={`flex h-12 w-full items-center gap-3 border-t border-border/80 px-3 text-left ${
-                  on ? "bg-raised" : "hover:bg-raised/40"
+                  on
+                    ? "bg-[color-mix(in_oklab,var(--color-accent)_14%,var(--color-surface))] shadow-[inset_3px_0_0_var(--color-accent)]"
+                    : "hover:bg-raised/40"
                 }`}
                 onClick={() => {
                   selectIssue(c.code);

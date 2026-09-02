@@ -246,7 +246,9 @@ export function IssueRow({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
-        selected ? "bg-raised/80 py-3" : "py-2"
+        selected
+          ? "bg-[color-mix(in_oklab,var(--color-accent)_14%,var(--color-surface))] py-3 shadow-[inset_3px_0_0_var(--color-accent)]"
+          : "py-2"
       }`}
     >
       {leading}

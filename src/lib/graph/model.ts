@@ -166,6 +166,7 @@ export function buildGraph(opts: {
   product: "all" | ProductId | string;
   layer: "all" | "L1" | "L2";
   expandIds?: string[];
+  collapsedIds?: string[];
   includeParent?: boolean;
   org?: GraphOrg;
   ruleCodes?: string[];
@@ -421,7 +422,9 @@ export function buildGraph(opts: {
     }
     const hub = parseHubId(id);
     if (hub) {
-      addPagesForHub(hub.brand, hub.product, opts.explode ? EXPLODE_CAP : EXPAND_PAGE_CAP);
+      if (!(opts.collapsedIds ?? []).includes(id) && !(opts.collapsedIds ?? []).includes(`brand:${hub.brand}`)) {
+        addPagesForHub(hub.brand, hub.product, opts.explode ? EXPLODE_CAP : EXPAND_PAGE_CAP);
+      }
       return;
     }
     const brand = parseBrandId(id);
@@ -434,6 +437,9 @@ export function buildGraph(opts: {
           const pid = p as ProductId;
           if (countPages(brand, pid) === 0 && !(info?.products ?? []).includes(pid)) continue;
           ensureNode(hubId(brand, pid));
+          if (!(opts.collapsedIds ?? []).includes(hubId(brand, pid))) {
+            addPagesForHub(brand, pid, opts.explode ? EXPLODE_CAP : EXPAND_PAGE_CAP);
+          }
         } else {
           ensureNode(hubId(brand, p));
         }
@@ -443,9 +449,13 @@ export function buildGraph(opts: {
 
   for (const id of opts.expandIds ?? []) expandId(id);
 
+  const collapsed = new Set(opts.collapsedIds ?? []);
+  function clusterHidden(n: { id: string; brand?: string }) {
+    return collapsed.has(n.id) || (n.brand ? collapsed.has(`brand:${n.brand}`) : false);
+  }
   if (opts.explode) {
     for (const n of [...nodes]) {
-      if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product) {
+      if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product && !clusterHidden(n)) {
         addPagesForHub(n.brand, n.product, EXPLODE_CAP);
       }
     }
