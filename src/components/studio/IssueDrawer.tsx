@@ -89,18 +89,39 @@ export function IssueDrawer() {
     >
       <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-3">
         <div className="min-w-0">
-          <p className="vh-kicker">Evidence</p>
+          <p className="vh-kicker">Page</p>
           <h2 id={titleId} className="vh-page-hero mt-1">
             {view?.page.path || "No live URL"}
           </h2>
-          <p className="vh-whisper mt-1">{view?.section || PAGE_LEVEL}</p>
+          <p className="vh-whisper mt-1">Section · {view?.section || PAGE_LEVEL}</p>
         </div>
         <Button type="button" variant="ghost" size="icon" onClick={close} aria-label="Close">
           <X />
         </Button>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-        {view ? <IssueDetailBody view={view} /> : <p className="text-sm text-muted">Nothing selected.</p>}
+        {view ? (
+          <>
+            <div className="mb-5 flex flex-col gap-4">
+              <Badge tone={view.gate.blocks ? "danger" : "ok"}>{view.gate.label}</Badge>
+              <section>
+                <p className="vh-kicker">Fix</p>
+                <p className="vh-fix mt-1">{view.fix}</p>
+              </section>
+              <section>
+                <p className="vh-kicker">What</p>
+                <p className="vh-what mt-1">{view.what}</p>
+              </section>
+              <section>
+                <p className="vh-kicker">Why</p>
+                <p className="text-sm text-muted text-pretty mt-1">{view.why}</p>
+              </section>
+            </div>
+            <IssueDetailBody view={view} />
+          </>
+        ) : (
+          <p className="text-sm text-muted">Nothing selected.</p>
+        )}
       </div>
     </aside>
   );
@@ -247,7 +268,7 @@ export function IssueRow({
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
         selected
-          ? "bg-[color-mix(in_oklab,var(--color-accent)_14%,var(--color-surface))] py-3 shadow-[inset_3px_0_0_var(--color-accent)]"
+          ? "bg-[color-mix(in_oklab,#d7d2c8_16%,var(--color-surface))] py-3 shadow-[inset_3px_0_0_#d7d2c8]"
           : "py-2"
       }`}
     >

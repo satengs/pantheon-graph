@@ -16,7 +16,7 @@ import { identifyServices, SERVICE_CATALOG, stateByCode, statesData, statusTone,
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
-import { PAGE_LEVEL, pagePath } from "@/lib/studio/issue-detail";
+import { PAGE_LEVEL, liveGate, pagePath } from "@/lib/studio/issue-detail";
 import { pagesForRule } from "@/lib/studio/rule-pages";
 import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { VirtualList } from "@/components/studio/VirtualList";
@@ -175,39 +175,30 @@ export function Inspector() {
 
   const rec = recForCode(issue.code);
 
+  const gate = liveGate(issue.impact);
   return (
     <aside className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-4">
-      <Fold title="Identity" defaultOpen>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-mono text-xs text-fg">
-              <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
-              {pagePath(focusUrl || issue.urls[0] || "")}
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
-              {PAGE_LEVEL}
-            </p>
-            <p className="font-mono mt-2 text-xs text-subtle">{issue.code}</p>
-            <h2 className="mt-1 text-lg font-medium text-fg text-balance">{issue.title}</h2>
-          </div>
-          <Button size="sm" onClick={() => openIssueDrawer({ issueId: issue.id, pageUrl: focusUrl || issue.urls[0] })}>
-            View issue
-          </Button>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <Badge tone={issue.impact === "critical" ? "danger" : issue.impact === "high" ? "warn" : "neutral"}>
-            {issue.impact}
-          </Badge>
-          <Badge>{issue.layer}</Badge>
-        </div>
-      </Fold>
-      <Fold title="Why">
-        <p className="vh-what">{issue.reason}</p>
-      </Fold>
-      <Fold title="What">
-        <p className="vh-fix">{issue.fix}</p>
-      </Fold>
+      <p className="font-mono text-xs text-fg">
+        <span className="font-medium uppercase tracking-wide text-subtle">Page </span>
+        {pagePath(focusUrl || issue.urls[0] || "")}
+      </p>
+      <p className="text-xs text-muted">
+        <span className="font-medium uppercase tracking-wide text-subtle">Section </span>
+        {PAGE_LEVEL}
+      </p>
+      <Badge tone={gate.blocks ? "danger" : "ok"}>{gate.label}</Badge>
+      <section>
+        <p className="vh-kicker">Fix</p>
+        <p className="vh-fix mt-1">{issue.fix}</p>
+      </section>
+      <section>
+        <p className="vh-kicker">What</p>
+        <p className="vh-what mt-1">{issue.title}</p>
+      </section>
+      <section>
+        <p className="vh-kicker">Why</p>
+        <p className="mt-1 text-sm text-muted text-pretty">{issue.reason}</p>
+      </section>
 
       {seedFamily && rec ? (
         <div>
