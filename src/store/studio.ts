@@ -64,6 +64,7 @@ type StudioState = {
   registerOpen: boolean;
   familyEpoch: number;
   attachedRuleCodes: string[];
+  graphInspectorOpen: boolean;
   parents: FamilyParent[];
   allBrands: FamilyBrand[];
   setTab: (tab: StudioTab) => void;
@@ -89,6 +90,7 @@ type StudioState = {
   popGraphFocus: () => void;
   toggleCluster: (id: string) => void;
   setIncludeParent: (v: boolean) => void;
+  setGraphInspectorOpen: (v: boolean) => void;
   setParentSlug: (v: string) => void;
   setGraphOrg: (v: GraphOrg | null) => void;
   setRegisterOpen: (v: boolean) => void;
@@ -188,6 +190,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   registerOpen: false,
   familyEpoch: 0,
   attachedRuleCodes: [],
+  graphInspectorOpen: false,
   parents: [],
   allBrands: [],
   setTab: (tab) =>
@@ -300,6 +303,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         collapsedClusters: s.collapsedClusters.filter((x) => x !== id),
       };
     }),
+  setGraphInspectorOpen: (graphInspectorOpen) => set({ graphInspectorOpen }),
   setIncludeParent: (includeParent) =>
     set((s) => ({
       includeParent,

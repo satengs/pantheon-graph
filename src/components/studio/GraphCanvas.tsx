@@ -212,6 +212,7 @@ export function GraphCanvas() {
   const layer = useStudio((s) => s.layer);
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const selectNode = useStudio((s) => s.selectNode);
+  const setGraphInspectorOpen = useStudio((s) => s.setGraphInspectorOpen);
   const selectIssue = useStudio((s) => s.selectIssue);
   const graphLayout = useStudio((s) => s.graphLayout);
   const setGraphLayout = useStudio((s) => s.setGraphLayout);
@@ -512,8 +513,9 @@ export function GraphCanvas() {
             }
           }}
           onClick={(e) => {
-            if (e.target === e.currentTarget && !drag?.moved) selectNode(null);
+            e.preventDefault();
           }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <g transform={`translate(${r2(pan.x)} ${r2(pan.y)})`}>
             {graph.edges.map((e) => {
@@ -643,6 +645,13 @@ export function GraphCanvas() {
                     if (n.issueId) selectIssue(n.issueId);
                   }}
                   onClick={(ev) => ev.stopPropagation()}
+                  onContextMenu={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    selectNode(n.id);
+                    if (n.issueId) selectIssue(n.issueId);
+                    setGraphInspectorOpen(true);
+                  }}
                   onDoubleClick={(ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();

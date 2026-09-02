@@ -75,6 +75,7 @@ export function Studio() {
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const graphInspectorOpen = useStudio((s) => s.graphInspectorOpen);
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const maximized = useStudio((s) => s.maximized);
@@ -115,7 +116,7 @@ export function Studio() {
   const showInspector =
     tab === "issues" ||
     tab === "states" ||
-    (tab === "graph" && Boolean(selectedNodeId) && !selectedNodeId?.startsWith("issue:"));
+    (tab === "graph" && graphInspectorOpen);
 
   useEffect(() => {
     if (tab !== "issues") return;
