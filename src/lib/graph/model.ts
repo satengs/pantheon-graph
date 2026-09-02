@@ -339,10 +339,7 @@ export function buildGraph(opts: {
   }
 
   function familyEdgeAllowed(t: (typeof TREE)[number]) {
-    if (opts.layer === "L1") return true;
-    const glossary = (id: string) => id.includes(":glossary");
-    const twins = t.kind === "conflict" && glossary(t.source) && glossary(t.target);
-    return t.kind === "sameAs" || twins;
+    return t.code === "S01" || t.code === "S06";
   }
 
   function attachIssue(t: (typeof TREE)[number], withCites = false) {
