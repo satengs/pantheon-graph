@@ -244,6 +244,8 @@ export function GraphCanvas() {
     origins?: Record<string, Pt>;
     x: number;
     y: number;
+    cx: number;
+    cy: number;
     ox: number;
     oy: number;
     moved: boolean;
@@ -254,7 +256,8 @@ export function GraphCanvas() {
   const [zoom, setZoom] = useState(1);
   const lastExpand = useRef(0);
   const dragRef = useRef<typeof drag>(null);
-  dragRef.current = drag;
+  const offsetsRef = useRef(offsets);
+  offsetsRef.current = offsets;
 
   useEffect(() => {
     setReady(true);
@@ -359,7 +362,38 @@ export function GraphCanvas() {
     return [...ids];
   }
 
-  // Fit from layout positions only. Drag offsets must not retarget the
+  function applyClusterDrag(e: RE<SVGElement> | PointerEvent, captureEl?: EventTarget | null) {
+    const cur = dragRef.current;
+    if (!cur || cur.kind !== "node" || !cur.id) return;
+    const s = clientToSvg(e as RE<SVGSVGElement>);
+    const distPx = Math.hypot(e.clientX - cur.cx, e.clientY - cur.cy);
+    const moved = cur.moved || distPx > 8;
+    if (!moved) return;
+    if (captureEl && "setPointerCapture" in captureEl) {
+      try {
+        (captureEl as SVGElement).setPointerCapture((e as PointerEvent).pointerId);
+      } catch {
+        /* already captured */
+      }
+    }
+    const dx = s.x - cur.x;
+    const dy = s.y - cur.y;
+    const members = cur.group?.length ? cur.group : [cur.id];
+    const nextOff = { ...offsetsRef.current };
+    for (const id of members) {
+      const o = cur.origins?.[id] ?? (id === cur.id ? { x: cur.ox, y: cur.oy } : nextOff[id] ?? { x: 0, y: 0 });
+      nextOff[id] = { x: o.x + dx, y: o.y + dy };
+    }
+    offsetsRef.current = nextOff;
+    setOffsets(nextOff);
+    if (!cur.moved) {
+      const next = { ...cur, moved: true };
+      dragRef.current = next;
+      setDrag(next);
+    }
+  }
+
+    // Fit from layout positions only. Drag offsets must not retarget the
   // camera — otherwise a hull drag looks stationary (viewBox follows).
   const vb = useMemo(() => {
     const pts: Pt[] = [];
@@ -512,8 +546,9 @@ export function GraphCanvas() {
             if (e.target !== e.currentTarget && (e.target as Element).tagName !== "svg") return;
             const s = clientToSvg(e);
             e.currentTarget.setPointerCapture(e.pointerId);
-            setDrag({ kind: "pan", x: s.x, y: s.y, ox: pan.x, oy: pan.y, moved: false });
-            dragRef.current = { kind: "pan", x: s.x, y: s.y, ox: pan.x, oy: pan.y, moved: false };
+            const panG = { kind: "pan" as const, x: s.x, y: s.y, cx: e.clientX, cy: e.clientY, ox: pan.x, oy: pan.y, moved: false };
+            setDrag(panG);
+            dragRef.current = panG;
           }}
           onPointerMove={(e) => {
             const cur = dragRef.current;
@@ -528,26 +563,8 @@ export function GraphCanvas() {
                 dragRef.current = next;
                 setDrag(next);
               }
-            } else if (cur.id && moved) {
-              try {
-                e.currentTarget.setPointerCapture(e.pointerId);
-              } catch {
-                /* already captured */
-              }
-              const dx = s.x - cur.x;
-              const dy = s.y - cur.y;
-              const members = cur.group?.length ? cur.group : [cur.id];
-              const nextOff = { ...offsets };
-              for (const id of members) {
-                const o = cur.origins?.[id] ?? (id === cur.id ? { x: cur.ox, y: cur.oy } : offsets[id] ?? { x: 0, y: 0 });
-                nextOff[id] = { x: o.x + dx, y: o.y + dy };
-              }
-              setOffsets(nextOff);
-              if (!cur.moved) {
-                const next = { ...cur, moved: true };
-                dragRef.current = next;
-                setDrag(next);
-              }
+            } else if (cur.id) {
+              applyClusterDrag(e, e.currentTarget);
             }
           }}
           onPointerUp={(e) => {
@@ -612,6 +629,8 @@ export function GraphCanvas() {
                         origins,
                         x: spt.x,
                         y: spt.y,
+                        cx: ev.clientX,
+                        cy: ev.clientY,
                         ox: o.x,
                         oy: o.y,
                         moved: false,
@@ -619,6 +638,24 @@ export function GraphCanvas() {
                       dragRef.current = gesture;
                       setDrag(gesture);
                       if (ev.button === 0) selectNode(hub.id);
+                    }}
+                    onPointerMove={(ev) => {
+                      ev.stopPropagation();
+                      applyClusterDrag(ev, ev.currentTarget);
+                    }}
+                    onPointerUp={(ev) => {
+                      ev.stopPropagation();
+                      const cur = dragRef.current;
+                      if (cur?.kind === "node" && cur.moved) {
+                        window.localStorage.setItem("origin.graphOffsets", JSON.stringify(offsetsRef.current));
+                      }
+                      dragRef.current = null;
+                      setDrag(null);
+                      try {
+                        ev.currentTarget.releasePointerCapture(ev.pointerId);
+                      } catch {
+                        /* not captured */
+                      }
                     }}
                   />
                 );
@@ -752,6 +789,8 @@ export function GraphCanvas() {
                       origins,
                       x: s.x,
                       y: s.y,
+                      cx: ev.clientX,
+                      cy: ev.clientY,
                       ox: o.x,
                       oy: o.y,
                       moved: false,
@@ -761,6 +800,24 @@ export function GraphCanvas() {
                     if (ev.button === 0) {
                       selectNode(n.id);
                       if (n.issueId) selectIssue(n.issueId);
+                    }
+                  }}
+                  onPointerMove={(ev) => {
+                    ev.stopPropagation();
+                    applyClusterDrag(ev, ev.currentTarget);
+                  }}
+                  onPointerUp={(ev) => {
+                    ev.stopPropagation();
+                    const cur = dragRef.current;
+                    if (cur?.kind === "node" && cur.moved) {
+                      window.localStorage.setItem("origin.graphOffsets", JSON.stringify(offsetsRef.current));
+                    }
+                    dragRef.current = null;
+                    setDrag(null);
+                    try {
+                      ev.currentTarget.releasePointerCapture(ev.pointerId);
+                    } catch {
+                      /* not captured */
                     }
                   }}
                   onClick={(ev) => ev.stopPropagation()}
