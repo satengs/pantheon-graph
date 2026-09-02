@@ -338,7 +338,7 @@ export function GraphCanvas() {
   function nodeR(n: GraphNode) {
     if (n.kind === "parent") return 50;
     if (n.kind === "brand") return 44;
-    if (n.kind === "page") return 7;
+    if (n.kind === "page") return 9;
     if (n.kind === "issue") return 18;
     if (n.kind === "glossary") return 22;
     return 26;
@@ -489,8 +489,8 @@ export function GraphCanvas() {
               /* not captured */
             }
           }}
-          onClick={() => {
-            if (!drag?.moved) selectNode(null);
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !drag?.moved) selectNode(null);
           }}
         >
           <g transform={`translate(${r2(pan.x)} ${r2(pan.y)})`}>
@@ -498,10 +498,17 @@ export function GraphCanvas() {
               const a = at(e.source);
               const b = at(e.target);
               if (!a || !b) return null;
+              const srcN = graph.nodes.find((n) => n.id === e.source);
+              const tgtN = graph.nodes.find((n) => n.id === e.target);
+              const glossaryTwin =
+                e.kind === "conflict" && srcN?.kind === "glossary" && tgtN?.kind === "glossary";
+              if (e.kind === "suggests" || e.kind === "cites") return null;
+              if (e.kind === "conflict" && !glossaryTwin) return null;
+              if ((srcN?.kind === "issue" || tgtN?.kind === "issue") && e.issueId !== "S01" && e.kind !== "sameAs") return null;
               const conflict = e.kind === "conflict";
               const sameAs = e.kind === "sameAs";
-              const suggests = e.kind === "suggests";
-              const cites = e.kind === "cites";
+              const suggests = false;
+              const cites = false;
               const idx = edgePairIndex.get(e.id) ?? 0;
               const c = controlPoint(a, b, idx, e.kind, explode);
               const issueNode = e.issueId ? graph.nodes.some((n) => n.id === `issue:${e.issueId}`) : false;
@@ -568,6 +575,7 @@ export function GraphCanvas() {
               );
             })}
             {graph.nodes.map((n) => {
+              if (n.kind === "issue" && n.issueId !== "S01") return null;
               const p = at(n.id);
               if (!p) return null;
               const radius = nodeR(n);
@@ -632,7 +640,12 @@ export function GraphCanvas() {
                     />
                   ) : null}
                   {on && n.kind !== "glossary" ? (
-                    <circle r={r + 4} fill="none" stroke="var(--color-accent)" strokeWidth={3} />
+                    <circle
+                      r={r + (n.kind === "page" ? 6 : 4)}
+                      fill="none"
+                      stroke="#e4dfd4"
+                      strokeWidth={n.kind === "page" ? 4 : 3}
+                    />
                   ) : null}
                   {n.kind === "glossary" ? (
                     <rect
@@ -650,8 +663,8 @@ export function GraphCanvas() {
                     <circle
                       r={r}
                       fill={fill}
-                      stroke={nodeStroke(n)}
-                      strokeWidth={on ? 2.2 : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
+                      stroke={on && n.kind === "page" ? "#e4dfd4" : nodeStroke(n)}
+                      strokeWidth={on ? (n.kind === "page" ? 2 : 2.2) : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
                   )}
                   {label ? (
@@ -716,7 +729,7 @@ export function GraphCanvas() {
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-px w-3 bg-danger" /> Conflict
         </span>
-        <span className="flex items-center gap-1.5">Issue node = double-click</span>
+        <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
       </div>
     </div>
   );
