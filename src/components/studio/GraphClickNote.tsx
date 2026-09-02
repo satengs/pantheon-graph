@@ -67,7 +67,7 @@ export function GraphClickNote() {
 
   return (
     <aside
-      className="absolute z-20 w-[14.5rem] rounded-md border border-border bg-surface text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
+      className="absolute z-30 w-[14.5rem] rounded-md border border-border bg-surface text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
       style={{ left: pos.x, top: pos.y, borderLeftWidth: 3, borderLeftColor: "#c4b8a4" }}
       onPointerDown={stop}
       onPointerMove={stop}
@@ -102,19 +102,22 @@ export function GraphClickNote() {
           <li>• Layout: rearranges that group</li>
         </ul>
         {last ? (
-          <button
-            type="button"
-            title="Fold this product’s pages"
-            className="mt-2 inline-flex h-7 items-center gap-1 rounded-md bg-raised px-2 text-[11px] text-muted"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleCluster(last);
-            }}
-          >
-            <ArrowLeft className="size-3.5" />
-            Back
-          </button>
+          <>
+            <p className="mt-2 text-fg">Back: fold this product’s pages.</p>
+            <button
+              type="button"
+              title="Fold this product’s pages"
+              className="mt-1.5 inline-flex h-7 items-center gap-1 rounded-md bg-raised px-2 text-[11px] text-muted"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleCluster(last);
+              }}
+            >
+              <ArrowLeft className="size-3.5" />
+              Back
+            </button>
+          </>
         ) : null}
       </div>
     </aside>
