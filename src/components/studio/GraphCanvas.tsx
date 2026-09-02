@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RE } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
+import { GraphClickNote } from "@/components/studio/GraphClickNote";
 import { buildGraph } from "@/lib/graph/model";
 import { nodeLabel, TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import { useStudio, type GraphLayout } from "@/store/studio";
@@ -475,12 +476,14 @@ export function GraphCanvas() {
           {full ? "Exit" : "Full screen"}
         </button>
       </div>
+      <div className="relative min-h-0 flex-1">
+      <GraphClickNote />
       {ready ? (
         <svg
           ref={svgRef}
           viewBox={`${r2(vb.x + (vb.w - vb.w / zoom) / 2)} ${r2(vb.y + (vb.h - vb.h / zoom) / 2)} ${r2(vb.w / zoom)} ${r2(vb.h / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
-          className="h-full min-h-0 w-full flex-1 touch-none bg-bg"
+          className="absolute inset-0 h-full w-full touch-none bg-bg"
           onWheel={(e) => {
             e.preventDefault();
             const dir = e.deltaY > 0 ? 1 / 1.12 : 1.12;
@@ -790,7 +793,7 @@ export function GraphCanvas() {
           </g>
         </svg>
       ) : (
-        <div className="min-h-0 flex-1 bg-bg" />
+        <div className="absolute inset-0 bg-bg" />
       )}
       <div className="absolute bottom-3 right-3 z-10 flex gap-1">
         <button
@@ -835,6 +838,7 @@ export function GraphCanvas() {
           <span className="inline-block h-px w-3 bg-danger" /> Conflict
         </span>
         <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
+      </div>
       </div>
     </div>
   );

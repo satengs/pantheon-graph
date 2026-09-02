@@ -259,7 +259,7 @@ export function IssueRow({
       aria-current={selected ? "true" : undefined}
       style={
         selected
-          ? { borderLeft: "3px solid #c4b8a4", background: "color-mix(in oklab, #c4b8a4 30%, var(--color-surface))" }
+          ? { borderLeft: "3px solid #c4b8a4", background: "#c4b8a4" }
           : { borderLeft: "3px solid transparent" }
       }
       onClick={onOpen}
@@ -271,15 +271,15 @@ export function IssueRow({
       }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
+      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
         selected
-          ? "border-l-[3px] border-l-[#c4b8a4] bg-[color-mix(in_oklab,#c4b8a4_24%,var(--color-surface))] py-3"
-          : "border-l-[3px] border-l-transparent py-2"
+          ? "border-l-[3px] border-l-[#c4b8a4] bg-[#c4b8a4] py-3"
+          : "border-l-[3px] border-l-transparent py-2 hover:bg-raised/50"
       }`}
     >
       {leading}
       <span
-        className={`shrink-0 rounded-full ${selected ? "mt-2 size-2" : "mt-1.5 size-1.5"} ${
+        className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
           row.impact === "critical" ? "bg-danger" : row.impact === "high" ? "bg-warn" : "bg-subtle"
         }`}
         title={row.impact || "impact"}
