@@ -16,7 +16,7 @@ const LAYOUTS: { id: GraphLayout; label: string }[] = [
   { id: "grid", label: "Grid" },
 ];
 
-const DRAG_PX = 5;
+const DRAG_PX = 14;
 
 function r2(n: number) {
   return Math.round(n * 100) / 100;
@@ -167,9 +167,22 @@ function layoutOf(
   for (const [hid, list] of pageGroups) {
     const origin = pos.get(hid) ?? { x: 0, y: 0 };
     list.forEach((p, i) => {
-      const a = -Math.PI / 2 + (i / Math.max(list.length, 1)) * Math.PI * 2;
-      const rad = origin && issues.length ? 56 : 48;
-      pos.set(p.id, { x: r2(origin.x + Math.cos(a) * rad), y: r2(origin.y + Math.sin(a) * rad) });
+      if (kind === "circle") {
+        const a = -Math.PI / 2 + (i / Math.max(list.length, 1)) * Math.PI * 2;
+        pos.set(p.id, { x: r2(origin.x + Math.cos(a) * 56), y: r2(origin.y + Math.sin(a) * 56) });
+      } else if (kind === "grid") {
+        const cols = Math.max(3, Math.ceil(Math.sqrt(list.length)));
+        pos.set(p.id, {
+          x: r2(origin.x + ((i % cols) - (cols - 1) / 2) * 44),
+          y: r2(origin.y + 58 + Math.floor(i / cols) * 40),
+        });
+      } else {
+        const cols = Math.min(5, Math.max(1, list.length));
+        pos.set(p.id, {
+          x: r2(origin.x + ((i % cols) - (cols - 1) / 2) * 42),
+          y: r2(origin.y + 62 + Math.floor(i / cols) * 38),
+        });
+      }
     });
   }
   return pos;
@@ -229,7 +242,6 @@ export function GraphCanvas() {
   const [ready, setReady] = useState(false);
   const [hoverEdgeId, setHoverEdgeId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
-  const lastTap = useRef<{ id: string; t: number } | null>(null);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
 
@@ -326,9 +338,13 @@ export function GraphCanvas() {
     const el = svgRef.current;
     if (!el) return { x: 0, y: 0 };
     const r = el.getBoundingClientRect();
+    const vw = vb.w / zoom;
+    const vh = vb.h / zoom;
+    const vx = vb.x + (vb.w - vw) / 2;
+    const vy = vb.y + (vb.h - vh) / 2;
     return {
-      x: vb.x + ((e.clientX - r.left) / r.width) * vb.w,
-      y: vb.y + ((e.clientY - r.top) / r.height) * vb.h,
+      x: vx + ((e.clientX - r.left) / r.width) * vw,
+      y: vy + ((e.clientY - r.top) / r.height) * vh,
     };
   }
 
@@ -485,15 +501,7 @@ export function GraphCanvas() {
               window.localStorage.setItem("origin.graphOffsets", JSON.stringify(offsets));
             }
             if (cur?.kind === "node" && cur.id && !cur.moved) {
-              const now = Date.now();
-              const prev = lastTap.current;
-              const node = graph.nodes.find((n) => n.id === cur.id);
-              if (prev && prev.id === cur.id && now - prev.t < 400 && node) {
-                lastTap.current = null;
-                expandNode(node);
-              } else {
-                lastTap.current = { id: cur.id, t: now };
-              }
+              /* single click selects via pointerdown; double-click on the node expands */
             }
             dragRef.current = null;
             setDrag(null);
@@ -514,11 +522,10 @@ export function GraphCanvas() {
               if (!a || !b) return null;
               const srcN = graph.nodes.find((n) => n.id === e.source);
               const tgtN = graph.nodes.find((n) => n.id === e.target);
-              const glossaryTwin =
-                e.kind === "conflict" && srcN?.kind === "glossary" && tgtN?.kind === "glossary";
               if (e.kind === "suggests" || e.kind === "cites") return null;
-              if (e.kind === "conflict" && !glossaryTwin) return null;
-              if ((srcN?.kind === "issue" || tgtN?.kind === "issue") && e.issueId !== "S01" && e.kind !== "sameAs") return null;
+              if (e.kind === "conflict" && e.issueId !== "S01") return null;
+              if (e.kind === "sameAs" && e.issueId !== "S06") return null;
+              if (srcN?.kind === "issue" || tgtN?.kind === "issue") return null;
               const conflict = e.kind === "conflict";
               const sameAs = e.kind === "sameAs";
               const suggests = false;
@@ -609,11 +616,13 @@ export function GraphCanvas() {
               const r = on ? radius * 1.3 : radius;
               const brandFill = nodeStroke(n);
               const fill =
-                on && n.kind !== "parent"
+                n.kind === "page"
                   ? brandFill
-                  : selectedNodeId && !on
-                    ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
-                    : nodeFill(n);
+                  : on && n.kind !== "parent"
+                    ? brandFill
+                    : selectedNodeId && !on
+                      ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
+                      : nodeFill(n);
               return (
                 <g
                   key={n.id}
@@ -637,6 +646,7 @@ export function GraphCanvas() {
                   onDoubleClick={(ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();
+                    expandNode(n);
                   }}
                 >
                   {on && n.kind === "glossary" ? (
@@ -653,7 +663,7 @@ export function GraphCanvas() {
                     />
                   ) : null}
                   {on && n.kind === "page" ? (
-                    <circle r={r + 6} fill="none" stroke="#d7d2c8" strokeWidth={4} />
+                    <circle r={r + 6} fill="none" stroke="#c4b8a4" strokeWidth={4} />
                   ) : on && n.kind !== "glossary" ? (
                     <circle r={r + 4} fill="none" stroke={brandFill} strokeWidth={3} />
                   ) : null}

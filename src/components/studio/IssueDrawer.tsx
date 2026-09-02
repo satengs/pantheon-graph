@@ -268,8 +268,8 @@ export function IssueRow({
       onMouseLeave={() => onHover?.(false)}
       className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left hover:bg-raised/50 ${
         selected
-          ? "bg-[color-mix(in_oklab,#d7d2c8_16%,var(--color-surface))] py-3 shadow-[inset_3px_0_0_#d7d2c8]"
-          : "py-2"
+          ? "border-l-[3px] border-l-[#c4b8a4] bg-[color-mix(in_oklab,#c4b8a4_24%,var(--color-surface))] py-3"
+          : "border-l-[3px] border-l-transparent py-2"
       }`}
     >
       {leading}

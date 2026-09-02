@@ -185,9 +185,8 @@ export function Backlog() {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
-      <ValidatePage />
       {seedFamily ? (
         <section className="mb-3 rounded-lg bg-surface p-3">
           <h2 className="text-sm text-fg">Ideal graph</h2>
@@ -268,11 +267,15 @@ export function Backlog() {
         <span className="vh-whisper ml-auto">{categories.length} in view</span>
       </div>
       {note ? <p className="mb-2 text-xs text-muted">{note}</p> : null}
+      <details className="mb-2 shrink-0">
+        <summary className="cursor-pointer text-xs text-muted">Validate a page</summary>
+        <ValidatePage />
+      </details>
       {!seedFamily && categories.length === 0 ? (
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
 
-      <section className="flex min-h-0 flex-1 flex-col rounded-lg bg-surface">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
         <p className="vh-whisper px-3 pb-2">Page, then section, then the problem. One selected.</p>
         <VirtualList
