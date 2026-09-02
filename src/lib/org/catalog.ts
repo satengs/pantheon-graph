@@ -25,7 +25,7 @@ export const SEED_BRANDS = [
     name: "Achieve",
     website: "https://www.achieve.com/",
     host: "www.achieve.com",
-    products: ["heloc", "hel", "personal-loan", "glossary"] as ProductId[],
+    products: ["heloc", "hel", "personal-loan", "consolidation", "glossary"] as ProductId[],
   },
 ] as const;
 
