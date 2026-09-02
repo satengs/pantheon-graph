@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RE } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react";
 import { buildGraph } from "@/lib/graph/model";
 import { nodeLabel, TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import { useStudio, type GraphLayout } from "@/store/studio";
@@ -212,6 +212,7 @@ export function GraphCanvas() {
   const [offsets, setOffsets] = useState<Record<string, Pt>>({});
   const [ready, setReady] = useState(false);
   const [hoverEdgeId, setHoverEdgeId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   const lastTap = useRef<{ id: string; t: number } | null>(null);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
@@ -391,6 +392,22 @@ export function GraphCanvas() {
         </label>
         <button
           type="button"
+          title="Zoom out"
+          onClick={() => setZoom((z) => Math.max(0.45, z / 1.2))}
+          className="inline-flex size-9 items-center justify-center rounded-md bg-raised text-muted"
+        >
+          <ZoomOut className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          title="Zoom in"
+          onClick={() => setZoom((z) => Math.min(2.8, z * 1.2))}
+          className="inline-flex size-9 items-center justify-center rounded-md bg-raised text-muted"
+        >
+          <ZoomIn className="size-3.5" />
+        </button>
+        <button
+          type="button"
           disabled={!graphFocusStack.length}
           title={lastFocus ? `Undo ${nodeLabel(lastFocus)}` : "Undo last expand"}
           onClick={() => popGraphFocus()}
@@ -417,9 +434,14 @@ export function GraphCanvas() {
       {ready ? (
         <svg
           ref={svgRef}
-          viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+          viewBox={`${r2(vb.x + (vb.w - vb.w / zoom) / 2)} ${r2(vb.y + (vb.h - vb.h / zoom) / 2)} ${r2(vb.w / zoom)} ${r2(vb.h / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
           className="h-full min-h-0 w-full flex-1 touch-none bg-bg"
+          onWheel={(e) => {
+            e.preventDefault();
+            const dir = e.deltaY > 0 ? 1 / 1.12 : 1.12;
+            setZoom((z) => Math.min(2.8, Math.max(0.45, z * dir)));
+          }}
           role="img"
           aria-label="Content graph. Double-click a node to load related nodes. Back undoes the last step."
           onPointerDown={(e) => {

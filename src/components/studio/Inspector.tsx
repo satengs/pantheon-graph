@@ -1,12 +1,12 @@
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { RULES } from "@/data/rules-seed";
-import { crawl } from "@/data/crawl";
+import { crawl, pageUrl, pagesFor } from "@/data/crawl";
 import { buildGraph, toneRatio } from "@/lib/graph/model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
-import { BRAND_LABEL } from "@/lib/graph/types";
+import { BRAND_LABEL, type GraphNode } from "@/lib/graph/types";
 import { runPsi } from "@/lib/server/ops";
 import { listStudio } from "@/lib/server/studio-db";
 import { analyzePage } from "@/lib/server/analyze-page";
@@ -36,6 +36,7 @@ export function Inspector() {
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const selectIssue = useStudio((s) => s.selectIssue);
+  const selectNode = useStudio((s) => s.selectNode);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
@@ -111,18 +112,15 @@ export function Inspector() {
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
         <p className="text-[10px] uppercase tracking-wide text-subtle">{node.kind}</p>
         <h2 className="font-display text-xl text-fg">{node.label}</h2>
-        {node.url ? (
+        {node.kind === "page" && node.url ? (
           <a href={node.url} target="_blank" rel="noreferrer" className="font-mono text-xs text-muted hover:text-fg">
             {node.url}
           </a>
         ) : null}
-        {node.count != null ? <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p> : null}
-        {node.kind === "page" || node.url ? <PageMeta url={node.url} /> : null}
-        {node.kind !== "page" ? (
-          <p className="text-sm text-muted">
-            {seedFamily ? "This node in the family graph." : "No crawled pages for this company yet."}
-          </p>
+        {node.count != null && node.kind !== "page" ? (
+          <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p>
         ) : null}
+        {node.kind === "page" ? <PageMeta url={node.url} /> : <EntityChildren node={node} graph={graph} onSelect={selectNode} />}
         {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
       </aside>
     );
@@ -612,5 +610,79 @@ function StatesOverview() {
       </section>
       <p className="text-[10px] text-subtle">{statesData.notes.achieveHelocClaim}</p>
     </aside>
+  );
+}
+
+function hostless(url: string) {
+  return url.replace(/^https?:\/\/(www\.)?/, "");
+}
+
+function EntityChildren({
+  node,
+  graph,
+  onSelect,
+}: {
+  node: GraphNode;
+  graph: { nodes: GraphNode[] };
+  onSelect: (id: string) => void;
+}) {
+  const groups =
+    node.kind === "parent"
+      ? graph.nodes.filter((n) => n.kind === "brand")
+      : node.kind === "brand"
+        ? graph.nodes.filter((n) => (n.kind === "product" || n.kind === "glossary") && n.brand === node.brand)
+        : [];
+  const pageNodes = graph.nodes.filter((n) => {
+    if (n.kind !== "page" || !n.url) return false;
+    if (node.kind === "brand") return n.brand === node.brand;
+    if (node.kind === "product" || node.kind === "glossary") return n.brand === node.brand && n.product === node.product;
+    return false;
+  });
+  const crawlPages =
+    !pageNodes.length && (node.kind === "product" || node.kind === "glossary" || node.kind === "brand")
+      ? pagesFor(node.brand, node.kind === "brand" ? undefined : node.product).slice(0, 24)
+      : [];
+  const groupLabel = node.kind === "parent" ? "Brands" : node.kind === "brand" ? "Products" : null;
+  const rowClass =
+    "w-full truncate rounded-md px-2 py-1.5 text-left text-xs text-muted hover:bg-raised hover:text-fg";
+  return (
+    <>
+      {groups.length ? (
+        <div className="grid gap-1">
+          <p className="text-[10px] uppercase tracking-wide text-subtle">{groupLabel}</p>
+          <ul className="grid gap-0.5">
+            {groups.map((n) => (
+              <li key={n.id}>
+                <button type="button" onClick={() => onSelect(n.id)} className={rowClass}>
+                  {n.label}
+                  {n.count != null ? <span className="text-subtle"> · {n.count}</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {pageNodes.length || crawlPages.length ? (
+        <div className="grid gap-1">
+          <p className="text-[10px] uppercase tracking-wide text-subtle">Pages</p>
+          <ul className="grid gap-0.5">
+            {pageNodes.map((n) => (
+              <li key={n.id}>
+                <button type="button" onClick={() => onSelect(n.id)} className={`${rowClass} font-mono`}>
+                  {hostless(n.url!)}
+                </button>
+              </li>
+            ))}
+            {crawlPages.map((page) => (
+              <li key={`${page.b}:${page.path}`} className="truncate px-2 py-1.5 font-mono text-xs text-muted">
+                {hostless(pageUrl(page))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : node.kind !== "page" ? (
+        <p className="text-sm text-muted">No pages listed on this {node.kind} yet.</p>
+      ) : null}
+    </>
   );
 }
