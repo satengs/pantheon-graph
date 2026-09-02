@@ -257,6 +257,11 @@ export function IssueRow({
       role="button"
       tabIndex={0}
       aria-current={selected ? "true" : undefined}
+      style={
+        selected
+          ? { borderLeft: "3px solid #c4b8a4", background: "color-mix(in oklab, #c4b8a4 30%, var(--color-surface))" }
+          : { borderLeft: "3px solid transparent" }
+      }
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

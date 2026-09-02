@@ -287,7 +287,7 @@ export function GraphCanvas() {
   const graph = useMemo(
     () =>
       buildGraph({
-        explode,
+        explode: false,
         brand,
         product,
         layer,
@@ -663,7 +663,7 @@ export function GraphCanvas() {
                     />
                   ) : null}
                   {on && n.kind === "page" ? (
-                    <circle r={r + 6} fill="none" stroke="#c4b8a4" strokeWidth={4} />
+                    <circle r={r + 7} fill="none" stroke="#c4b8a4" strokeWidth={5} />
                   ) : on && n.kind !== "glossary" ? (
                     <circle r={r + 4} fill="none" stroke={brandFill} strokeWidth={3} />
                   ) : null}

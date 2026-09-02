@@ -342,18 +342,6 @@ export function Studio() {
         </label>
         </div>
         <div className="g-cluster" role="group" aria-label="Actions">
-        {tab === "graph" ? (
-        <label className="flex h-8 items-center gap-2 px-1 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={explode}
-            onChange={(e) => setExplode(e.target.checked)}
-            suppressHydrationWarning
-            className="size-4 accent-[var(--color-accent)]"
-          />
-          Explode pages
-        </label>
-        ) : null}
         {(tab === "graph" || tab === "states" || tab === "validation") && (
           <Button
             variant="secondary"
