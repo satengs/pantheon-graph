@@ -243,6 +243,7 @@ export function GraphCanvas() {
   const [ready, setReady] = useState(false);
   const [hoverEdgeId, setHoverEdgeId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const lastExpand = useRef(0);
   const dragRef = useRef<typeof drag>(null);
   dragRef.current = drag;
 
@@ -376,6 +377,9 @@ export function GraphCanvas() {
   }
 
   function expandNode(n: GraphNode) {
+    const now = Date.now();
+    if (now - lastExpand.current < 350) return;
+    lastExpand.current = now;
     if (n.kind === "page") return;
     if (n.kind === "product" || n.kind === "glossary" || n.kind === "brand") {
       toggleCluster(n.id);
@@ -488,6 +492,11 @@ export function GraphCanvas() {
                 setDrag(next);
               }
             } else if (cur.id && moved) {
+              try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } catch {
+                /* already captured */
+              }
               setOffsets({ ...offsets, [cur.id]: { x: cur.ox + (s.x - cur.x), y: cur.oy + (s.y - cur.y) } });
               if (!cur.moved) {
                 const next = { ...cur, moved: true };
@@ -635,14 +644,15 @@ export function GraphCanvas() {
                   className="cursor-grab"
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
-                    svgRef.current?.setPointerCapture(ev.pointerId);
                     const s = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                     const o = offsets[n.id] ?? { x: 0, y: 0 };
                     const gesture = { kind: "node" as const, id: n.id, x: s.x, y: s.y, ox: o.x, oy: o.y, moved: false };
                     dragRef.current = gesture;
                     setDrag(gesture);
-                    selectNode(n.id);
-                    if (n.issueId) selectIssue(n.issueId);
+                    if (ev.button === 0) {
+                      selectNode(n.id);
+                      if (n.issueId) selectIssue(n.issueId);
+                    }
                   }}
                   onClick={(ev) => ev.stopPropagation()}
                   onContextMenu={(ev) => {
