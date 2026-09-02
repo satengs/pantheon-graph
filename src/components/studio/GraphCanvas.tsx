@@ -23,6 +23,12 @@ function r2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
+function shortPageLabel(n: GraphNode) {
+  const fromUrl = (n.url ?? "").replace(/\/$/, "").split("/").filter(Boolean).slice(-1)[0] ?? "";
+  const raw = (n.label && n.label.trim()) || fromUrl;
+  return raw.length > 22 ? `${raw.slice(0, 21)}…` : raw;
+}
+
 function pairKey(e: GraphEdge) {
   return `${[e.source, e.target].sort().join("|")}:${e.kind}`;
 }
@@ -677,7 +683,7 @@ export function GraphCanvas() {
                         ? "Achieve"
                         : n.label
                     : n.kind === "page"
-                      ? ""
+                      ? shortPageLabel(n)
                       : n.label;
               const on = n.id === selectedNodeId;
               const r = on ? radius * 1.3 : radius;
@@ -777,7 +783,7 @@ export function GraphCanvas() {
                   )}
                   {label ? (
                     <text
-                      y={n.kind === "product" || n.kind === "glossary" ? r + 12 : 4}
+                      y={n.kind === "product" || n.kind === "glossary" || n.kind === "page" ? r + 12 : 4}
                       textAnchor="middle"
                       fill="var(--color-fg)"
                       fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : 8}
