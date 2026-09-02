@@ -33,7 +33,7 @@ const OWNER: Partial<Record<ProductId, BrandId>> = {
 
 const SEED_PRODUCTS: Record<string, ProductId[]> = {
   fdr: ["debt-relief", "settlement", "consolidation", "glossary"],
-  achieve: ["heloc", "hel", "personal-loan", "glossary"],
+  achieve: ["heloc", "hel", "personal-loan", "consolidation", "glossary"],
 };
 
 export function countPages(brand?: BrandId, product?: ProductId): number {
@@ -304,7 +304,8 @@ export function buildGraph(opts: {
     const info = meta.get(b);
     const seedP = SEED_PRODUCTS[b] ?? [];
     const fromOrg = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
-    const plist = [...new Set([...fromOrg, ...seedP])];
+    const fromCrawl = PRODUCT_ORDER.filter((pid) => pid !== "other" && countPages(b, pid) > 0);
+    const plist = [...new Set([...fromOrg, ...seedP, ...fromCrawl])];
     for (const p of plist) {
       if (opts.product !== "all" && opts.product !== p) continue;
       if (!(p in PRODUCT_LABEL) && p !== "other") {
