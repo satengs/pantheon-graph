@@ -25,9 +25,15 @@ export const PRODUCT_ORDER: ProductId[] = [
 const OWNER: Partial<Record<ProductId, BrandId>> = {
   "debt-relief": "fdr",
   settlement: "fdr",
+  consolidation: "fdr",
   heloc: "achieve",
   hel: "achieve",
   "personal-loan": "achieve",
+};
+
+const SEED_PRODUCTS: Record<string, ProductId[]> = {
+  fdr: ["debt-relief", "settlement", "consolidation", "glossary"],
+  achieve: ["heloc", "hel", "personal-loan", "glossary"],
 };
 
 export function countPages(brand?: BrandId, product?: ProductId): number {
@@ -149,7 +155,7 @@ const FALLBACK_ORG: GraphOrg = {
       slug: "fdr",
       name: "Freedom Debt Relief",
       url: "https://www.freedomdebtrelief.com/",
-      products: ["debt-relief", "settlement", "glossary"],
+      products: ["debt-relief", "settlement", "consolidation", "glossary"],
     },
     {
       slug: "achieve",
@@ -296,7 +302,9 @@ export function buildGraph(opts: {
 
   for (const b of brands) {
     const info = meta.get(b);
-    const plist = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
+    const seedP = SEED_PRODUCTS[b] ?? [];
+    const fromOrg = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
+    const plist = [...new Set([...fromOrg, ...seedP])];
     for (const p of plist) {
       if (opts.product !== "all" && opts.product !== p) continue;
       if (!(p in PRODUCT_LABEL) && p !== "other") {
@@ -317,7 +325,6 @@ export function buildGraph(opts: {
       }
       const pid = p as ProductId;
       if (opts.product !== "all" && opts.product !== pid) continue;
-      if (countPages(b, pid) === 0 && !(info?.products ?? []).includes(pid)) continue;
       addHub(b, pid);
     }
   }
