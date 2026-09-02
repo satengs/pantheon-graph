@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { windowRange } from "@/lib/studio/virtual";
 
 export function VirtualList<T>({
@@ -9,6 +9,7 @@ export function VirtualList<T>({
   selectedIndex,
   getKey,
   renderRow,
+  rowWrapper,
 }: {
   items: T[];
   rowHeight: number;
@@ -17,6 +18,7 @@ export function VirtualList<T>({
   selectedIndex?: number;
   getKey: (item: T, index: number) => string;
   renderRow: (item: T, index: number) => ReactNode;
+  rowWrapper?: (item: T, index: number) => { className?: string; style?: CSSProperties } | undefined;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -56,7 +58,16 @@ export function VirtualList<T>({
           return (
             <div
               key={getKey(item, index)}
-              style={{ position: "absolute", top: index * rowHeight, height: rowHeight, left: 0, right: 0 }}
+              className={rowWrapper?.(item, index)?.className}
+              style={{
+                position: "absolute",
+                top: index * rowHeight,
+                height: rowHeight,
+                left: 0,
+                right: 0,
+                overflow: "visible",
+                ...rowWrapper?.(item, index)?.style,
+              }}
             >
               {renderRow(item, index)}
             </div>
