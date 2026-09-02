@@ -233,6 +233,8 @@ export function GraphCanvas() {
   const [drag, setDrag] = useState<null | {
     kind: "pan" | "node";
     id?: string;
+    group?: string[];
+    origins?: Record<string, Pt>;
     x: number;
     y: number;
     ox: number;
@@ -323,6 +325,21 @@ export function GraphCanvas() {
     if (!p) return undefined;
     const o = offsets[id];
     return o ? { x: p.x + o.x, y: p.y + o.y } : p;
+  }
+
+  function clusterIds(start: string): string[] {
+    const ids = new Set<string>([start]);
+    const walk = [start];
+    while (walk.length) {
+      const id = walk.pop()!;
+      for (const e of graph.edges) {
+        if (e.kind === "owns" && e.source === id && !ids.has(e.target)) {
+          ids.add(e.target);
+          walk.push(e.target);
+        }
+      }
+    }
+    return [...ids];
   }
 
   const vb = useMemo(() => {
@@ -497,7 +514,15 @@ export function GraphCanvas() {
               } catch {
                 /* already captured */
               }
-              setOffsets({ ...offsets, [cur.id]: { x: cur.ox + (s.x - cur.x), y: cur.oy + (s.y - cur.y) } });
+              const dx = s.x - cur.x;
+              const dy = s.y - cur.y;
+              const members = cur.group?.length ? cur.group : [cur.id];
+              const nextOff = { ...offsets };
+              for (const id of members) {
+                const o = cur.origins?.[id] ?? (id === cur.id ? { x: cur.ox, y: cur.oy } : offsets[id] ?? { x: 0, y: 0 });
+                nextOff[id] = { x: o.x + dx, y: o.y + dy };
+              }
+              setOffsets(nextOff);
               if (!cur.moved) {
                 const next = { ...cur, moved: true };
                 dragRef.current = next;
@@ -527,6 +552,34 @@ export function GraphCanvas() {
           onContextMenu={(e) => e.preventDefault()}
         >
           <g transform={`translate(${r2(pan.x)} ${r2(pan.y)})`}>
+            {graph.nodes
+              .filter((n) => n.kind === "product" || n.kind === "glossary" || n.kind === "brand")
+              .map((hub) => {
+                const members = clusterIds(hub.id)
+                  .map((id) => ({ id, p: at(id), n: graph.nodes.find((x) => x.id === id) }))
+                  .filter((m) => m.p && m.n?.kind === "page");
+                if (members.length < 1) return null;
+                const hp = at(hub.id);
+                const pts = [...members.map((m) => m.p!), ...(hp ? [hp] : [])];
+                const pad = 28;
+                const minX = Math.min(...pts.map((p) => p.x)) - pad;
+                const minY = Math.min(...pts.map((p) => p.y)) - pad;
+                const maxX = Math.max(...pts.map((p) => p.x)) + pad;
+                const maxY = Math.max(...pts.map((p) => p.y)) + pad;
+                return (
+                  <rect
+                    key={`cluster:${hub.id}`}
+                    x={minX}
+                    y={minY}
+                    width={maxX - minX}
+                    height={maxY - minY}
+                    rx={16}
+                    fill="color-mix(in oklab, var(--color-raised) 55%, transparent)"
+                    stroke="color-mix(in oklab, var(--color-fg) 18%, transparent)"
+                    strokeWidth={1}
+                  />
+                );
+              })}
             {graph.edges.map((e) => {
               const a = at(e.source);
               const b = at(e.target);
@@ -646,7 +699,20 @@ export function GraphCanvas() {
                     ev.stopPropagation();
                     const s = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                     const o = offsets[n.id] ?? { x: 0, y: 0 };
-                    const gesture = { kind: "node" as const, id: n.id, x: s.x, y: s.y, ox: o.x, oy: o.y, moved: false };
+                    const group = clusterIds(n.id);
+                    const origins: Record<string, Pt> = {};
+                    for (const id of group) origins[id] = offsets[id] ?? { x: 0, y: 0 };
+                    const gesture = {
+                      kind: "node" as const,
+                      id: n.id,
+                      group,
+                      origins,
+                      x: s.x,
+                      y: s.y,
+                      ox: o.x,
+                      oy: o.y,
+                      moved: false,
+                    };
                     dragRef.current = gesture;
                     setDrag(gesture);
                     if (ev.button === 0) {
