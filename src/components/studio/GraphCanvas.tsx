@@ -335,8 +335,18 @@ export function GraphCanvas() {
   }
 
   function clusterIds(start: string): string[] {
-    const ids = new Set<string>([start]);
-    const walk = [start];
+    let root = start;
+    const seen = new Set<string>();
+    while (!seen.has(root)) {
+      seen.add(root);
+      const node = graph.nodes.find((x) => x.id === root);
+      if (node && (node.kind === "product" || node.kind === "glossary" || node.kind === "brand")) break;
+      const up = graph.edges.find((e) => e.kind === "owns" && e.target === root);
+      if (!up) break;
+      root = up.source;
+    }
+    const ids = new Set<string>([root]);
+    const walk = [root];
     while (walk.length) {
       const id = walk.pop()!;
       for (const e of graph.edges) {
@@ -587,6 +597,29 @@ export function GraphCanvas() {
                     fill="color-mix(in oklab, var(--color-raised) 55%, transparent)"
                     stroke="color-mix(in oklab, var(--color-fg) 18%, transparent)"
                     strokeWidth={1}
+                    className="cursor-grab"
+                    onPointerDown={(ev) => {
+                      ev.stopPropagation();
+                      const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
+                      const group = clusterIds(hub.id);
+                      const origins: Record<string, Pt> = {};
+                      for (const id of group) origins[id] = offsets[id] ?? { x: 0, y: 0 };
+                      const o = origins[hub.id] ?? { x: 0, y: 0 };
+                      const gesture = {
+                        kind: "node" as const,
+                        id: hub.id,
+                        group,
+                        origins,
+                        x: spt.x,
+                        y: spt.y,
+                        ox: o.x,
+                        oy: o.y,
+                        moved: false,
+                      };
+                      dragRef.current = gesture;
+                      setDrag(gesture);
+                      if (ev.button === 0) selectNode(hub.id);
+                    }}
                   />
                 );
               })}
