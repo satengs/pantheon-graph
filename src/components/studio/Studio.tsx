@@ -75,6 +75,7 @@ export function Studio() {
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const graphInspectorOpen = useStudio((s) => s.graphInspectorOpen);
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const maximized = useStudio((s) => s.maximized);
@@ -115,7 +116,7 @@ export function Studio() {
   const showInspector =
     tab === "issues" ||
     tab === "states" ||
-    (tab === "graph" && Boolean(selectedNodeId) && !selectedNodeId?.startsWith("issue:"));
+    (tab === "graph" && graphInspectorOpen);
 
   useEffect(() => {
     if (tab !== "issues") return;
@@ -342,18 +343,6 @@ export function Studio() {
         </label>
         </div>
         <div className="g-cluster" role="group" aria-label="Actions">
-        {tab === "graph" ? (
-        <label className="flex h-8 items-center gap-2 px-1 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={explode}
-            onChange={(e) => setExplode(e.target.checked)}
-            suppressHydrationWarning
-            className="size-4 accent-[var(--color-accent)]"
-          />
-          Explode pages
-        </label>
-        ) : null}
         {(tab === "graph" || tab === "states" || tab === "validation") && (
           <Button
             variant="secondary"

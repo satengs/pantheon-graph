@@ -283,9 +283,9 @@ export function Backlog() {
           items={categories}
           rowHeight={88}
           getKey={(c) => c.code}
-          selectedIndex={categories.findIndex((c) => c.code === selectedIssueId)}
+          selectedIndex={categories.findIndex((c) => c.code === selectedIssueId || RULES.find((r) => r.code === c.code)?.id === selectedIssueId)}
           renderRow={(c) => {
-            const on = selectedIssueId === c.code;
+            const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             const page = c.pages[0];
             return (
               <IssueRow

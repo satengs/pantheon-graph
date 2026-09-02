@@ -38,6 +38,7 @@ export function Inspector() {
   const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectNode = useStudio((s) => s.selectNode);
+  const setGraphInspectorOpen = useStudio((s) => s.setGraphInspectorOpen);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
@@ -114,6 +115,9 @@ export function Inspector() {
     const kindLabel = node.kind === "page" ? "PAGE" : node.kind.toUpperCase();
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4">
+        <div className="flex justify-end">
+          <Button size="sm" variant="ghost" onClick={() => setGraphInspectorOpen(false)}>Close</Button>
+        </div>
         <Fold title="Identity" defaultOpen>
           <p className="text-[10px] uppercase tracking-wide text-subtle">{kindLabel}</p>
           <h2 className="font-display text-xl text-fg">{node.label}</h2>
