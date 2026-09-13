@@ -937,6 +937,9 @@ export function GraphCanvas() {
           <span className="inline-block size-2 rounded-full bg-achieve" /> Achieve
         </span>
         <span className="flex items-center gap-1.5">
+          <span className="inline-block size-2 rounded-full bg-bills" /> Bills
+        </span>
+        <span className="flex items-center gap-1.5">
           <span className="inline-block h-px w-3 bg-danger" /> Conflict
         </span>
         <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
