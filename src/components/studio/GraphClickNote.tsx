@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type PointerEvent as PE } from "react";
 import { ArrowLeft, GripVertical } from "lucide-react";
 import { useStudio } from "@/store/studio";
 
-const KEY = "origin.graphClickNotePos";
-const DEFAULT = { x: 12, y: 12 };
+const KEY = "origin.graphClickNotePos.v2";
+const DEFAULT = { x: -1, y: 12 };
 
 function stop<E extends { stopPropagation: () => void }>(e: E) {
   e.stopPropagation();
@@ -68,7 +68,7 @@ export function GraphClickNote() {
   return (
     <aside
       className="absolute z-30 w-[14.5rem] rounded-md border border-border bg-surface text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
-      style={{ left: pos.x, top: pos.y, borderLeftWidth: 3, borderLeftColor: "#c4b8a4" }}
+      style={pos.x < 0 ? { right: 12, top: pos.y, left: "auto", borderLeftWidth: 3, borderLeftColor: "#c4b8a4" } : { left: pos.x, top: pos.y, borderLeftWidth: 3, borderLeftColor: "#c4b8a4" }}
       onPointerDown={stop}
       onPointerMove={stop}
       onPointerUp={stop}

@@ -108,7 +108,7 @@ function layoutOf(
     }
   } else {
     brands.forEach((b, i) => {
-      pos.set(b.id, { x: r2((i - (brands.length - 1) / 2) * 460), y: -230 });
+      pos.set(b.id, { x: r2((i - (brands.length - 1) / 2) * 560), y: -230 });
     });
     const byBrand = new Map<string, GraphNode[]>();
     for (const h of hubs) {
@@ -404,7 +404,7 @@ export function GraphCanvas() {
       if (!p) continue;
       pts.push(p);
     }
-    return fitView(pts, full ? 96 : 72);
+    return fitView(pts, full ? 160 : 128);
   }, [graph.nodes, base, full]);
 
   function clientToSvg(e: RE<SVGSVGElement> | PointerEvent): Pt {
