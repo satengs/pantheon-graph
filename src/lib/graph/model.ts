@@ -46,6 +46,24 @@ const SEED_PRODUCTS: Record<string, ProductId[]> = {
   bills: ["consolidation", "hel", "heloc", "personal-loan", "credit-cards", "student-loans", "insurance"],
 };
 
+const FDR_NOT_HUBS = new Set<string>([
+  "heloc",
+  "hel",
+  "personal-loan",
+  "wellness",
+  "credit-cards",
+  "student-loans",
+  "insurance",
+]);
+
+function hubAllowed(brand: string, product: string): boolean {
+  if (brand === "fdr" && FDR_NOT_HUBS.has(product)) return false;
+  if (brand === "achieve" && product === "settlement") return false;
+  return product !== "other";
+}
+
+const BRAND_DRAW_ORDER = ["fdr", "achieve", "bills"];
+
 export function countPages(brand?: BrandId, product?: ProductId): number {
   return crawl.pages.filter((p) => {
     if (brand && p.b !== brand) return false;
@@ -210,7 +228,13 @@ export function buildGraph(opts: {
     opts.brand === "all" || (family.parent && opts.brand === family.parent.slug)
       ? family.brands
       : family.brands.filter((b) => b.slug === opts.brand);
-  const brands: BrandId[] = (opts.org ? orgBrands : orgBrands.length ? orgBrands : FALLBACK_ORG.brands).map((b) => b.slug);
+  const brands: BrandId[] = (opts.org ? orgBrands : orgBrands.length ? orgBrands : FALLBACK_ORG.brands)
+    .map((b) => b.slug)
+    .sort((a, b) => {
+      const ia = BRAND_DRAW_ORDER.indexOf(a);
+      const ib = BRAND_DRAW_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
   const meta = new Map(family.brands.map((b) => [b.slug, b]));
 
   const addBrand = (b: BrandId) => {
@@ -320,13 +344,14 @@ export function buildGraph(opts: {
     const info = meta.get(b);
     const seedP = SEED_PRODUCTS[b] ?? [];
     const fromOrg = (info?.products?.length ? info.products : []) as string[];
-    // Suggested structure = seed/OWNER hubs. Do not spawn every crawl product bucket
-    // (e.g. FDR HELOC leftovers or Achieve settlement press pages).
+    // Seed-family brands: locked suggested hubs. Stale org product lists
+    // (old FDR HELOC / personal-loan / HEL) must not spawn canvas nodes.
     const fromCrawl =
-      fromOrg.length || seedP.length
+      seedP.length || fromOrg.length
         ? []
-        : PRODUCT_ORDER.filter((pid) => pid !== "other" && countPages(b, pid) > 0);
-    const plist = [...new Set([...(fromOrg.length ? fromOrg : seedP), ...fromCrawl])];
+        : PRODUCT_ORDER.filter((pid) => pid !== "other" && countPages(b, pid) > 0 && hubAllowed(b, pid));
+    const raw = seedP.length ? seedP : fromOrg.length ? fromOrg : fromCrawl;
+    const plist = [...new Set(raw.filter((p) => hubAllowed(b, p)))];
     for (const p of plist) {
       if (opts.product !== "all" && opts.product !== p) continue;
       if (!(p in PRODUCT_LABEL) && p !== "other") {
@@ -463,7 +488,7 @@ export function buildGraph(opts: {
     if (brand) {
       const info = meta.get(brand);
       const seedP = SEED_PRODUCTS[brand] ?? [];
-      const plist = (info?.products?.length ? info.products : seedP) as string[];
+      const plist = (seedP.length ? seedP : (info?.products ?? [])) as string[];
       for (const p of plist) {
         if (opts.product !== "all" && opts.product !== p) continue;
         if (p in PRODUCT_LABEL) {
