@@ -30,6 +30,7 @@ import {
   validateFamilyDraft,
   validateOrgName,
 } from "@/lib/org/family-form";
+import { crawl } from "@/data/crawl";
 import { PRODUCT_LABEL, type ProductId } from "@/lib/graph/types";
 
 const FETCH_HEADERS = { "user-agent": "OriginStudio/1.0 (+content-graph)" };
@@ -275,18 +276,25 @@ export async function seedOrgs(userId: string) {
       where user_id = ${userId} and slug = ${"pantheon"} and kind = ${"parent"}
         and (rules_json is null or rules_json = ${"[]"} or rules_json = ${""})
     `;
-    return;
+  } else {
+    await sql`
+      insert into studio_orgs (id, user_id, slug, name, kind, parent_id, website, host, products_json, probe_json, include_in_graph, rules_json)
+      values (
+        ${`${userId}:org:pantheon`}, ${userId}, ${SEED_PARENT.slug}, ${SEED_PARENT.name}, ${"parent"}, ${null},
+        ${SEED_PARENT.website}, ${""}, ${"[]"}, ${"{}"}, ${1}, ${seedCodes}
+      )
+      on conflict (id) do nothing
+    `;
   }
   const parentId = `${userId}:org:pantheon`;
-  await sql`
-    insert into studio_orgs (id, user_id, slug, name, kind, parent_id, website, host, products_json, probe_json, include_in_graph, rules_json)
-    values (
-      ${parentId}, ${userId}, ${SEED_PARENT.slug}, ${SEED_PARENT.name}, ${"parent"}, ${null},
-      ${SEED_PARENT.website}, ${""}, ${"[]"}, ${"{}"}, ${1}, ${seedCodes}
-    )
-    on conflict (id) do nothing
-  `;
+  const sitemapFor: Record<string, string> = {
+    fdr: "https://www.freedomdebtrelief.com/sitemap-index.xml",
+    achieve: "https://www.achieve.com/sitemap.xml",
+    bills: "https://www.bills.com/sitemap-index.xml",
+  };
   for (const b of SEED_BRANDS) {
+    const counted = crawl.counts[b.slug as keyof typeof crawl.counts];
+    const pageCount = typeof counted === "number" ? counted : crawl.pages.filter((pg) => pg.b === b.slug).length;
     const probe: OrgProbe = {
       ok: true,
       fetchedAt: "seed",
@@ -294,8 +302,8 @@ export async function seedOrgs(userId: string) {
       orgName: b.name,
       orgId: `${b.website}#organization`,
       hasJsonLd: true,
-      sitemapUrl: b.slug === "fdr" ? "https://www.freedomdebtrelief.com/sitemap-index.xml" : "https://www.achieve.com/sitemap.xml",
-      pageCount: b.slug === "fdr" ? 1159 : 1114,
+      sitemapUrl: sitemapFor[b.slug] ?? `${b.website}sitemap.xml`,
+      pageCount,
       products: [...b.products],
     };
     await sql`
@@ -304,7 +312,13 @@ export async function seedOrgs(userId: string) {
         ${`${userId}:org:${b.slug}`}, ${userId}, ${b.slug}, ${b.name}, ${"brand"}, ${parentId},
         ${b.website}, ${b.host}, ${JSON.stringify(b.products)}, ${JSON.stringify(probe)}, ${1}
       )
-      on conflict (id) do nothing
+      on conflict (id) do update set
+        products_json = excluded.products_json,
+        probe_json = excluded.probe_json,
+        website = excluded.website,
+        host = excluded.host,
+        name = excluded.name,
+        include_in_graph = 1
     `;
   }
 }

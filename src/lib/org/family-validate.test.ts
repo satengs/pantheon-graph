@@ -6,15 +6,17 @@ import { SYSTEM_RULE_CODES } from "./system-rules.ts";
 const pantheonBrands = [
   { slug: "fdr", website: "https://www.freedomdebtrelief.com/", parentId: "p1" },
   { slug: "achieve", website: "https://www.achieve.com/", parentId: "p1" },
+  { slug: "bills", website: "https://www.bills.com/", parentId: "p1" },
 ];
 const northstarBrands = [
   { slug: "lumen", website: "https://www.lumen.example/", parentId: "p2" },
   { slug: "harbor", website: "https://harbor.example/", parentId: "p2" },
 ];
 
-test("familyIsSeed detects Pantheon / FDR / Achieve", () => {
+test("familyIsSeed detects Pantheon / FDR / Achieve / Bills", () => {
   assert.equal(familyIsSeed("pantheon", ["lumen"]), true);
   assert.equal(familyIsSeed("northstar", ["fdr", "harbor"]), true);
+  assert.equal(familyIsSeed("northstar", ["bills", "harbor"]), true);
   assert.equal(familyIsSeed("northstar", ["lumen", "harbor"]), false);
 });
 
@@ -38,6 +40,7 @@ test("recheckTargets for the seed family keeps seed URLs", () => {
   });
   assert.ok(urls.includes("https://www.freedomdebtrelief.com/"));
   assert.ok(urls.includes("https://www.achieve.com/"));
+  assert.ok(urls.includes("https://www.bills.com/"));
   assert.ok(urls.includes("https://www.freedomdebtrelief.com/debt-relief/"));
 });
 

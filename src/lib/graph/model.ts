@@ -19,6 +19,10 @@ export const PRODUCT_ORDER: ProductId[] = [
   "personal-loan",
   "consolidation",
   "glossary",
+  "wellness",
+  "credit-cards",
+  "student-loans",
+  "insurance",
   "other",
 ];
 
@@ -29,11 +33,17 @@ const OWNER: Partial<Record<ProductId, BrandId>> = {
   heloc: "achieve",
   hel: "achieve",
   "personal-loan": "achieve",
+  wellness: "achieve",
+  "credit-cards": "bills",
+  "student-loans": "bills",
+  insurance: "bills",
 };
 
+/** Default hubs per brand — seed/OWNER structure, not every crawl bucket. */
 const SEED_PRODUCTS: Record<string, ProductId[]> = {
-  fdr: ["debt-relief", "settlement", "consolidation", "glossary"],
-  achieve: ["heloc", "hel", "personal-loan", "consolidation", "glossary"],
+  fdr: ["settlement", "debt-relief", "consolidation", "glossary"],
+  achieve: ["personal-loan", "heloc", "hel", "wellness", "debt-relief", "glossary"],
+  bills: ["consolidation", "hel", "heloc", "personal-loan", "credit-cards", "student-loans", "insurance"],
 };
 
 export function countPages(brand?: BrandId, product?: ProductId): number {
@@ -155,13 +165,19 @@ const FALLBACK_ORG: GraphOrg = {
       slug: "fdr",
       name: "Freedom Debt Relief",
       url: "https://www.freedomdebtrelief.com/",
-      products: ["debt-relief", "settlement", "consolidation", "glossary"],
+      products: ["settlement", "debt-relief", "consolidation", "glossary"],
     },
     {
       slug: "achieve",
       name: "Achieve",
       url: "https://www.achieve.com/",
-      products: ["heloc", "hel", "personal-loan", "glossary"],
+      products: ["personal-loan", "heloc", "hel", "wellness", "debt-relief", "glossary"],
+    },
+    {
+      slug: "bills",
+      name: "Bills.com",
+      url: "https://www.bills.com/",
+      products: ["consolidation", "hel", "heloc", "personal-loan", "credit-cards", "student-loans", "insurance"],
     },
   ],
 };
@@ -303,9 +319,14 @@ export function buildGraph(opts: {
   for (const b of brands) {
     const info = meta.get(b);
     const seedP = SEED_PRODUCTS[b] ?? [];
-    const fromOrg = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
-    const fromCrawl = PRODUCT_ORDER.filter((pid) => pid !== "other" && countPages(b, pid) > 0);
-    const plist = [...new Set([...fromOrg, ...seedP, ...fromCrawl])];
+    const fromOrg = (info?.products?.length ? info.products : []) as string[];
+    // Suggested structure = seed/OWNER hubs. Do not spawn every crawl product bucket
+    // (e.g. FDR HELOC leftovers or Achieve settlement press pages).
+    const fromCrawl =
+      fromOrg.length || seedP.length
+        ? []
+        : PRODUCT_ORDER.filter((pid) => pid !== "other" && countPages(b, pid) > 0);
+    const plist = [...new Set([...(fromOrg.length ? fromOrg : seedP), ...fromCrawl])];
     for (const p of plist) {
       if (opts.product !== "all" && opts.product !== p) continue;
       if (!(p in PRODUCT_LABEL) && p !== "other") {
@@ -393,7 +414,13 @@ export function buildGraph(opts: {
     if (!rule?.urls.length) return;
     rule.urls.slice(0, 4).forEach((url, i) => {
       const pid = `page:cite:${t.code}:${i}`;
-      const host = url.includes("achieve.com") ? "achieve" : url.includes("freedomdebtrelief") ? "fdr" : undefined;
+      const host = url.includes("bills.com")
+        ? "bills"
+        : url.includes("achieve.com")
+          ? "achieve"
+          : url.includes("freedomdebtrelief")
+            ? "fdr"
+            : undefined;
       addN({
         id: pid,
         label:
@@ -435,7 +462,8 @@ export function buildGraph(opts: {
     const brand = parseBrandId(id);
     if (brand) {
       const info = meta.get(brand);
-      const plist = (info?.products?.length ? info.products : opts.org ? [] : PRODUCT_ORDER) as string[];
+      const seedP = SEED_PRODUCTS[brand] ?? [];
+      const plist = (info?.products?.length ? info.products : seedP) as string[];
       for (const p of plist) {
         if (opts.product !== "all" && opts.product !== p) continue;
         if (p in PRODUCT_LABEL) {

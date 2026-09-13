@@ -25,7 +25,11 @@ export function crawlMetrics(crawl: CrawlSnapshot): CrawlMetrics {
   const glossDen = Math.max(fdrG, 1);
   return {
     crawledAt: crawl.crawledAt,
-    pages: { fdr: crawl.counts.fdr, achieve: crawl.counts.achieve, total: crawl.pages.length },
+    pages: {
+      fdr: crawl.counts.fdr,
+      achieve: crawl.counts.achieve,
+      total: crawl.pages.length,
+    },
     glossary: {
       fdr: fdrG,
       achieve: achG,
