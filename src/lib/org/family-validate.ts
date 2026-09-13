@@ -1,7 +1,7 @@
 import { SYSTEM_RULE_SET } from "./system-rules.ts";
 
 const SEED_PARENT_SLUG = "pantheon";
-const SEED_BRAND_SLUGS = new Set(["fdr", "achieve"]);
+const SEED_BRAND_SLUGS = new Set(["fdr", "achieve", "bills"]);
 
 export type FamilySite = {
   slug: string;

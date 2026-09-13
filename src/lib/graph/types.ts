@@ -10,6 +10,10 @@ export type ProductId =
   | "personal-loan"
   | "consolidation"
   | "glossary"
+  | "wellness"
+  | "credit-cards"
+  | "student-loans"
+  | "insurance"
   | "other";
 
 export type CrawlKind = "g" | "a" | "u" | "r" | "p";
@@ -29,8 +33,8 @@ export type GlossaryPair = {
 
 export type CrawlSnapshot = {
   crawledAt: string;
-  source: { fdr: string; achieve: string };
-  counts: { fdr: number; achieve: number };
+  source: { fdr: string; achieve: string; bills?: string };
+  counts: { fdr: number; achieve: number; bills?: number };
   pages: CrawlPage[];
   glossaryOverlap: GlossaryPair[];
   glossaryNear: Array<{
@@ -96,6 +100,7 @@ export type GraphEdge = {
 export const BRAND_HOST: Record<string, string> = {
   fdr: "https://www.freedomdebtrelief.com",
   achieve: "https://www.achieve.com",
+  bills: "https://www.bills.com",
 };
 
 export const PRODUCT_LABEL: Record<ProductId, string> = {
@@ -106,12 +111,17 @@ export const PRODUCT_LABEL: Record<ProductId, string> = {
   "personal-loan": "Personal loans",
   consolidation: "Consolidation",
   glossary: "Glossary",
+  wellness: "Wellness",
+  "credit-cards": "Credit cards",
+  "student-loans": "Student loans",
+  insurance: "Insurance",
   other: "Other",
 };
 
 export const BRAND_LABEL: Record<string, string> = {
   fdr: "Freedom Debt Relief",
   achieve: "Achieve",
+  bills: "Bills.com",
   pantheon: "Pantheon",
 };
 

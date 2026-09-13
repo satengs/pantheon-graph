@@ -18,14 +18,29 @@ export const SEED_BRANDS = [
     name: "Freedom Debt Relief",
     website: "https://www.freedomdebtrelief.com/",
     host: "www.freedomdebtrelief.com",
-    products: ["debt-relief", "settlement", "consolidation", "glossary"] as ProductId[],
+    products: ["settlement", "debt-relief", "consolidation", "glossary"] as ProductId[],
   },
   {
     slug: "achieve",
     name: "Achieve",
     website: "https://www.achieve.com/",
     host: "www.achieve.com",
-    products: ["heloc", "hel", "personal-loan", "consolidation", "glossary"] as ProductId[],
+    products: ["personal-loan", "heloc", "hel", "wellness", "debt-relief", "glossary"] as ProductId[],
+  },
+  {
+    slug: "bills",
+    name: "Bills.com",
+    website: "https://www.bills.com/",
+    host: "www.bills.com",
+    products: [
+      "consolidation",
+      "hel",
+      "heloc",
+      "personal-loan",
+      "credit-cards",
+      "student-loans",
+      "insurance",
+    ] as ProductId[],
   },
 ] as const;
 

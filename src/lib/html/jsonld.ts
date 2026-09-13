@@ -37,6 +37,10 @@ const EXPECTED: Record<string, string[]> = {
   "debt-relief": ["Service"],
   settlement: ["Service"],
   consolidation: ["LoanOrCredit", "Service"],
+  wellness: ["Service", "WebPage"],
+  "credit-cards": ["FinancialProduct", "Product"],
+  "student-loans": ["LoanOrCredit", "FinancialProduct"],
+  insurance: ["FinancialProduct", "Service"],
   other: ["Organization", "WebPage"],
 };
 
@@ -45,6 +49,7 @@ const LOAN_PROPS = ["interestRate", "annualPercentageRate", "loanTerm", "amount"
 const DEFAULT_ORG: Record<string, string> = {
   fdr: "https://www.freedomdebtrelief.com/#organization",
   achieve: "https://www.achieve.com/#organization",
+  bills: "https://www.bills.com/#organization",
 };
 
 function asArray<T>(v: T | T[] | undefined | null): T[] {
@@ -57,6 +62,7 @@ function shortType(t: string): string {
 }
 
 function brandFromUrl(url: string): BrandId | undefined {
+  if (url.includes("bills.com")) return "bills";
   if (url.includes("achieve.com")) return "achieve";
   if (url.includes("freedomdebtrelief")) return "fdr";
   return undefined;
@@ -65,12 +71,25 @@ function brandFromUrl(url: string): BrandId | undefined {
 export function productFromUrl(url: string): ProductId {
   const p = url.toLowerCase();
   if (p.includes("/glossary")) return "glossary";
-  if (p.includes("heloc")) return "heloc";
+  if (p.includes("heloc") || p.includes("home-equity-line")) return "heloc";
   if (p.includes("home-equity") || /\/hel(\/|$)/.test(p)) return "hel";
-  if (p.includes("personal-loan") || p.includes("personal_loan")) return "personal-loan";
+  if (p.includes("personal-loan") || p.includes("personal_loan") || p.includes("/personal-loans")) return "personal-loan";
+  if (p.includes("student-loan")) return "student-loans";
+  if (p.includes("credit-card")) return "credit-cards";
+  if (p.includes("insurance") || p.includes("/insur")) return "insurance";
+  if (
+    p.includes("wellness") ||
+    p.includes("financial-health") ||
+    p.includes("mental-health") ||
+    p.includes("debt-stress") ||
+    p.includes("financial-stress") ||
+    p.includes("financial-well")
+  ) {
+    return "wellness";
+  }
   if (p.includes("settlement")) return "settlement";
   if (p.includes("consolidat")) return "consolidation";
-  if (p.includes("debt-relief") || p.includes("debtrelief")) return "debt-relief";
+  if (p.includes("debt-relief") || p.includes("debtrelief") || p.includes("/debt/debt-relief")) return "debt-relief";
   return "other";
 }
 

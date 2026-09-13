@@ -69,7 +69,9 @@ function layoutOf(
   const issues = nodes.filter((n) => n.kind === "issue");
 
   if (kind === "circle") {
-    brands.forEach((b) => pos.set(b.id, { x: b.brand === "achieve" ? 280 : -280, y: 0 }));
+    brands.forEach((b, i) => {
+      pos.set(b.id, { x: r2((i - (brands.length - 1) / 2) * 320), y: 0 });
+    });
     const byBrand = new Map<string, GraphNode[]>();
     for (const h of hubs) {
       const k = h.brand ?? "fdr";
@@ -434,6 +436,7 @@ export function GraphCanvas() {
     if (n.kind === "parent") return "var(--color-accent)";
     if (n.brand === "fdr") return "var(--color-fdr)";
     if (n.brand === "achieve") return "var(--color-achieve)";
+    if (n.brand === "bills") return "var(--color-bills)";
     return "color-mix(in oklab, var(--color-fg) 18%, transparent)";
   }
   function nodeR(n: GraphNode) {
@@ -752,7 +755,9 @@ export function GraphCanvas() {
                       ? "FDR"
                       : n.brand === "achieve"
                         ? "Achieve"
-                        : n.label
+                        : n.brand === "bills"
+                          ? "Bills"
+                          : n.label
                     : n.kind === "page"
                       ? shortPageLabel(n)
                       : n.label;
