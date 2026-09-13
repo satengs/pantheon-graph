@@ -8,6 +8,7 @@ import { PRODUCT_MAX_PER_BRAND, SEED_BRAND_SLUGS, SEED_PARENT, slugProduct, vali
 import { familyContextFrom, useStudio } from "@/store/studio";
 import { runValidation } from "@/lib/server/validate-run";
 import { productLabel, PRODUCT_LABEL } from "@/lib/graph/types";
+import { IDEAL_TREE } from "@/data/recommend";
 
 type Family = {
   parents: StudioOrg[];
@@ -111,6 +112,25 @@ export function Companies() {
       {msg ? <p className="text-sm text-ok">{msg}</p> : null}
 
       <section className="rounded-xl bg-raised p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-subtle">
+          <Building2 className="size-3.5" /> Suggested structure
+        </div>
+        <p className="mb-3 text-sm text-muted">
+          Pantheon family as it should read. Graph and product lists follow this split.
+        </p>
+        <div className="mb-4 flex flex-col items-center">
+          <div className="rounded-lg bg-bg px-3 py-1.5 text-xs text-fg">{IDEAL_TREE.parent}</div>
+          <div className="h-4 w-px bg-border" />
+          <div className="grid w-full gap-2 sm:grid-cols-3">
+            {IDEAL_TREE.brands.map((b) => (
+              <div key={b.id} className="rounded-md bg-bg p-2">
+                <p className={`text-sm ${b.id === "fdr" ? "text-fdr" : b.id === "achieve" ? "text-achieve" : "text-bills"}`}>{b.name}</p>
+                <p className="text-[11px] text-muted">{b.role}</p>
+                <p className="mt-1 text-[11px] text-fg">{b.products.join(" · ")}</p>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wide text-subtle">
           <Building2 className="size-3.5" /> Structure
         </div>

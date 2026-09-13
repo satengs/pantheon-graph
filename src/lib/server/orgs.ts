@@ -73,7 +73,10 @@ function rowToOrg(r: {
     parentId: r.parent_id,
     website: r.website,
     host: r.host,
-    products: parseProducts(r.products_json),
+    products: (() => {
+      const seed = SEED_BRANDS.find((b) => b.slug === r.slug);
+      return seed ? [...seed.products] : parseProducts(r.products_json);
+    })(),
     probe: parseProbe(r.probe_json),
     includeInGraph: r.include_in_graph !== 0,
     ruleCodes: parseRuleCodes(r.rules_json),

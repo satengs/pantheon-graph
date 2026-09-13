@@ -189,24 +189,21 @@ export function Backlog() {
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
       {seedFamily ? (
         <section className="mb-3 rounded-lg bg-surface p-3">
-          <h2 className="text-sm text-fg">Ideal graph</h2>
-          <p className="vh-whisper mt-1">Parent named once. Brands do not sell each other’s products.</p>
-          <details className="mt-2">
-            <summary className="cursor-pointer text-xs text-muted">Show target split</summary>
-            <div className="mt-3 flex flex-col items-center">
-              <div className="rounded-lg bg-raised px-3 py-1.5 text-xs">{IDEAL_TREE.parent}</div>
-              <div className="h-4 w-px bg-border" />
-              <div className="flex w-full gap-2">
-                {IDEAL_TREE.brands.map((b) => (
-                  <div key={b.id} className="min-w-0 flex-1 rounded-md bg-raised p-2">
-                    <p className={`text-sm ${b.id === "fdr" ? "text-fdr" : "text-achieve"}`}>{b.name}</p>
-                    <p className="text-[11px] text-muted">{b.role}</p>
-                    <p className="mt-1 text-[11px] text-fg">{b.products.join(" · ")}</p>
-                  </div>
-                ))}
-              </div>
+          <h2 className="text-sm text-fg">Suggested structure</h2>
+          <p className="vh-whisper mt-1">Pantheon family. Brands do not sell each other’s products.</p>
+          <div className="mt-3 flex flex-col items-center">
+            <div className="rounded-lg bg-raised px-3 py-1.5 text-xs">{IDEAL_TREE.parent}</div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex w-full gap-2">
+              {IDEAL_TREE.brands.map((b) => (
+                <div key={b.id} className="min-w-0 flex-1 rounded-md bg-raised p-2">
+                  <p className={`text-sm ${b.id === "fdr" ? "text-fdr" : b.id === "achieve" ? "text-achieve" : "text-bills"}`}>{b.name}</p>
+                  <p className="text-[11px] text-muted">{b.role}</p>
+                  <p className="mt-1 text-[11px] text-fg">{b.products.join(" · ")}</p>
+                </div>
+              ))}
             </div>
-          </details>
+          </div>
         </section>
       ) : null}
 

@@ -101,21 +101,28 @@ export const RECS: RecItem[] = [
 ];
 
 export const IDEAL_TREE = {
-  parent: "Achieve (parent)",
+  parent: "Pantheon",
   brands: [
-    {
-      id: "achieve",
-      name: "Achieve",
-      role: "Lending and credit",
-      products: ["HELOC", "Home equity loan", "Personal loans", "Consolidation"],
-      glossary: "APR, HELOC, credit, origination",
-    },
     {
       id: "fdr",
       name: "Freedom Debt Relief",
-      role: "Debt relief specialist",
-      products: ["Debt relief", "Settlement"],
+      role: "Settlement",
+      products: ["Settlement", "Debt relief", "Consolidation"],
       glossary: "Settlement, hardship, collections, relief",
+    },
+    {
+      id: "achieve",
+      name: "Achieve",
+      role: "Loans / HELOC / wellness + debt-relief access",
+      products: ["Personal loans", "HELOC", "Home equity loan", "Wellness", "Debt relief"],
+      glossary: "APR, HELOC, credit, origination",
+    },
+    {
+      id: "bills",
+      name: "Bills.com",
+      role: "Marketplace",
+      products: ["Consolidation", "HELOC", "Personal loans", "Credit cards", "Student loans", "Insurance"],
+      glossary: "",
     },
   ],
 };
