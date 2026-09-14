@@ -944,28 +944,30 @@ export function GraphCanvas() {
                     <>
                       {n.kind === "parent" || n.kind === "brand" ? (
                         <text
-                          y={r + 16}
+                          y={5}
                           textAnchor="middle"
-                          fill="none"
                           stroke="var(--color-bg)"
-                          strokeWidth={6}
-                          fontSize={14}
+                          strokeWidth={5}
+                          fill="var(--color-fg)"
+                          paintOrder="stroke"
+                          fontSize={13}
                           fontWeight={700}
                           fontFamily="IBM Plex Sans, sans-serif"
                         >
                           {label}
                         </text>
-                      ) : null}
-                      <text
-                        y={n.kind === "product" || n.kind === "glossary" || n.kind === "page" ? r + 12 : r + 16}
-                        textAnchor="middle"
-                        fill="var(--color-fg)"
-                        fontSize={n.kind === "parent" || n.kind === "brand" ? 14 : 8}
-                        fontWeight={n.kind === "parent" || n.kind === "brand" ? 700 : 600}
-                        fontFamily="IBM Plex Sans, sans-serif"
-                      >
-                        {label}
-                      </text>
+                      ) : (
+                        <text
+                          y={r + 12}
+                          textAnchor="middle"
+                          fill="var(--color-fg)"
+                          fontSize={8}
+                          fontWeight={600}
+                          fontFamily="IBM Plex Sans, sans-serif"
+                        >
+                          {label}
+                        </text>
+                      )}
                     </>
                   ) : null}
                 </g>
