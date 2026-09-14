@@ -553,10 +553,8 @@ export function GraphCanvas() {
           {full ? "Exit" : "Full screen"}
         </button>
       </div>
-      <div className="relative min-h-0 flex-1">
-      <GraphClickNote />
       {graph.nodes.some((n) => n.kind === "issue") ? (
-        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex justify-between gap-4">
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-border bg-bg px-2 py-2">
           {graph.nodes
             .filter((n) => n.kind === "issue" && n.issueId)
             .map((n) => {
@@ -570,7 +568,7 @@ export function GraphCanvas() {
                 <button
                   key={n.id}
                   type="button"
-                  className={`pointer-events-auto w-[min(calc(50%-0.5rem),20rem)] shrink-0 rounded-lg bg-surface/95 p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
+                  className={`w-full rounded-lg bg-surface p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
                   onClick={() => {
                     selectNode(n.id);
                     if (n.issueId) selectIssue(n.issueId);
@@ -595,6 +593,8 @@ export function GraphCanvas() {
             })}
         </div>
       ) : null}
+      <div className="relative min-h-0 flex-1">
+      <GraphClickNote />
       {ready ? (
         <svg
           ref={svgRef}
