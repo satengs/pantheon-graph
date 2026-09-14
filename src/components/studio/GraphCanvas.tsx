@@ -556,7 +556,7 @@ export function GraphCanvas() {
       <div className="relative min-h-0 flex-1">
       <GraphClickNote />
       {graph.nodes.some((n) => n.kind === "issue") ? (
-        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap gap-2">
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex justify-between gap-4">
           {graph.nodes
             .filter((n) => n.kind === "issue" && n.issueId)
             .map((n) => {
@@ -570,7 +570,7 @@ export function GraphCanvas() {
                 <button
                   key={n.id}
                   type="button"
-                  className={`pointer-events-auto w-[min(100%,22rem)] rounded-lg bg-surface p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
+                  className={`pointer-events-auto w-[min(calc(50%-0.5rem),20rem)] shrink-0 rounded-lg bg-surface/95 p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
                   onClick={() => {
                     selectNode(n.id);
                     if (n.issueId) selectIssue(n.issueId);
@@ -941,16 +941,32 @@ export function GraphCanvas() {
                     />
                   )}
                   {label ? (
-                    <text
-                      y={n.kind === "product" || n.kind === "glossary" || n.kind === "page" ? r + 12 : 4}
-                      textAnchor="middle"
-                      fill="var(--color-fg)"
-                      fontSize={n.kind === "parent" || n.kind === "brand" ? 12 : 8}
-                      fontWeight={600}
-                      fontFamily="IBM Plex Sans, sans-serif"
-                    >
-                      {label}
-                    </text>
+                    <>
+                      {n.kind === "parent" || n.kind === "brand" ? (
+                        <text
+                          y={r + 16}
+                          textAnchor="middle"
+                          fill="none"
+                          stroke="var(--color-bg)"
+                          strokeWidth={6}
+                          fontSize={14}
+                          fontWeight={700}
+                          fontFamily="IBM Plex Sans, sans-serif"
+                        >
+                          {label}
+                        </text>
+                      ) : null}
+                      <text
+                        y={n.kind === "product" || n.kind === "glossary" || n.kind === "page" ? r + 12 : r + 16}
+                        textAnchor="middle"
+                        fill="var(--color-fg)"
+                        fontSize={n.kind === "parent" || n.kind === "brand" ? 14 : 8}
+                        fontWeight={n.kind === "parent" || n.kind === "brand" ? 700 : 600}
+                        fontFamily="IBM Plex Sans, sans-serif"
+                      >
+                        {label}
+                      </text>
+                    </>
                   ) : null}
                 </g>
               );
