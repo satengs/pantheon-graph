@@ -75,6 +75,7 @@ export function Backlog() {
   const parentSlug = useStudio((s) => s.parentSlug);
   const parentId = useStudio((s) => s.parentId);
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
+  const showSuggestedStructure = useStudio((s) => s.showSuggestedStructure);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [taskTitle, setTaskTitle] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -190,7 +191,10 @@ export function Backlog() {
       {seedFamily ? (
         <section className="mb-3 rounded-lg bg-surface p-3">
           <h2 className="text-sm text-fg">Suggested structure</h2>
-          <p className="vh-whisper mt-1">Pantheon family. Brands do not sell each other’s products.</p>
+          <p className="vh-whisper mt-1">Pantheon family. Show it on the graph — three brands, every node expanded, issue nodes on the canvas.</p>
+          <Button type="button" size="sm" className="mt-2" onClick={() => showSuggestedStructure()}>
+            Show on graph
+          </Button>
           <div className="mt-3 flex flex-col items-center">
             <div className="rounded-lg bg-raised px-3 py-1.5 text-xs">{IDEAL_TREE.parent}</div>
             <div className="h-4 w-px bg-border" />

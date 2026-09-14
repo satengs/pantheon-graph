@@ -517,6 +517,7 @@ export function buildGraph(opts: {
         addPagesForHub(n.brand, n.product, EXPLODE_CAP);
       }
     }
+    for (const t of TREE) attachIssue(t);
   }
 
   for (const t of TREE) {

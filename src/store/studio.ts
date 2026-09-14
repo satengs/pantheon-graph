@@ -102,6 +102,7 @@ type StudioState = {
     includeParent?: boolean;
   }) => void;
   selectParent: (parentId: string) => void;
+  showSuggestedStructure: () => void;
 };
 
 function graphFrom(parent: FamilyParent | undefined, brands: FamilyBrand[]): GraphOrg {
@@ -163,7 +164,7 @@ export function familyContextFrom(d: {
 
 export const useStudio = create<StudioState>((set, get) => ({
   tab: "companies",
-  explode: false,
+  explode: true,
   brand: "all",
   product: "all",
   layer: "all",
@@ -353,4 +354,17 @@ export const useStudio = create<StudioState>((set, get) => ({
       includeParent: parent.includeInGraph,
     });
   },
+  showSuggestedStructure: () =>
+    set({
+      tab: "graph",
+      explode: true,
+      brand: "all",
+      product: "all",
+      layer: "all",
+      collapsedClusters: [],
+      includeParent: true,
+      graphLayout: "tree",
+      graphFocusStack: [],
+      issueDrawerOpen: false,
+    }),
 }));

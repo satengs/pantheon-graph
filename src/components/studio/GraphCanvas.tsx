@@ -303,7 +303,7 @@ export function GraphCanvas() {
   const graph = useMemo(
     () =>
       buildGraph({
-        explode: false,
+        explode,
         brand,
         product,
         layer,

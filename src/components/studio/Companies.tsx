@@ -47,6 +47,7 @@ export function Companies() {
   const familyEpoch = useStudio((s) => s.familyEpoch);
   const parentId = useStudio((s) => s.parentId);
   const selectIssue = useStudio((s) => s.selectIssue);
+  const showSuggestedStructure = useStudio((s) => s.showSuggestedStructure);
 
   const [family, setFamily] = useState<Family>(emptyFamily);
   const [err, setErr] = useState<string | null>(null);
@@ -116,8 +117,11 @@ export function Companies() {
           <Building2 className="size-3.5" /> Suggested structure
         </div>
         <p className="mb-3 text-sm text-muted">
-          Pantheon family as it should read. Graph and product lists follow this split.
+          Pantheon family as it should read. Show it on the graph — three brands, every node expanded, issue nodes on the canvas.
         </p>
+        <Button type="button" size="sm" className="mb-3" onClick={() => showSuggestedStructure()}>
+          Show on graph
+        </Button>
         <div className="mb-4 flex flex-col items-center">
           <div className="rounded-lg bg-bg px-3 py-1.5 text-xs text-fg">{IDEAL_TREE.parent}</div>
           <div className="h-4 w-px bg-border" />
