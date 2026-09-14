@@ -166,6 +166,19 @@ function layoutOf(
       pos.set(n.id, { x: r2(origin.x + Math.cos(ang) * 90), y: r2(origin.y + Math.sin(ang) * 90) });
     }
   }
+  if (issues.length && brands.length) {
+    const brandYs = brands.map((b) => pos.get(b.id)?.y ?? -230);
+    const railY = Math.min(...brandYs) - 96;
+    issues.forEach((n, i) => {
+      const sug = TREE_SUGGESTIONS.find((t) => t.code === n.issueId || `issue:${t.code}` === n.id);
+      const ax = sug ? pos.get(sug.source)?.x ?? 0 : 0;
+      const bx = sug ? pos.get(sug.target)?.x ?? 0 : 0;
+      pos.set(n.id, {
+        x: r2((ax + bx) / 2 + (i - (issues.length - 1) / 2) * 110),
+        y: r2(railY),
+      });
+    });
+  }
 
   const pageGroups = new Map<string, GraphNode[]>();
   for (const p of pages) {
@@ -443,7 +456,7 @@ export function GraphCanvas() {
     if (n.kind === "parent") return 50;
     if (n.kind === "brand") return 44;
     if (n.kind === "page") return 9;
-    if (n.kind === "issue") return 18;
+    if (n.kind === "issue") return 24;
     if (n.kind === "glossary") return 22;
     return 26;
   }
@@ -672,7 +685,6 @@ export function GraphCanvas() {
               if (e.kind === "suggests" || e.kind === "cites") return null;
               if (e.kind === "conflict" && e.issueId !== "S01") return null;
               if (e.kind === "sameAs" && e.issueId !== "S06") return null;
-              if (srcN?.kind === "issue" || tgtN?.kind === "issue") return null;
               const conflict = e.kind === "conflict";
               const sameAs = e.kind === "sameAs";
               const suggests = false;
@@ -680,7 +692,7 @@ export function GraphCanvas() {
               const idx = edgePairIndex.get(e.id) ?? 0;
               const c = controlPoint(a, b, idx, e.kind, explode);
               const issueNode = e.issueId ? graph.nodes.some((n) => n.id === `issue:${e.issueId}`) : false;
-              const showLabel = Boolean(e.label) && (conflict || sameAs);
+              const showLabel = Boolean(e.label) && (conflict || sameAs) && !issueNode;
               const pairTitle = `${nodeLabel(e.source)} ↔ ${nodeLabel(e.target)}${e.label ? ` · ${e.label}` : ""}`;
               const hovered = hoverEdgeId === e.id;
               return (
@@ -892,6 +904,64 @@ export function GraphCanvas() {
                 </g>
               );
             })}
+            {graph.nodes
+              .filter((n) => n.kind === "issue")
+              .map((n) => {
+                const p = at(n.id);
+                if (!p) return null;
+                const on = n.id === selectedNodeId;
+                const r = on ? 30 : 24;
+                const kind = TREE_SUGGESTIONS.find((t) => t.code === n.issueId)?.kind;
+                const stroke =
+                  kind === "conflict" ? "var(--color-danger)" : kind === "sameAs" ? "var(--color-accent)" : "var(--color-achieve)";
+                return (
+                  <g
+                    key={n.id}
+                    data-kind="issue"
+                    data-selected={on ? "true" : undefined}
+                    transform={`translate(${p.x} ${p.y})`}
+                    className="cursor-pointer"
+                    onPointerDown={(ev) => {
+                      ev.stopPropagation();
+                      if (ev.button === 0) {
+                        selectNode(n.id);
+                        if (n.issueId) selectIssue(n.issueId);
+                      }
+                    }}
+                    onClick={(ev) => ev.stopPropagation()}
+                    onContextMenu={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
+                      selectNode(n.id);
+                      if (n.issueId) selectIssue(n.issueId);
+                      setGraphInspectorOpen(true);
+                    }}
+                  >
+                    <circle r={r + 8} fill="var(--color-bg)" stroke={stroke} strokeWidth={2.4} />
+                    <circle r={r} fill="var(--color-raised)" stroke={stroke} strokeWidth={on ? 3 : 2} />
+                    <text
+                      y={4}
+                      textAnchor="middle"
+                      fill="var(--color-fg)"
+                      fontSize={11}
+                      fontWeight={700}
+                      fontFamily="IBM Plex Sans, sans-serif"
+                    >
+                      {n.label}
+                    </text>
+                    <text
+                      y={r + 14}
+                      textAnchor="middle"
+                      fill="var(--color-fg)"
+                      fontSize={9}
+                      fontWeight={600}
+                      fontFamily="IBM Plex Sans, sans-serif"
+                    >
+                      {kind === "sameAs" ? "sameAs" : kind === "conflict" ? "twins" : kind ?? "issue"}
+                    </text>
+                  </g>
+                );
+              })}
           </g>
         </svg>
       ) : (
