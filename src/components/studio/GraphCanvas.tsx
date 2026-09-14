@@ -7,6 +7,7 @@ import { nodeLabel, TREE_SUGGESTIONS } from "@/lib/graph/suggestions";
 import { useStudio, type GraphLayout } from "@/store/studio";
 import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
+import { RULES } from "@/data/rules-seed";
 
 type Pt = { x: number; y: number };
 
@@ -21,6 +22,15 @@ const DRAG_PX = 14;
 
 function r2(n: number) {
   return Math.round(n * 100) / 100;
+}
+
+function clip(s: string, n = 140) {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+}
+
+function pagePath(url: string) {
+  return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
 function shortPageLabel(n: GraphNode) {
@@ -545,6 +555,46 @@ export function GraphCanvas() {
       </div>
       <div className="relative min-h-0 flex-1">
       <GraphClickNote />
+      {graph.nodes.some((n) => n.kind === "issue") ? (
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap gap-2">
+          {graph.nodes
+            .filter((n) => n.kind === "issue" && n.issueId)
+            .map((n) => {
+              const rule = RULES.find((r) => r.code === n.issueId);
+              if (!rule) return null;
+              const cite = rule.citations[0];
+              const page = pagePath(cite?.url ?? rule.urls[0] ?? "");
+              const section = cite?.location ?? "graph";
+              const on = n.id === selectedNodeId;
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  className={`pointer-events-auto w-[min(100%,22rem)] rounded-lg bg-surface p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
+                  onClick={() => {
+                    selectNode(n.id);
+                    if (n.issueId) selectIssue(n.issueId);
+                    setGraphInspectorOpen(true);
+                  }}
+                >
+                  <p className="text-[10px] uppercase tracking-wide text-subtle">
+                    {rule.code} · {section}
+                  </p>
+                  <p className="truncate font-mono text-[11px] text-muted">{page}</p>
+                  <p className="mt-1 text-sm text-fg">{rule.title}</p>
+                  <p className="mt-1 text-[11px] text-muted">
+                    <span className="text-subtle">Why </span>
+                    {clip(rule.reason)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted">
+                    <span className="text-subtle">Fix </span>
+                    {clip(rule.fix)}
+                  </p>
+                </button>
+              );
+            })}
+        </div>
+      ) : null}
       {ready ? (
         <svg
           ref={svgRef}
@@ -885,6 +935,7 @@ export function GraphCanvas() {
                     <circle
                       r={r}
                       fill={fill}
+                      opacity={explode && n.kind === "page" ? 0.42 : 1}
                       stroke={on && n.kind === "page" ? "none" : nodeStroke(n)}
                       strokeWidth={on ? (n.kind === "page" ? 0 : 2.2) : n.kind === "brand" || n.kind === "parent" ? 2 : 1.4}
                     />
