@@ -137,7 +137,7 @@ export function Studio() {
     try {
       if (seedFamily) {
         const res = await recrawl();
-        setCrawlMsg(`Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve} · Bills ${res.counts.bills ?? 0}`);
+        setCrawlMsg(`Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve} · Bills ${crawl.counts.bills ?? 0}`);
       } else {
         const brands = allBrands.filter((b) => b.parentId === parentId && b.website);
         for (const b of brands) await retrieveBrand({ data: { id: b.id } });
