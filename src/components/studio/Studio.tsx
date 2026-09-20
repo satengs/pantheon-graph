@@ -137,7 +137,7 @@ export function Studio() {
     try {
       if (seedFamily) {
         const res = await recrawl();
-        setCrawlMsg(`Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve}`);
+        setCrawlMsg(`Live crawl ${res.crawledAt.slice(0, 19)} · FDR ${res.counts.fdr} · Achieve ${res.counts.achieve} · Bills ${res.counts.bills ?? 0}`);
       } else {
         const brands = allBrands.filter((b) => b.parentId === parentId && b.website);
         for (const b of brands) await retrieveBrand({ data: { id: b.id } });
@@ -247,7 +247,7 @@ export function Studio() {
         <div className="ml-auto g-cluster" role="group" aria-label="Family actions">
           {seedFamily ? (
             <span className="vh-whisper font-mono tabular-nums">
-              FDR {crawl.counts.fdr.toLocaleString()} · Achieve {crawl.counts.achieve.toLocaleString()}
+              FDR {crawl.counts.fdr.toLocaleString()} · Achieve {crawl.counts.achieve.toLocaleString()} · Bills {(crawl.counts.bills ?? 0).toLocaleString()}
             </span>
           ) : (
             <span className="vh-whisper font-mono tabular-nums">{familyPages.toLocaleString()} pages</span>

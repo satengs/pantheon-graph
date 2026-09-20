@@ -392,7 +392,7 @@ export function GraphCanvas() {
     if (!cur || cur.kind !== "node" || !cur.id) return;
     const s = clientToSvg(e as RE<SVGSVGElement>);
     const distPx = Math.hypot(e.clientX - cur.cx, e.clientY - cur.cy);
-    const moved = cur.moved || distPx > 8;
+    const moved = cur.moved || distPx > 4;
     if (!moved) return;
     if (captureEl && "setPointerCapture" in captureEl) {
       try {
@@ -636,7 +636,7 @@ export function GraphCanvas() {
           onPointerUp={(e) => {
             const cur = dragRef.current;
             if (cur?.kind === "node" && cur.moved) {
-              window.localStorage.setItem("origin.graphOffsets", JSON.stringify(offsets));
+              window.localStorage.setItem("origin.graphOffsets", JSON.stringify(offsetsRef.current));
             }
             if (cur?.kind === "node" && cur.id && !cur.moved) {
               /* single click selects via pointerdown; double-click on the node expands */
@@ -685,8 +685,9 @@ export function GraphCanvas() {
                       ev.stopPropagation();
                       const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                       const group = clusterIds(hub.id);
+                      const snap = offsetsRef.current;
                       const origins: Record<string, Pt> = {};
-                      for (const id of group) origins[id] = offsets[id] ?? { x: 0, y: 0 };
+                      for (const id of group) origins[id] = snap[id] ?? { x: 0, y: 0 };
                       const o = origins[hub.id] ?? { x: 0, y: 0 };
                       const gesture = {
                         kind: "node" as const,
@@ -703,6 +704,11 @@ export function GraphCanvas() {
                       };
                       dragRef.current = gesture;
                       setDrag(gesture);
+                      try {
+                        svgRef.current?.setPointerCapture(ev.pointerId);
+                      } catch {
+                        /* capture unavailable */
+                      }
                       if (ev.button === 0) selectNode(hub.id);
                     }}
                     onPointerMove={(ev) => {
@@ -844,18 +850,19 @@ export function GraphCanvas() {
                   className="cursor-grab"
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
-                    const s = clientToSvg(ev as unknown as RE<SVGSVGElement>);
-                    const o = offsets[n.id] ?? { x: 0, y: 0 };
+                    const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
+                    const snap = offsetsRef.current;
+                    const o = snap[n.id] ?? { x: 0, y: 0 };
                     const group = clusterIds(n.id);
                     const origins: Record<string, Pt> = {};
-                    for (const id of group) origins[id] = offsets[id] ?? { x: 0, y: 0 };
+                    for (const id of group) origins[id] = snap[id] ?? { x: 0, y: 0 };
                     const gesture = {
                       kind: "node" as const,
                       id: n.id,
                       group,
                       origins,
-                      x: s.x,
-                      y: s.y,
+                      x: spt.x,
+                      y: spt.y,
                       cx: ev.clientX,
                       cy: ev.clientY,
                       ox: o.x,
@@ -864,6 +871,11 @@ export function GraphCanvas() {
                     };
                     dragRef.current = gesture;
                     setDrag(gesture);
+                    try {
+                      svgRef.current?.setPointerCapture(ev.pointerId);
+                    } catch {
+                      /* capture unavailable */
+                    }
                     if (ev.button === 0) {
                       selectNode(n.id);
                       if (n.issueId) selectIssue(n.issueId);
