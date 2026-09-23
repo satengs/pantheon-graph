@@ -278,11 +278,15 @@ export function Backlog() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
-        <p className="vh-whisper px-3 pb-2">Page, then section, then the problem. One selected.</p>
+        <p className="vh-whisper px-3 pb-1">Page, then section, then the problem. One selected.</p>
+        <p className="px-3 pb-2 text-[11px] text-muted">
+          <span className="font-medium text-fg">S = Structure</span>
+          <span className="text-subtle"> (family graph / ownership checks)</span>
+        </p>
         <VirtualList
           className="min-h-0 flex-1 overflow-auto"
           items={categories}
-          rowHeight={88}
+          rowHeight={104}
           getKey={(c) => c.code}
           selectedIndex={categories.findIndex((c) => c.code === selectedIssueId || RULES.find((r) => r.code === c.code)?.id === selectedIssueId)}
           rowWrapper={(c) => {
@@ -297,6 +301,8 @@ export function Backlog() {
           renderRow={(c) => {
             const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             const page = c.pages[0];
+            const recCat = recCategoryForCode(c.code);
+            const catLabel = recCat ? CATEGORIES[recCat].label : null;
             return (
               <IssueRow
                 selected={on}
@@ -307,6 +313,7 @@ export function Backlog() {
                   hoverIssue(c.code);
                   openIssueDrawer({ issueId: rule?.id ?? c.code, pageUrl: page?.url ?? null });
                 }}
+                categoryLabel={catLabel}
                 row={{
                   id: c.code,
                   code: c.code,
