@@ -245,12 +245,14 @@ export function IssueRow({
   onOpen,
   onHover,
   leading,
+  categoryLabel,
 }: {
   row: IssueListRow;
   selected?: boolean;
   onOpen: () => void;
   onHover?: (on: boolean) => void;
   leading?: ReactNode;
+  categoryLabel?: string | null;
 }) {
   const ink = "#1c1814";
   return (
@@ -292,7 +294,11 @@ export function IssueRow({
         title={row.impact || "impact"}
       />
       <div className="min-w-0 flex-1">
-        <p className={`truncate font-mono text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
+        <p className={`truncate font-mono text-[11px] ${selected ? "" : "text-fg"}`} style={selected ? { color: ink } : undefined}>
+          {row.code}
+          {categoryLabel ? <span className={selected ? "" : "text-muted"}> · {categoryLabel}</span> : null}
+        </p>
+        <p className={`mt-0.5 truncate font-mono text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
           <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Page </span>
           {row.pagePath}
         </p>

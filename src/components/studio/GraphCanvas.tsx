@@ -24,11 +24,6 @@ function r2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-function clip(s: string, n = 140) {
-  const t = s.replace(/\s+/g, " ").trim();
-  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
-}
-
 function pagePath(url: string) {
   return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
@@ -245,7 +240,8 @@ export function GraphCanvas() {
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
   const selectNode = useStudio((s) => s.selectNode);
   const setGraphInspectorOpen = useStudio((s) => s.setGraphInspectorOpen);
-  const selectIssue = useStudio((s) => s.selectIssue);
+  const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const setTab = useStudio((s) => s.setTab);
   const graphLayout = useStudio((s) => s.graphLayout);
   const setGraphLayout = useStudio((s) => s.setGraphLayout);
   const maximized = useStudio((s) => s.maximized);
@@ -482,8 +478,10 @@ export function GraphCanvas() {
       return;
     }
     pushGraphFocus(n.id);
-    if (n.issueId) selectIssue(n.issueId);
-    else selectNode(n.id);
+    if (n.issueId) {
+      openIssueDrawer({ issueId: n.issueId });
+      setTab("issues");
+    } else selectNode(n.id);
   }
 
   const lastFocus = graphFocusStack[graphFocusStack.length - 1];
@@ -568,11 +566,13 @@ export function GraphCanvas() {
                 <button
                   key={n.id}
                   type="button"
-                  className={`w-full rounded-lg bg-surface p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
+                  className={`flex w-full flex-col rounded-lg bg-surface p-2.5 text-left shadow-[var(--shadow-border)] ${on ? "ring-1 ring-accent" : ""}`}
                   onClick={() => {
                     selectNode(n.id);
-                    if (n.issueId) selectIssue(n.issueId);
-                    setGraphInspectorOpen(true);
+                    if (n.issueId) {
+                      openIssueDrawer({ issueId: n.issueId });
+                      setTab("issues");
+                    }
                   }}
                 >
                   <p className="text-[10px] uppercase tracking-wide text-subtle">
@@ -580,14 +580,16 @@ export function GraphCanvas() {
                   </p>
                   <p className="truncate font-mono text-[11px] text-muted">{page}</p>
                   <p className="mt-1 text-sm text-fg">{rule.title}</p>
-                  <p className="mt-1 text-[11px] text-muted">
-                    <span className="text-subtle">Why </span>
-                    {clip(rule.reason)}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted">
-                    <span className="text-subtle">Fix </span>
-                    {clip(rule.fix)}
-                  </p>
+                  <div className="mt-1 max-h-28 space-y-0.5 overflow-y-auto text-[11px] text-muted">
+                    <p>
+                      <span className="text-subtle">Why </span>
+                      {rule.reason}
+                    </p>
+                    <p>
+                      <span className="text-subtle">Fix </span>
+                      {rule.fix}
+                    </p>
+                  </div>
                 </button>
               );
             })}
@@ -757,7 +759,10 @@ export function GraphCanvas() {
                   className="cursor-pointer"
                   onClick={(ev) => {
                     ev.stopPropagation();
-                    if (e.issueId) selectIssue(e.issueId);
+                    if (e.issueId) {
+                      openIssueDrawer({ issueId: e.issueId });
+                      setTab("issues");
+                    }
                   }}
                   onPointerEnter={() => setHoverEdgeId(e.id)}
                   onPointerLeave={() => setHoverEdgeId((id) => (id === e.id ? null : id))}
@@ -878,7 +883,10 @@ export function GraphCanvas() {
                     }
                     if (ev.button === 0) {
                       selectNode(n.id);
-                      if (n.issueId) selectIssue(n.issueId);
+                      if (n.issueId) {
+                        openIssueDrawer({ issueId: n.issueId });
+                        setTab("issues");
+                      }
                     }
                   }}
                   onPointerMove={(ev) => {
@@ -904,8 +912,12 @@ export function GraphCanvas() {
                     ev.preventDefault();
                     ev.stopPropagation();
                     selectNode(n.id);
-                    if (n.issueId) selectIssue(n.issueId);
-                    setGraphInspectorOpen(true);
+                    if (n.issueId) {
+                      openIssueDrawer({ issueId: n.issueId });
+                      setTab("issues");
+                    } else {
+                      setGraphInspectorOpen(true);
+                    }
                   }}
                   onDoubleClick={(ev) => {
                     ev.stopPropagation();
@@ -1006,7 +1018,10 @@ export function GraphCanvas() {
                       ev.stopPropagation();
                       if (ev.button === 0) {
                         selectNode(n.id);
-                        if (n.issueId) selectIssue(n.issueId);
+                        if (n.issueId) {
+                          openIssueDrawer({ issueId: n.issueId });
+                          setTab("issues");
+                        }
                       }
                     }}
                     onClick={(ev) => ev.stopPropagation()}
@@ -1014,8 +1029,10 @@ export function GraphCanvas() {
                       ev.preventDefault();
                       ev.stopPropagation();
                       selectNode(n.id);
-                      if (n.issueId) selectIssue(n.issueId);
-                      setGraphInspectorOpen(true);
+                      if (n.issueId) {
+                        openIssueDrawer({ issueId: n.issueId });
+                        setTab("issues");
+                      }
                     }}
                   >
                     <circle r={r + 8} fill="var(--color-bg)" stroke={stroke} strokeWidth={2.4} />
