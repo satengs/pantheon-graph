@@ -151,21 +151,71 @@ function nearSlug(a, b) {
   return i >= 10 && Math.abs(a.length - b.length) <= 8;
 }
 
+/** Live status per URL (no redirect follow). Sitemaps can list URLs that 301 away. */
+async function statusOf(url) {
+  for (const method of ["HEAD", "GET"]) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 20_000);
+    try {
+      const res = await fetch(url, { method, headers: { "user-agent": UA }, redirect: "manual", signal: ctrl.signal });
+      await res.body?.cancel().catch(() => {});
+      if (method === "HEAD" && (res.status === 405 || res.status === 403)) continue;
+      return { status: res.status, to: res.headers.get("location") || "" };
+    } catch {
+      if (method === "GET") return { status: 0, to: "" };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+  return { status: 0, to: "" };
+}
+
+async function statusAll(urls, conc = 12) {
+  const out = new Map();
+  let i = 0;
+  await Promise.all(
+    Array.from({ length: conc }, async () => {
+      while (i < urls.length) {
+        const u = urls[i++];
+        out.set(u, await statusOf(u));
+      }
+    }),
+  );
+  return out;
+}
+
 async function main() {
   const crawledAt = new Date().toISOString();
   const byBrand = {};
   const errors = [];
+  const redirected = [];
 
   for (const [brand, seed] of Object.entries(SOURCES)) {
     console.log(`Crawling ${brand} from ${seed}…`);
     const urls = await collectUrls(seed, brand);
+    if (!urls.length) throw new Error(`${brand}: sitemap returned 0 URLs — refusing to overwrite crawl.json`);
     const host = HOSTS[brand];
     const pages = [];
     const seenPath = new Set();
+    const uniq = [];
     for (const url of urls) {
       const path = pathOf(url, host);
-      if (path == null) continue;
-      if (seenPath.has(path)) continue;
+      if (path == null || seenPath.has(path)) continue;
+      seenPath.add(path);
+      uniq.push({ url, path });
+    }
+    const st = await statusAll(uniq.map((u) => u.url));
+    seenPath.clear();
+    for (const { url, path } of uniq) {
+      const s = st.get(url) || { status: 0, to: "" };
+      if (s.status >= 300 && s.status < 400) {
+        redirected.push({ b: brand, path, status: s.status, to: new URL(s.to, url).href });
+        continue;
+      }
+      if (s.status === 404 || s.status === 410) {
+        redirected.push({ b: brand, path, status: s.status, to: "" });
+        continue;
+      }
       seenPath.add(path);
       const p = classifyProduct(path);
       const k = classifyKind(path, p);
@@ -177,7 +227,7 @@ async function main() {
     }
     pages.sort((a, b) => a.path.localeCompare(b.path));
     byBrand[brand] = pages;
-    console.log(`  ${brand}: ${pages.length} pages (${urls.length} locs raw)`);
+    console.log(`  ${brand}: ${pages.length} live pages (${urls.length} locs raw, ${redirected.filter((r) => r.b === brand).length} redirect/404 dropped)`);
   }
 
   const pages = [...byBrand.fdr, ...byBrand.achieve, ...byBrand.bills];
@@ -235,6 +285,7 @@ async function main() {
     pages,
     glossaryOverlap,
     glossaryNear: glossaryNear.slice(0, 40),
+    redirected,
   };
 
   const json = JSON.stringify(snapshot);

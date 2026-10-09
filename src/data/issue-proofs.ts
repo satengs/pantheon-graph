@@ -6,9 +6,17 @@ export type ProofRow = {
   extra: string;
 };
 
+export type ProofPair = { query: string; fdr: string; achieve: string };
+
 export type IssueProofView = {
   conflict: string;
   rows: ProofRow[];
+  /** Head-to-head FDR vs Achieve URLs competing for the same query. */
+  pairs?: ProofPair[];
+  /** Specific leftover items: one URL, what's wrong, the fix, who owns it. */
+  residual?: Array<{ url: string; problem: string; fix: string; owner: string }>;
+  /** Show crawl.redirected entries for this brand whose path contains this text. */
+  redirected?: { brand: "fdr" | "achieve"; pathIncludes: string };
 };
 
 export const ISSUE_PROOFS: Record<string, IssueProofView> = {
@@ -268,7 +276,8 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
     ],
   },
   S22: {
-    conflict: "Last crawl: both sitemaps include /debt-relief as a product URL.",
+    conflict:
+      "Resolved 2026-10-09: Achieve /debt-relief and its subpages 301 to FDR, and /learn/debt-relief 301s to FDR /l/debt-relief/. Leftovers are listed under S24.",
     rows: [
       {
         brand: "fdr",
@@ -306,7 +315,35 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
     ],
   },
   S24: {
-    conflict: "Last crawl: Achieve has /debt-relief plus press URLs tagged debt-relief/settlement.",
+    conflict:
+      "Head term resolved. What's left: 4 specific cleanup items, 17 Achieve /learn/debt-basics/ articles still targeting FDR's debt-relief queries, and the URLs already fixed by redirect.",
+    residual: [
+      { url: "https://www.achieve.com/sitemap-video.xml", problem: "Lists 17 /debt-relief* URLs (10× /debt-relief plus 7 subpage entries) that now 301 to FDR.", fix: "Remove them from the video sitemap.", owner: "Achieve public site" },
+      { url: "https://www.achieve.com/sitemap-general.xml", problem: "Still lists /learn/debt-relief, 8 old /learn/debt-relief/* articles and /debt-relief, which all redirect.", fix: "List only final 200 URLs.", owner: "Achieve public site" },
+      { url: "https://www.achieve.com/debt-relief/debt-relief-faq", problem: "Returns 404 (the other subpages 301 to FDR).", fix: "301 to https://www.freedomdebtrelief.com/faq/ or remove links to it.", owner: "Achieve public site" },
+      { url: "https://www.freedomdebtrelief.com/l/debt-relief/", problem: "Is the target of Achieve’s /learn/debt-relief 301 but isn’t in any FDR sitemap.", fix: "Add it to FDR’s sitemap, or point the 301 at FDR /debt-relief/.", owner: "FDR public site" },
+    ],
+    redirected: { brand: "achieve", pathIncludes: "debt-relief" },
+    pairs: [
+      { query: "what is debt relief", fdr: "https://www.freedomdebtrelief.com/debt-relief/", achieve: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief" },
+      { query: "what is debt relief (video)", fdr: "https://www.freedomdebtrelief.com/debt-relief/", achieve: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief-video" },
+      { query: "how does debt relief work", fdr: "https://www.freedomdebtrelief.com/debt-relief/how-debt-relief-programs-work/", achieve: "https://www.achieve.com/learn/debt-basics/how-does-debt-relief-work" },
+      { query: "debt relief program", fdr: "https://www.freedomdebtrelief.com/debt-relief-program/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-program" },
+      { query: "is debt relief legit", fdr: "https://www.freedomdebtrelief.com/debt-relief/is-debt-relief-legit/", achieve: "https://www.achieve.com/learn/debt-basics/is-debt-relief-legit" },
+      { query: "is debt relief a good idea", fdr: "https://www.freedomdebtrelief.com/learn/debt-relief/is-a-debt-relief-program-a-good-idea/", achieve: "https://www.achieve.com/learn/debt-basics/is-debt-relief-a-good-idea" },
+      { query: "debt relief vs bankruptcy", fdr: "https://www.freedomdebtrelief.com/debt-solutions/debt-relief-vs-bankruptcy/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-vs-bankruptcy" },
+      { query: "bankruptcy or debt relief", fdr: "https://www.freedomdebtrelief.com/debt-solutions/debt-relief-vs-bankruptcy/", achieve: "https://www.achieve.com/learn/debt-basics/bankruptcy-or-debt-relief-7-questions-to-help-you-decide" },
+      { query: "debt relief vs consolidation", fdr: "https://www.freedomdebtrelief.com/learn/debt-solutions/debt-settlement-vs-debt-consolidation/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-vs-debt-consolidation-comparison" },
+      { query: "debt relief vs debt management plan", fdr: "https://www.freedomdebtrelief.com/learn/debt-solutions/how-do-debt-management-plans-work/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-vs-debt-management-plan" },
+      { query: "debt relief pros and cons", fdr: "https://www.freedomdebtrelief.com/debt-solutions/debt-settlement-pros-and-cons/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-pros-and-cons" },
+      { query: "debt relief myths", fdr: "https://www.freedomdebtrelief.com/learn/debt-relief/debt-relief-myths-realities/", achieve: "https://www.achieve.com/learn/debt-basics/6-common-debt-relief-myths-busted" },
+      { query: "medical bills and debt relief", fdr: "https://www.freedomdebtrelief.com/debt-relief/medical-debt-relief/", achieve: "https://www.achieve.com/learn/debt-basics/can-medical-bills-be-cleared-through-debt-relief" },
+      { query: "tax on forgiven debt", fdr: "https://www.freedomdebtrelief.com/learn/debt-solutions/debt-settlement-taxes/", achieve: "https://www.achieve.com/learn/debt-basics/tax-on-debt-relief" },
+      { query: "debt relief lawyer", fdr: "https://www.freedomdebtrelief.com/learn/credit-card-debt/credit-card-debt-lawyer/", achieve: "https://www.achieve.com/learn/debt-basics/debt-relief-lawyer" },
+      { query: "sued while in a debt relief program", fdr: "https://www.freedomdebtrelief.com/learn/credit-card-debt/sued-for-credit-card-debt/", achieve: "https://www.achieve.com/learn/debt-basics/can-debt-collectors-sue-you-while-you-are-in-a-debt-relief-program" },
+      { query: "hardships that qualify for debt relief", fdr: "https://www.freedomdebtrelief.com/glossary/f/financial-hardship/", achieve: "https://www.achieve.com/learn/debt-basics/financial-hardships-that-qualify-for-debt-relief" },
+    ],
+
     rows: [
       {
         brand: "achieve",

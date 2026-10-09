@@ -43,6 +43,8 @@ export type CrawlSnapshot = {
     fdr: string;
     achieve: string;
   }>;
+  /** Sitemap URLs that 3xx/404 on live — not counted as pages. */
+  redirected?: Array<{ b: string; path: string; status: number; to: string }>;
 };
 
 export type Citation = {
