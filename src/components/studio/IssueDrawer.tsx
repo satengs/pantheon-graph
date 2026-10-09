@@ -229,7 +229,7 @@ function ProofPairs({ code }: { code?: string }) {
           <ol className="mt-2 flex flex-col gap-2">
             {residual.map((x, i) => (
               <li key={x.url} className="rounded-md bg-raised px-3 py-2">
-                <a href={x.url} target="_blank" rel="noreferrer" className="block truncate font-mono text-[11px] text-fg hover:underline">
+                <a href={x.url} target="_blank" rel="noreferrer" className="block break-all font-mono text-[11px] text-fg hover:underline">
                   {i + 1}. {short(x.url)}
                 </a>
                 <p className="mt-1 text-xs text-fg text-pretty">{x.problem}</p>
@@ -250,10 +250,10 @@ function ProofPairs({ code }: { code?: string }) {
                 <p className="text-xs font-medium text-fg">
                   {i + 1}. {p.query}
                 </p>
-                <a href={p.fdr} target="_blank" rel="noreferrer" className="mt-1 block truncate font-mono text-[11px] text-muted hover:underline">
+                <a href={p.fdr} target="_blank" rel="noreferrer" className="mt-1 block break-all font-mono text-[11px] text-muted hover:underline">
                   FDR · {short(p.fdr)}
                 </a>
-                <a href={p.achieve} target="_blank" rel="noreferrer" className="block truncate font-mono text-[11px] text-muted hover:underline">
+                <a href={p.achieve} target="_blank" rel="noreferrer" className="block break-all font-mono text-[11px] text-muted hover:underline">
                   Achieve · {short(p.achieve)}
                 </a>
               </li>
@@ -263,7 +263,9 @@ function ProofPairs({ code }: { code?: string }) {
       ) : null}
       {redirected.length ? (
         <section>
-          <p className="vh-kicker">Resolved by redirect · {redirected.length} not counted as conflicts</p>
+          <p className="vh-kicker">
+            Resolved by redirect · {redirected.length} debt-relief URLs (of {(crawl.redirected ?? []).filter((x) => x.b === r?.brand).length} {r?.brand === "fdr" ? "FDR" : "Achieve"} redirects/404s), not counted as conflicts
+          </p>
           <ul className="mt-2 flex flex-col gap-1">
             {redirected.map((x) => (
               <li key={x.path} className="font-mono text-[11px] text-muted">

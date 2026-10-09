@@ -277,6 +277,22 @@ export function GraphCanvas() {
   const [zoom, setZoom] = useState(1);
   const lastExpand = useRef(0);
   const dragRef = useRef<typeof drag>(null);
+  useEffect(() => {
+    // No blue text selection while dragging a group or panning.
+    const svg = svgRef.current;
+    if (!svg) return;
+    const on = () => document.body.classList.add("select-none");
+    const off = () => document.body.classList.remove("select-none");
+    svg.addEventListener("pointerdown", on);
+    window.addEventListener("pointerup", off);
+    window.addEventListener("pointercancel", off);
+    return () => {
+      svg.removeEventListener("pointerdown", on);
+      window.removeEventListener("pointerup", off);
+      window.removeEventListener("pointercancel", off);
+      off();
+    };
+  }, [ready]);
   const offsetsRef = useRef(offsets);
   offsetsRef.current = offsets;
 
@@ -602,7 +618,7 @@ export function GraphCanvas() {
           ref={svgRef}
           viewBox={`${r2(vb.x + (vb.w - vb.w / zoom) / 2)} ${r2(vb.y + (vb.h - vb.h / zoom) / 2)} ${r2(vb.w / zoom)} ${r2(vb.h / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
-          className="absolute inset-0 h-full w-full touch-none bg-bg"
+          className="absolute inset-0 h-full w-full touch-none select-none bg-bg"
           onWheel={(e) => {
             e.preventDefault();
             const dir = e.deltaY > 0 ? 1 / 1.12 : 1.12;
