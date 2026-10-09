@@ -96,7 +96,7 @@ export function Studio() {
   const [draft, setDraft] = useState("");
   const [notesOpen, setNotesOpen] = useState(false);
   const showFilters = tab === "issues" || tab === "validation" || tab === "graph" || tab === "states" || tab === "gate";
-  const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).filter((i) =>
+  const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes.length ? attachedRuleCodes : undefined }).filter((i) =>
     issueFitsFamily(i, graphOrg, parentSlug),
   );
   const openCount = visibleIssues.filter((i) => i.status === "open").length;
@@ -104,11 +104,22 @@ export function Studio() {
   const productOptions = productsForFamily(graphOrg?.brands ?? [], brand);
 
   useEffect(() => {
-    void listOrgs()
-      .then((d) => applyFamilyContext(familyContextFrom(d)))
-      .catch(() => {
-        /* seed graph still works */
-      });
+    // Load the family (and its rule codes) on mount whatever tab opens first; retry a cold server.
+    let cancelled = false;
+    let tries = 0;
+    const load = () => {
+      void listOrgs()
+        .then((d) => {
+          if (!cancelled) applyFamilyContext(familyContextFrom(d));
+        })
+        .catch(() => {
+          if (!cancelled && ++tries < 5) setTimeout(load, 700 * tries);
+        });
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [applyFamilyContext]);
 
   const firstIssueCode = visibleIssues[0]?.code ?? null;

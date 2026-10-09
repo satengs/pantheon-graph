@@ -89,7 +89,7 @@ export function Backlog() {
 
   const visibleRules = useMemo(
     () =>
-      filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes }).filter((r) =>
+      filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes.length ? attachedRuleCodes : undefined }).filter((r) =>
         issueFitsFamily(r, graphOrg, parentSlug),
       ),
     [brand, product, layer, impact, query, attachedRuleCodes, graphOrg, parentSlug],

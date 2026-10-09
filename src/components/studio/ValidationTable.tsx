@@ -44,7 +44,7 @@ export function ValidationTable() {
   const seedFamily = isSeedFamily(graphOrg, parentSlug);
   const metrics = crawlMetrics(crawl);
 
-  const rows = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes })
+  const rows = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes.length ? attachedRuleCodes : undefined })
     .filter((r) => issueFitsFamily(r, graphOrg, parentSlug))
     .slice()
     .sort((a, b) => {

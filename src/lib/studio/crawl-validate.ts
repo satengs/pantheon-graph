@@ -87,17 +87,21 @@ export function validateCrawl(crawl: CrawlSnapshot): HtmlFinding[] {
     );
   }
 
-  const achRelief = crawl.pages.filter((p) => p.b === "achieve" && (p.p === "debt-relief" || p.p === "settlement"));
-  if (achRelief.length) {
-    const lines = achRelief.slice(0, 12).map((p) => `${p.p} ${p.k}  ${BRAND_HOST.achieve}${p.path}`);
+  const drRedirected = (crawl.redirected ?? []).filter((r) => r.b === "achieve" && r.path.includes("debt-relief"));
+  const drBasics = crawl.pages.filter((p) => p.b === "achieve" && p.path.startsWith("/learn/debt-basics/") && p.path.includes("debt-relief"));
+  if (drRedirected.length || drBasics.length) {
+    const lines = [
+      ...drRedirected.map((r) => `${r.status} ${BRAND_HOST.achieve}${r.path} -> ${r.to || "gone"}`),
+      ...drBasics.slice(0, 12).map((p) => `200 ${BRAND_HOST.achieve}${p.path}`),
+    ];
     out.push(
       finding(
         "S24",
-        `Achieve sitemap lists ${achRelief.length} debt-relief/settlement URLs`,
-        `${BRAND_HOST.achieve}/debt-relief`,
-        "Last crawl. Achieve should not own the relief product node. Press URLs plus /debt-relief compete with FDR.",
+        `${drRedirected.length} redirected debt-relief URLs still in Achieve sitemaps; ${drBasics.length} articles still compete with FDR`,
+        `${BRAND_HOST.achieve}/learn/debt-basics/what-is-debt-relief`,
+        "Sitemaps advertise dead URLs, and twin articles split the debt-relief head term.",
         lines.join("\n"),
-        "Keep press as NewsArticle. Product /debt-relief on Achieve must not be a Service node; canonical to FDR or a relationship page.",
+        "Drop redirected and 404 URLs from Achieve sitemaps. Give each debt-relief query one owner: canonical or 301 the Achieve article to its FDR twin, or retarget it.",
         "achieve",
       ),
     );

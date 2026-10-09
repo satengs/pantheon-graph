@@ -168,6 +168,8 @@ export const SEED_BRAND_SLUGS = new Set<string>(SEED_BRANDS.map((b) => b.slug));
 
 export function isSeedFamily(org: GraphOrg | null | undefined, parentSlug?: string): boolean {
   if (parentSlug === SEED_PARENT.slug) return true;
+  // Family not loaded yet (fresh load straight into Issues): the default family is the seed family.
+  if (!org && !parentSlug) return true;
   return Boolean(org?.brands.some((b) => SEED_BRAND_SLUGS.has(b.slug)));
 }
 
