@@ -372,10 +372,10 @@ export const ISSUES: BacklogItem[] = [
     domain: "both",
     product: "debt-relief",
     reason:
-      "Review stars on Achieve debt-relief templates bind to Freedom Debt Relief (or the reverse). Ratings then attach to the wrong Organization.",
+      "Achieve /debt-relief now 301s to FDR (verified 2026-10-09), so no Achieve debt-relief template can bind FDR’s review stars any more.",
     fix: "AggregateRating.itemReviewed must equal the page's brand @id. Cross-brand reviews are allowed only on the relationship page.",
     impact: "high",
-    status: "open",
+    status: "pass",
     urls: [
       "https://www.freedomdebtrelief.com/debt-relief/",
       "https://www.achieve.com/debt-relief",
@@ -418,15 +418,15 @@ export const ISSUES: BacklogItem[] = [
   {
     id: "S22",
     code: "S22",
-    title: "Both brands index /debt-relief as a product",
+    title: "Resolved: Achieve /debt-relief now 301s to FDR",
     layer: "L2",
     domain: "both",
     product: "debt-relief",
     reason:
-      "Both brands sell debt relief. Google AI Overview still keeps one “Debt Relief Services” hub — Achieve’s product is folded into FDR as an affiliate, not a second Service.",
-    fix: "Do not 301 Achieve /debt-relief to FDR. Two Service nodes, two Organization @ids. Corporate affiliate lives on about, not on the product URL.",
+      "Verified 2026-10-09: achieve.com/debt-relief 301s to the FDR homepage, its subpages 301 to FDR /how-it-works/, /who-we-help/, /why-were-better/ and /faq/, and /learn/debt-relief 301s to FDR /l/debt-relief/. FDR is the only brand indexing the debt-relief head term.",
+    fix: "Done. Leftover cleanup (sitemaps, the FAQ 404, debt-basics articles) is tracked under S24.",
     impact: "critical",
-    status: "open",
+    status: "pass",
     urls: [
       "https://www.freedomdebtrelief.com/debt-relief/",
       "https://www.achieve.com/debt-relief",
@@ -479,14 +479,14 @@ export const ISSUES: BacklogItem[] = [
   {
     id: "S24",
     code: "S24",
-    title: "Achieve sitemap lists debt-relief product URLs",
+    title: "Debt-relief leftovers after the Achieve 301s",
     layer: "L2",
-    domain: "achieve",
+    domain: "both",
     product: "debt-relief",
     reason:
-      "Last crawl: Achieve /debt-relief plus press URLs tagged debt-relief/settlement. Press as NewsArticle is fine; a second Service node is not.",
-    fix: "Keep press as NewsArticle. Do not mint Service on Achieve /debt-relief. Canonical to FDR or a relationship page.",
-    impact: "high",
+      "The head-term conflict is gone, but Achieve sitemaps still list URLs that now 301 to FDR, one old FAQ URL 404s, 17 /learn/debt-basics/ articles still target the same queries FDR owns, and FDR’s new redirect target /l/debt-relief/ is missing from FDR’s sitemaps.",
+    fix: "Drop redirected and 404 URLs from Achieve sitemap-video.xml and sitemap-general.xml. 301 /debt-relief/debt-relief-faq to FDR /faq/. Decide per debt-basics article: canonical or 301 to the FDR twin, or retarget away from debt-relief queries. Add /l/debt-relief/ to FDR’s sitemap.",
+    impact: "medium",
     status: "open",
     urls: [
       "https://www.achieve.com/debt-relief",

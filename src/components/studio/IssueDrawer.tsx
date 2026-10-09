@@ -117,6 +117,7 @@ export function IssueDrawer() {
                 <p className="text-sm text-muted text-pretty mt-1">{view.why}</p>
               </section>
             </div>
+            <ProofPairs code={issue?.code ?? finding?.code} />
             <IssueDetailBody view={view} />
           </>
         ) : (
@@ -206,6 +207,71 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
 
       {!quotes.length && !rows.length && !primary ? (
         <p className="text-sm text-muted">No captured evidence for this issue yet.</p>
+      ) : null}
+    </div>
+  );
+}
+
+function ProofPairs({ code }: { code?: string }) {
+  const proof = code ? ISSUE_PROOFS[code] : undefined;
+  if (!proof) return null;
+  const pairs = proof.pairs ?? [];
+  const r = proof.redirected;
+  const redirected = r ? (crawl.redirected ?? []).filter((x) => x.b === r.brand && x.path.includes(r.pathIncludes)) : [];
+  const residual = proof.residual ?? [];
+  if (!pairs.length && !redirected.length && !residual.length) return null;
+  const short = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "");
+  return (
+    <div className="mb-5 flex flex-col gap-4">
+      {residual.length ? (
+        <section>
+          <p className="vh-kicker">Left to fix · {residual.length} items</p>
+          <ol className="mt-2 flex flex-col gap-2">
+            {residual.map((x, i) => (
+              <li key={x.url} className="rounded-md bg-raised px-3 py-2">
+                <a href={x.url} target="_blank" rel="noreferrer" className="block truncate font-mono text-[11px] text-fg hover:underline">
+                  {i + 1}. {short(x.url)}
+                </a>
+                <p className="mt-1 text-xs text-fg text-pretty">{x.problem}</p>
+                <p className="mt-1 text-xs text-muted text-pretty">
+                  Fix: {x.fix} · Owner: {x.owner}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+      {pairs.length ? (
+        <section>
+          <p className="vh-kicker">Still competing · {pairs.length} FDR vs Achieve pairs</p>
+          <ol className="mt-2 flex flex-col gap-2">
+            {pairs.map((p, i) => (
+              <li key={p.achieve} className="rounded-md bg-raised px-3 py-2">
+                <p className="text-xs font-medium text-fg">
+                  {i + 1}. {p.query}
+                </p>
+                <a href={p.fdr} target="_blank" rel="noreferrer" className="mt-1 block truncate font-mono text-[11px] text-muted hover:underline">
+                  FDR · {short(p.fdr)}
+                </a>
+                <a href={p.achieve} target="_blank" rel="noreferrer" className="block truncate font-mono text-[11px] text-muted hover:underline">
+                  Achieve · {short(p.achieve)}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+      {redirected.length ? (
+        <section>
+          <p className="vh-kicker">Resolved by redirect · {redirected.length} not counted as conflicts</p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {redirected.map((x) => (
+              <li key={x.path} className="font-mono text-[11px] text-muted">
+                {x.path} → {x.status >= 400 ? x.status : short(x.to)}
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </div>
   );
