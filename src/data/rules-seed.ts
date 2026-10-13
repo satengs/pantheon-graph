@@ -49,7 +49,7 @@ export const RULE_TITLE: Record<string, string> = {
   S21: "JSON-LD exists and matches the page",
   S22: "Sibling brands may both sell a product",
   S23: "Origin does not mint another product type",
-  S24: "Redirected debt-relief URLs still in Achieve sitemaps; 17 articles still compete with FDR",
+  S24: "Indexable Achieve debt-relief learn URLs still compete with FDR; redirected URLs still in sitemaps",
   S25: "Glossary meaning, not automatic 301",
   S26: "Glossary emits DefinedTerm",
   S27: "Complete Article schema",

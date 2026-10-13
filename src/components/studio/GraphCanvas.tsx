@@ -232,6 +232,8 @@ function fitView(pts: Pt[], pad: number) {
   return { x: r2(minX - pad), y: r2(minY - pad), w: r2(w), h: r2(h) };
 }
 
+const NODE_Z: Record<string, number> = { page: 0, glossary: 1, product: 2, brand: 3, parent: 4, issue: 5 };
+
 export function GraphCanvas() {
   const explode = useStudio((s) => s.explode);
   const brand = useStudio((s) => s.brand);
@@ -831,7 +833,10 @@ export function GraphCanvas() {
                 </g>
               );
             })}
-            {graph.nodes.map((n) => {
+            {/* Pages under hubs: hubs, brands and parent paint last so a page or its label never steals their drag. */}
+            {[...graph.nodes]
+              .sort((a, b) => (NODE_Z[a.kind] ?? 0) - (NODE_Z[b.kind] ?? 0))
+              .map((n) => {
               if (n.kind === "issue") return null;
               const p = at(n.id);
               if (!p) return null;
@@ -1001,6 +1006,7 @@ export function GraphCanvas() {
                           y={r + 12}
                           textAnchor="middle"
                           fill="var(--color-fg)"
+                          pointerEvents="none"
                           fontSize={8}
                           fontWeight={600}
                           fontFamily="IBM Plex Sans, sans-serif"
