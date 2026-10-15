@@ -20,17 +20,32 @@ export async function readDemoUser(): Promise<{ id: string; email: string | null
   }
 }
 
-export async function issueDemoCookie(): Promise<void> {
-  const token = await new SignJWT({ name: "admin" })
+const MAX_AGE_SEC = 60 * 60 * 24 * 7;
+
+/** The signed admin session JWT stored in the `origin-demo` cookie. */
+async function createDemoToken(): Promise<string> {
+  return new SignJWT({ name: "admin" })
     .setSubject("admin")
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
     .sign(secret());
-  setCookie(COOKIE, token, {
+}
+
+export async function issueDemoCookie(): Promise<void> {
+  setCookie(COOKIE, await createDemoToken(), {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: MAX_AGE_SEC,
   });
+}
+
+/**
+ * The same session as `issueDemoCookie`, as a Set-Cookie header value — for
+ * server routes that return their own Response (e.g. /api/auth/sso).
+ */
+export async function demoSessionSetCookieHeader(): Promise<string> {
+  const token = await createDemoToken();
+  return `${COOKIE}=${token}; Path=/; Max-Age=${MAX_AGE_SEC}; HttpOnly; Secure; SameSite=Lax`;
 }
