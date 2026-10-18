@@ -21,10 +21,12 @@ export const SEVERITY_LABEL: Record<Severity, string> = {
 /** Letter inside the badge so the marker never relies on colour alone. */
 export const SEVERITY_GLYPH: Record<Severity, string> = { critical: "C", high: "H", medium: "M", low: "L" };
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  critical: "#ff5a52",
-  high: "#ff9a3c",
-  medium: "#f0d24a",
-  low: "#b49cff",
+  // Red, orange, lime, light grey: no pink/magenta/violet, and Medium sits well away
+  // from Achieve gold (#d4b57a) in hue; rings also get a dark outline.
+  critical: "#e5392f",
+  high: "#ff8c1a",
+  medium: "#b8e04a",
+  low: "#dcdcdc",
 };
 
 export function severityRank(s: Severity): number {
@@ -89,6 +91,8 @@ export type SeverityIndex = {
   forBrand: (brand: string) => SevRollup | null;
   forAll: () => SevRollup | null;
   brandEdges: Array<{ a: BrandId; b: BrandId; worst: Severity; issues: SevIssue[] }>;
+  /** hub:<brand>:<product> ids whose hub or pages carry an open rule — they auto-open on load. */
+  issueHubs: string[];
 };
 
 /** Build once per visible rule set (same filterIssues + family filter as the Issues overlay). */
@@ -181,13 +185,36 @@ export function buildSeverityIndex(rules: BacklogItem[]): SeverityIndex {
     return keys;
   };
 
+  const hubSet = new Set<string>();
+  for (const p of crawl.pages) if (byUrl.has(urlKey(pageUrl(p)))) hubSet.add(`hub:${p.b}:${p.p}`);
+  const codes = new Set(rules.map((r) => r.code));
+  for (const t of TREE_SUGGESTIONS) {
+    if (!codes.has(t.code)) continue;
+    for (const id of [t.source, t.target]) if (/^hub:/.test(id)) hubSet.add(id);
+  }
+  const issueHubs = [...hubSet].sort();
+
   return {
+    issueHubs,
     byUrl,
     rollup,
     forPage: (url) => (url ? rollup([urlKey(url)]) : null),
     forHub: (b, p) => rollup(new Set(crawlKeys((pb, pp) => pb === b && pp === p))),
     forBrand: (b) => rollup(brandUrlKeys(b)),
-    forAll: () => rollup(new Set([...crawl.pages.map((p) => urlKey(pageUrl(p))), ...urlOf.keys()])),
+    // Family node = every rule in the set, including ones with no crawl page, so its
+    // count equals the Issues header and Gate (one issue source: issue-source.ts).
+    forAll: () => {
+      const r = rollup(new Set([...crawl.pages.map((p) => urlKey(pageUrl(p))), ...urlOf.keys()]));
+      const have = new Set(r?.issues.map((i) => i.code) ?? []);
+      const extra = rules
+        .filter((x) => !have.has(x.code))
+        .map((x) => ({ code: x.code, title: x.title, impact: x.impact, layer: x.layer, why: x.reason, fix: x.fix, pages: 0 }));
+      if (!r && !extra.length) return null;
+      const issues = [...(r?.issues ?? []), ...extra].sort(
+        (a, b) => severityRank(a.impact) - severityRank(b.impact) || b.pages - a.pages || a.code.localeCompare(b.code),
+      );
+      return { worst: issues[0]!.impact, count: issues.length, pages: r?.pages ?? 0, issues };
+    },
     brandEdges,
   };
 }

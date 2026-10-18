@@ -1,3 +1,4 @@
+import { SevPill } from "@/components/studio/SevTotals";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
@@ -61,7 +62,7 @@ export function IssueDrawer() {
   }, [open, selectedIssueId, selectedFindingId]);
 
   const rawIssue =
-    RULES.find((i) => i.id === selectedIssueId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ??
+    RULES.find((i) => (i.id === selectedIssueId || i.code === selectedIssueId) && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ??
     null;
   const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
   const finding = selectedFindingId ? findings.find((f) => f.id === selectedFindingId) ?? null : null;
@@ -348,7 +349,9 @@ export function IssueRow({
   onHover,
   leading,
   categoryLabel,
+  htmlCheck,
 }: {
+  htmlCheck?: boolean;
   row: IssueListRow;
   selected?: boolean;
   onOpen: () => void;
@@ -362,11 +365,7 @@ export function IssueRow({
       role="button"
       tabIndex={0}
       aria-current={selected ? "true" : undefined}
-      style={
-        selected
-          ? { borderLeft: "3px solid #a89880", background: "#c4b8a4", color: ink }
-          : { borderLeft: "3px solid transparent" }
-      }
+      style={selected ? { background: "#c4b8a4", color: ink } : undefined}
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -377,24 +376,21 @@ export function IssueRow({
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
       className={`flex h-full min-h-0 cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
-        selected
-          ? "border-l-[3px] border-l-[#a89880] bg-[#c4b8a4] py-3"
-          : "border-l-[3px] border-l-transparent py-2 hover:bg-raised/50"
+        selected ? "bg-[#c4b8a4] py-3" : "py-2 hover:bg-raised/50"
       }`}
     >
       {leading}
-      <span
-        className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
-          selected
-            ? "bg-[#3a3530]"
-            : row.impact === "critical"
-              ? "bg-danger"
-              : row.impact === "high"
-                ? "bg-warn"
-                : "bg-subtle"
-        }`}
-        title={row.impact || "impact"}
-      />
+      {htmlCheck ? (
+        <span
+          className="mt-0.5 inline-flex h-4 shrink-0 items-center rounded-[3px] border border-border bg-raised px-1 font-mono text-[9px] text-muted"
+          title="Live HTML check — not a rule, no severity, not in C/H/M/L totals"
+          data-sev-pill="html"
+        >
+          HTML
+        </span>
+      ) : row.impact === "critical" || row.impact === "high" || row.impact === "medium" || row.impact === "low" ? (
+        <SevPill impact={row.impact} className="mt-0.5" />
+      ) : null}
       <div className="min-w-0 flex-1">
         <p className={`truncate font-mono text-[11px] ${selected ? "" : "text-fg"}`} style={selected ? { color: ink } : undefined}>
           {row.code}

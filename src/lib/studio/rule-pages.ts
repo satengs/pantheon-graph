@@ -18,6 +18,9 @@ export type IssueCategory = {
   impact: string;
   layer: string;
   pages: CategoryPage[];
+  /** "rule" = an open Pantheon rule (has a severity, counts in C/H/M/L);
+   *  "html" = a live-HTML check from the server run (no severity, separate group). */
+  source: "rule" | "html";
 };
 
 export type FindingHit = {
@@ -129,23 +132,39 @@ export function htmlCategories(findings: FindingHit[], used: Set<string>): Issue
     code,
     title: HTML_TITLE[code] ?? code,
     statement: pages[0]?.note || "HTML finding on these pages.",
-    impact: "high",
+    impact: "",
     layer: "L1",
     pages,
+    source: "html" as const,
   }));
 }
 
-export function issueCategories(findings: FindingHit[], rules: BacklogItem[] = RULES): IssueCategory[] {
+/**
+ * Every open rule is listed, even with no page hit yet (it still counts in the
+ * C/H/M/L totals, so dropping it made Issues disagree with the graph and Gate —
+ * S31/S32). `ruleFindings` adds page evidence for rules only (the crawl-derived
+ * findings the graph uses); live-HTML categories come from `findings` alone.
+ */
+export function issueCategories(
+  findings: FindingHit[],
+  rules: BacklogItem[] = RULES,
+  ruleFindings: FindingHit[] = [],
+): IssueCategory[] {
   const open = rules.filter((r) => isOpenIssue(r.status));
   const used = new Set(open.map((r) => r.code));
+  const all = ruleFindings.length ? [...findings, ...ruleFindings] : findings;
   const cats: IssueCategory[] = open.map((r) => ({
     code: r.code,
     title: RULE_TITLE[r.code] ?? r.title,
     statement: RULE_SCOPE[r.code] ?? r.reason,
     impact: r.impact,
     layer: r.layer,
-    pages: pagesForRule(r, findings),
+    pages: pagesForRule(
+      r,
+      all.filter((f) => f.code === r.code),
+    ),
+    source: "rule" as const,
   }));
-  cats.push(...htmlCategories(findings, used));
-  return cats.filter((c) => c.pages.length > 0);
+  cats.push(...htmlCategories(findings, used).filter((c) => c.pages.length > 0));
+  return cats;
 }

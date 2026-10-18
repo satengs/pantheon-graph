@@ -86,6 +86,8 @@ export type GraphNode = {
   brand?: BrandId;
   product?: ProductId;
   count?: number;
+  /** Hubs: pages drawn under this hub right now (graph caps expansion; count is the full total). */
+  shown?: number;
   url?: string;
   issueId?: string;
 };
