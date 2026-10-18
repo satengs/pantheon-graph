@@ -59,6 +59,8 @@ function byId(...ids: StudioTab[]) {
   return ids.map((id) => TABS.find((t) => t.id === id)!);
 }
 
+const URL_VIEWS = ["graph", "issues", "validation", "rules", "gate", "states", "config", "companies"] as const;
+
 export function Studio() {
   const tab = useStudio((s) => s.tab);
   const setTab = useStudio((s) => s.setTab);
@@ -121,6 +123,34 @@ export function Studio() {
       cancelled = true;
     };
   }, [applyFamilyContext]);
+
+  // Each view has its own URL (?view=graph, ?view=issues&issue=S24) so a hard reload keeps it.
+  const [urlRead, setUrlRead] = useState(false);
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const v = q.get("view");
+      if (v && (URL_VIEWS as readonly string[]).includes(v)) setTab(v as StudioTab);
+      const iss = q.get("issue");
+      if (v === "issues" && iss) selectIssue(iss);
+    } catch {
+      /* ignore */
+    }
+    setUrlRead(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!urlRead) return;
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set("view", tab);
+      if (tab === "issues" && selectedIssueId) u.searchParams.set("issue", selectedIssueId);
+      else u.searchParams.delete("issue");
+      if (u.href !== window.location.href) window.history.replaceState(window.history.state, "", u.href);
+    } catch {
+      /* ignore */
+    }
+  }, [tab, selectedIssueId, urlRead]);
 
   const firstIssueCode = visibleIssues[0]?.code ?? null;
   const issueFitsSelection = Boolean(selectedIssueId && visibleIssues.some((i) => i.code === selectedIssueId || i.id === selectedIssueId));

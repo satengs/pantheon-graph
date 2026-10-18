@@ -78,6 +78,14 @@ function crawlHits(code: string, out: CategoryPage[], seen: Set<string>) {
     }
     return;
   }
+  if (code === "S24") {
+    // Indexable Achieve learn URLs still targeting debt relief (crawl keeps only live 200s).
+    for (const p of crawl.pages) {
+      if (p.b !== "achieve" || !p.path.startsWith("/learn/") || !p.path.includes("debt-relief")) continue;
+      addPage(out, seen, pageUrl(p), "debt-relief learn page");
+    }
+    return;
+  }
   if (code === "S22") {
     for (const p of crawl.pages) {
       if (p.p !== "debt-relief" || (p.k !== "r" && p.k !== "p")) continue;

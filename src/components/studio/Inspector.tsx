@@ -135,7 +135,7 @@ export function Inspector() {
             <PageMeta url={node.url} />
           </Fold>
         ) : (
-          <Fold title="Children">
+          <Fold title="Children" defaultOpen>
             <EntityChildren node={node} graph={graph} onSelect={selectNode} />
           </Fold>
         )}

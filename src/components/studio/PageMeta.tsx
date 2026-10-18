@@ -8,7 +8,14 @@ export function PageMeta({ url, variant = "inspector" }: { url?: string; variant
     if (drawer) return null;
     return (
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Canonical + metadata</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Canonical + metadata</h3>
+          {url ? (
+            <Badge tone={blockingIssuesForUrl(url).length ? "danger" : "ok"}>
+              {blockingIssuesForUrl(url).length ? "Blocks live" : "Doesn't block live"}
+            </Badge>
+          ) : null}
+        </div>
         <p className="mt-1 text-sm text-muted">No crawl snapshot for this page.</p>
       </section>
     );

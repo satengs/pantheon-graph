@@ -88,16 +88,16 @@ export function validateCrawl(crawl: CrawlSnapshot): HtmlFinding[] {
   }
 
   const drRedirected = (crawl.redirected ?? []).filter((r) => r.b === "achieve" && r.path.includes("debt-relief"));
-  const drBasics = crawl.pages.filter((p) => p.b === "achieve" && p.path.startsWith("/learn/debt-basics/") && p.path.includes("debt-relief"));
+  const drBasics = crawl.pages.filter((p) => p.b === "achieve" && p.path.startsWith("/learn/") && p.path.includes("debt-relief"));
   if (drRedirected.length || drBasics.length) {
     const lines = [
       ...drRedirected.map((r) => `${r.status} ${BRAND_HOST.achieve}${r.path} -> ${r.to || "gone"}`),
-      ...drBasics.slice(0, 12).map((p) => `200 ${BRAND_HOST.achieve}${p.path}`),
+      ...drBasics.map((p) => `200 ${BRAND_HOST.achieve}${p.path}`),
     ];
     out.push(
       finding(
         "S24",
-        `${drRedirected.length} redirected debt-relief URLs still in Achieve sitemaps; ${drBasics.length} articles still compete with FDR`,
+        `${drBasics.length} indexable Achieve debt-relief learn URLs still compete with FDR; ${drRedirected.length} redirected URLs still in sitemaps`,
         `${BRAND_HOST.achieve}/learn/debt-basics/what-is-debt-relief`,
         "Sitemaps advertise dead URLs, and twin articles split the debt-relief head term.",
         lines.join("\n"),
