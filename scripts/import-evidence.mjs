@@ -219,7 +219,7 @@ const cleanTxt = (x) =>
     .replace(/\*\*/g, "")
     .replace(/`/g, "")
     .replace(/\s+/g, " ")
-    .replace(/^[\s.;:—–-]+|[\s.;:—–-]+$/g, "")
+    .replace(/^[\s.;:—–→-]+|[\s.;:—–→-]+$/g, "")
     .trim();
 
 /** "**headline** rest → Owner: fix" (also "**P0-1** www /apply 301 … — note"). */
@@ -338,7 +338,7 @@ function loadCrawl() {
   for (const p of c.pages ?? []) {
     const host = BRAND_HOST[p.b];
     if (!host) continue;
-    keys.set(urlKey(`${host}${p.path}`), `https://${host}${p.path}`);
+    keys.set(urlKey(`${host}${p.path}`), p.p ?? "other");
   }
   return keys;
 }
@@ -573,7 +573,10 @@ function main() {
     if (it.urls.length === 0) {
       it.match = { kind: "site-wide", nodes: [`brand:${it.brand}`] };
     } else if (hits.length) {
-      it.match = { kind: "page", nodes: hits.map((u) => urlKey(u)).sort() };
+      // Pages in product hubs are drawn as page nodes; "other" pages (/scam/, /facts/ …)
+      // are in the crawl but only roll up to their brand node.
+      const drawn = hits.some((u) => crawlKeys.get(urlKey(u)) !== "other");
+      it.match = { kind: "page", nodes: hits.map((u) => urlKey(u)).sort(), drawn };
       it.unmatchedUrls = it.urls.filter((u) => !crawlKeys.has(urlKey(u)));
     } else {
       const hostOnly = it.urls.every((u) => /^[^/]+$/.test(urlKey(u)));
@@ -637,6 +640,8 @@ function main() {
     briefRows: count((i) => i.source === "brief"),
     defects: count((i) => i.source === "ndr-vs-fdr"),
     matched: count((i) => i.match.kind === "page"),
+    matchedDrawnPage: count((i) => i.match.kind === "page" && i.match.drawn),
+    matchedBrandRollupOnly: count((i) => i.match.kind === "page" && !i.match.drawn),
     siteWide: count((i) => i.match.kind === "site-wide"),
     unmapped: count((i) => i.match.kind === "unmapped"),
     screenshots: used.size,

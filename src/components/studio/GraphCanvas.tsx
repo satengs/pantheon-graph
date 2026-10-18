@@ -18,9 +18,22 @@ import {
   SEVERITY_COLOR,
   SEVERITY_GLYPH,
   SEVERITY_LABEL,
-  type SeverityFilter,
+  type Severity,
   type SevRollup,
 } from "@/lib/graph/severity";
+import {
+  buildEvidenceIndex,
+  EV_COLOR,
+  EV_GLYPH,
+  EV_LABEL,
+  evRank,
+  filterEvRollup,
+  useEvidence,
+  type EvRollup,
+  type EvSeverityFilter,
+  type SourceFilter,
+} from "@/lib/graph/evidence";
+import { EvidenceCard } from "@/components/studio/EvidenceCard";
 
 type Pt = { x: number; y: number };
 
@@ -267,10 +280,17 @@ function fitView(pts: Pt[], pad: number) {
 
 const NODE_Z: Record<string, number> = { page: 0, glossary: 1, product: 2, brand: 3, parent: 4, issue: 5 };
 
-const SEV_CHIPS: { id: SeverityFilter; label: string }[] = [
+const SEV_CHIPS: { id: EvSeverityFilter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "crit-high", label: "Critical + High" },
-  ...SEVERITIES.map((s) => ({ id: s as SeverityFilter, label: SEVERITY_LABEL[s] })),
+  ...SEVERITIES.map((s) => ({ id: s as EvSeverityFilter, label: SEVERITY_LABEL[s] })),
+];
+/** Only Evidence Brief rows can be "unknown" (brief gave no P0 / severity wording). */
+const UNKNOWN_CHIP = { id: "unknown" as EvSeverityFilter, label: "Unknown" };
+const SOURCE_CHIPS: { id: SourceFilter; label: string }[] = [
+  { id: "pantheon", label: "Pantheon" },
+  { id: "evidence", label: "Evidence" },
+  { id: "both", label: "Both" },
 ];
 
 function clip(t: string, n: number) {
@@ -290,7 +310,8 @@ type SevHover = {
   x: number;
   y: number;
   title: string;
-  roll: SevRollup;
+  roll: SevRollup | null;
+  ev: EvRollup | null;
 };
 
 export function GraphCanvas() {
@@ -318,7 +339,14 @@ export function GraphCanvas() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const parentSlug = useStudio((s) => s.parentSlug);
-  const [sevFilter, setSevFilter] = useState<SeverityFilter>("all");
+  const [sevFilter, setSevFilter] = useState<EvSeverityFilter>("all");
+  const [source, setSource] = useState<SourceFilter>("both");
+  const [unmappedOpen, setUnmappedOpen] = useState(false);
+  const showPantheon = source !== "evidence";
+  const showEvidence = source !== "pantheon";
+  /** Pantheon rules never carry "unknown", so that chip matches none of them. */
+  const pMatch = (s: Severity) => sevFilter !== "unknown" && severityMatches(s, sevFilter);
+  const pRoll = (r: SevRollup | null) => (sevFilter === "unknown" ? null : filterRollup(r, sevFilter));
   const [sevHover, setSevHover] = useState<SevHover | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -459,6 +487,21 @@ export function GraphCanvas() {
     return m;
   }, [graph.nodes, sevIndex]);
 
+  const evDoc = useEvidence();
+  const evIndex = useMemo(() => buildEvidenceIndex(evDoc, brand), [evDoc, brand]);
+  const evByNode = useMemo(() => {
+    const m = new Map<string, EvRollup | null>();
+    for (const n of graph.nodes) {
+      let r: EvRollup | null = null;
+      if (n.kind === "page") r = evIndex.forPage(n.url);
+      else if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product) r = evIndex.forHub(n.brand, n.product);
+      else if (n.kind === "brand" && n.brand) r = evIndex.forBrand(n.brand);
+      else if (n.kind === "parent") r = evIndex.forAll();
+      m.set(n.id, r);
+    }
+    return m;
+  }, [graph.nodes, evIndex]);
+
   const brandEdges = useMemo(
     () =>
       sevIndex.brandEdges.filter(
@@ -467,11 +510,16 @@ export function GraphCanvas() {
     [sevIndex, graph.nodes],
   );
 
-  function showSev(ev: { clientX: number; clientY: number }, title: string, roll: SevRollup | null) {
-    if (!roll || dragRef.current?.moved) return;
+  function showSev(
+    ev: { clientX: number; clientY: number },
+    title: string,
+    roll: SevRollup | null,
+    evRoll: EvRollup | null = null,
+  ) {
+    if ((!roll && !evRoll) || dragRef.current?.moved) return;
     const box = canvasRef.current?.getBoundingClientRect();
     if (!box) return;
-    setSevHover({ x: ev.clientX - box.left, y: ev.clientY - box.top, title, roll });
+    setSevHover({ x: ev.clientX - box.left, y: ev.clientY - box.top, title, roll, ev: evRoll });
   }
 
   const edgePairIndex = useMemo(() => {
@@ -734,8 +782,64 @@ export function GraphCanvas() {
             </button>
           );
         })}
-        <span className="hidden pl-1 text-[10px] text-subtle lg:inline">
-          Ring + letter = worst open issue · number = issues · hubs and brands roll up all their pages · brand arc = cross-brand L2
+        {showEvidence ? (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={sevFilter === UNKNOWN_CHIP.id}
+            data-sev-chip="unknown"
+            onClick={() => setSevFilter(UNKNOWN_CHIP.id)}
+            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${sevFilter === "unknown" ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+          >
+            <span
+              className="inline-flex size-4 items-center justify-center rounded-[3px] text-[9px] font-bold text-[#0b0c0e]"
+              style={{ background: EV_COLOR.unknown }}
+              aria-hidden
+            >
+              ?
+            </span>
+            {UNKNOWN_CHIP.label}
+          </button>
+        ) : null}
+        <span className="ml-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Source</span>
+        <span role="radiogroup" aria-label="Issue source" className="inline-flex gap-1" data-testid="source-bar">
+          {SOURCE_CHIPS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={source === c.id}
+              data-source-chip={c.id}
+              onClick={() => {
+                setSource(c.id);
+                if (c.id === "pantheon" && sevFilter === "unknown") setSevFilter("all");
+              }}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${source === c.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+            >
+              {c.id === "pantheon" ? (
+                <span className="inline-block size-3 rounded-full border-2 border-current" aria-hidden />
+              ) : c.id === "evidence" ? (
+                <span className="inline-block size-3 rounded-[2px] border-2 border-current" aria-hidden />
+              ) : null}
+              {c.label}
+            </button>
+          ))}
+        </span>
+        {showEvidence && evDoc ? (
+          <button
+            type="button"
+            data-testid="unmapped-toggle"
+            aria-expanded={unmappedOpen}
+            onClick={() => setUnmappedOpen((v) => !v)}
+            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${unmappedOpen ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+            title="Evidence rows whose URL is not a node in this graph"
+          >
+            Unmapped {evIndex.unmapped.filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)).length}
+          </button>
+        ) : null}
+        <span className="hidden pl-1 text-[10px] text-subtle xl:inline">
+          Round ring + pill = Pantheon rule (worst · count) · square “E” tag = Evidence Brief row
+          {evDoc ? ` (brief ${evDoc.newestBrief.date})` : ""} · hubs and brands roll up their pages · brand arc = cross-brand L2
         </span>
       </div>
       {graph.nodes.some((n) => n.kind === "issue") ? (
@@ -917,11 +1021,11 @@ export function GraphCanvas() {
                   />
                 );
               })}
-            {brandEdges.map((be) => {
+            {(showPantheon ? brandEdges : []).map((be) => {
               const a = at(`brand:${be.a}`);
               const b = at(`brand:${be.b}`);
               if (!a || !b) return null;
-              const issues = be.issues.filter((i) => severityMatches(i.impact, sevFilter));
+              const issues = be.issues.filter((i) => pMatch(i.impact));
               const dim = issues.length === 0;
               const worst = (issues[0] ?? be.issues[0])!.impact;
               const color = SEVERITY_COLOR[worst];
@@ -1091,9 +1195,13 @@ export function GraphCanvas() {
                     : selectedNodeId && !on
                       ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
                       : nodeFill(n);
-              const sevAll = sevByNode.get(n.id) ?? null;
-              const sev = filterRollup(sevAll, sevFilter);
-              const sevDim = sevFilter !== "all" && !sev;
+              const sevAll = showPantheon ? (sevByNode.get(n.id) ?? null) : null;
+              const sev = pRoll(sevAll);
+              const evAll = showEvidence ? (evByNode.get(n.id) ?? null) : null;
+              const evr = filterEvRollup(evAll, sevFilter);
+              const sevDim = sevFilter !== "all" && !sev && !evr;
+              const evText = evr ? `E${EV_GLYPH[evr.worst]} ${evr.count}` : "";
+              const evW = n.kind === "page" ? 8 + evText.length * 4.4 : 10 + evText.length * 6.2;
               const sevTitle =
                 n.kind === "page"
                   ? pagePath(n.url ?? n.label)
@@ -1117,10 +1225,12 @@ export function GraphCanvas() {
                   data-selected={on ? "true" : undefined}
                   data-sev={sev?.worst}
                   data-sev-count={sev?.count}
+                  data-ev={evr?.worst}
+                  data-ev-count={evr?.count}
                   opacity={sevDim ? 0.22 : 1}
                   transform={`translate(${p.x} ${p.y})`}
                   className="cursor-grab"
-                  onPointerEnter={(ev) => showSev(ev, sevTitle, sev)}
+                  onPointerEnter={(ev) => showSev(ev, sevTitle, sev, evr)}
                   onPointerLeave={() => setSevHover(null)}
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
@@ -1296,6 +1406,31 @@ export function GraphCanvas() {
                       </text>
                     </g>
                   ) : null}
+                  {evr ? (
+                    <g pointerEvents="none" data-ev-marker={evr.worst}>
+                      <rect
+                        x={-bx - evW + 2}
+                        y={by - badgeH / 2}
+                        width={evW}
+                        height={badgeH}
+                        rx={2}
+                        fill={EV_COLOR[evr.worst]}
+                        stroke="#0b0c0e"
+                        strokeWidth={1.2}
+                      />
+                      <text
+                        x={-bx - evW / 2 + 2}
+                        y={by + (small ? 2.6 : 3.6)}
+                        textAnchor="middle"
+                        fill="#0b0c0e"
+                        fontSize={small ? 7.5 : 10}
+                        fontWeight={700}
+                        fontFamily="IBM Plex Mono, monospace"
+                      >
+                        {evText}
+                      </text>
+                    </g>
+                  ) : null}
                 </g>
               );
             })}
@@ -1308,7 +1443,7 @@ export function GraphCanvas() {
                 const r = on ? 30 : 24;
                 const kind = TREE_SUGGESTIONS.find((t) => t.code === n.issueId)?.kind;
                 const issueImpact = RULES.find((x) => x.code === n.issueId)?.impact;
-                const issueDim = sevFilter !== "all" && !(issueImpact && severityMatches(issueImpact, sevFilter));
+                const issueDim = sevFilter !== "all" && !(issueImpact && pMatch(issueImpact));
                 const stroke =
                   kind === "conflict" ? "var(--color-danger)" : kind === "sameAs" ? "var(--color-accent)" : "var(--color-achieve)";
                 return (
@@ -1377,46 +1512,121 @@ export function GraphCanvas() {
           className="pointer-events-none absolute z-40 w-[20rem] rounded-md border border-border bg-surface p-2.5 text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
           style={{
             left: Math.max(8, Math.min(sevHover.x + 14, (canvasRef.current?.clientWidth ?? 9999) - 336)),
-            top: Math.max(8, Math.min(sevHover.y + 14, (canvasRef.current?.clientHeight ?? 9999) - 260)),
+            top: Math.max(8, Math.min(sevHover.y + 14, (canvasRef.current?.clientHeight ?? 9999) - 320)),
           }}
         >
           <p className="flex items-center gap-1.5 font-medium">
-            <span
-              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#0b0c0e]"
-              style={{ background: SEVERITY_COLOR[sevHover.roll.worst] }}
-            >
-              {SEVERITY_GLYPH[sevHover.roll.worst]}
-            </span>
+            {sevHover.roll ? (
+              <span
+                className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#0b0c0e]"
+                style={{ background: SEVERITY_COLOR[sevHover.roll.worst] }}
+              >
+                {SEVERITY_GLYPH[sevHover.roll.worst]}
+              </span>
+            ) : null}
+            {sevHover.ev ? (
+              <span
+                className="inline-flex h-4 min-w-5 items-center justify-center rounded-[3px] px-1 text-[9px] font-bold text-[#0b0c0e]"
+                style={{ background: EV_COLOR[sevHover.ev.worst] }}
+              >
+                E{EV_GLYPH[sevHover.ev.worst]}
+              </span>
+            ) : null}
             <span className="truncate">{sevHover.title}</span>
           </p>
-          <p className="mt-0.5 text-[10px] text-subtle">
-            Worst {SEVERITY_LABEL[sevHover.roll.worst]} · {sevHover.roll.count} issue{sevHover.roll.count === 1 ? "" : "s"}
-            {sevHover.roll.pages > 1 ? ` on ${sevHover.roll.pages} pages` : ""}
-          </p>
-          <ul className="mt-1.5 flex flex-col gap-1.5">
-            {sevHover.roll.issues.slice(0, 3).map((i) => (
-              <li key={i.code} className="border-t border-border pt-1.5">
-                <p className="font-medium">
-                  <span style={{ color: SEVERITY_COLOR[i.impact] }}>
-                    {SEVERITY_LABEL[i.impact]}
-                  </span>{" "}
-                  · {i.code} · {i.title}
-                  {i.pages > 1 ? <span className="text-subtle"> · {i.pages} pages</span> : null}
+          {sevHover.roll ? (
+            <>
+              <p className="mt-0.5 text-[10px] text-subtle">
+                Pantheon · worst {SEVERITY_LABEL[sevHover.roll.worst]} · {sevHover.roll.count} issue
+                {sevHover.roll.count === 1 ? "" : "s"}
+                {sevHover.roll.pages > 1 ? ` on ${sevHover.roll.pages} pages` : ""}
+              </p>
+              <ul className="mt-1.5 flex flex-col gap-1.5">
+                {sevHover.roll.issues.slice(0, sevHover.ev ? 2 : 3).map((i) => (
+                  <li key={i.code} className="border-t border-border pt-1.5">
+                    <p className="font-medium">
+                      <span style={{ color: SEVERITY_COLOR[i.impact] }}>{SEVERITY_LABEL[i.impact]}</span> · {i.code} ·{" "}
+                      {i.title}
+                      {i.pages > 1 ? <span className="text-subtle"> · {i.pages} pages</span> : null}
+                    </p>
+                    <p className="text-muted">
+                      <span className="text-subtle">Why </span>
+                      {clip(i.why, sevHover.ev ? 100 : 150)}
+                    </p>
+                    <p className="text-muted">
+                      <span className="text-subtle">Fix </span>
+                      {clip(i.fix, sevHover.ev ? 100 : 150)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {sevHover.roll.issues.length > (sevHover.ev ? 2 : 3) ? (
+                <p className="mt-1 text-[10px] text-subtle">
+                  +{sevHover.roll.issues.length - (sevHover.ev ? 2 : 3)} more in Issues
                 </p>
-                <p className="text-muted">
-                  <span className="text-subtle">Why </span>
-                  {clip(i.why, 150)}
-                </p>
-                <p className="text-muted">
-                  <span className="text-subtle">Fix </span>
-                  {clip(i.fix, 150)}
-                </p>
-              </li>
-            ))}
-          </ul>
-          {sevHover.roll.issues.length > 3 ? (
-            <p className="mt-1 text-[10px] text-subtle">+{sevHover.roll.issues.length - 3} more in Issues</p>
+              ) : null}
+            </>
           ) : null}
+          {sevHover.ev ? (
+            <div data-testid="severity-tooltip-evidence" className={sevHover.roll ? "mt-2 border-t-2 border-border pt-1.5" : ""}>
+              <p className="mt-0.5 text-[10px] text-subtle">
+                Evidence Brief · worst {EV_LABEL[sevHover.ev.worst]} · {sevHover.ev.count} row
+                {sevHover.ev.count === 1 ? "" : "s"}
+              </p>
+              <ul className="mt-1 flex flex-col gap-1">
+                {sevHover.ev.items.slice(0, sevHover.roll ? 2 : 3).map((i) => (
+                  <li key={i.id} className="border-t border-border pt-1">
+                    <p className="font-medium">
+                      <span style={{ color: EV_COLOR[i.severity] }}>{EV_LABEL[i.severity]}</span> ·{" "}
+                      {i.row != null ? `Row ${i.row}` : i.id} · {i.title}
+                    </p>
+                    <p className="text-subtle">
+                      {i.owner} · {i.status}
+                      {i.daysOpen != null ? ` · ${i.daysOpen}d open` : ""}
+                    </p>
+                    {i.fix ? (
+                      <p className="text-muted">
+                        <span className="text-subtle">Fix </span>
+                        {clip(i.fix, 110)}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              {sevHover.ev.items.length > (sevHover.roll ? 2 : 3) ? (
+                <p className="mt-1 text-[10px] text-subtle">
+                  +{sevHover.ev.items.length - (sevHover.roll ? 2 : 3)} more · right-click for the Inspector
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {unmappedOpen && showEvidence && evDoc ? (
+        <div
+          data-testid="unmapped-panel"
+          className="absolute right-3 top-3 z-30 flex max-h-[calc(100%-4.5rem)] w-[22rem] flex-col rounded-lg border border-border bg-bg shadow-[var(--shadow-border)]"
+          onPointerDown={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-subtle">Evidence Brief · unmapped</p>
+              <p className="text-xs text-muted">URL not a node in this graph (off-sitemap, subdomain, Apply funnel or 404)</p>
+            </div>
+            <button type="button" className="rounded bg-raised px-2 py-1 text-xs text-muted" onClick={() => setUnmappedOpen(false)}>
+              Close
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-col gap-1.5 overflow-y-auto p-2">
+            {evIndex.unmapped
+              .filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))
+              .slice()
+              .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
+              .map((i) => (
+                <EvidenceCard key={i.id} item={i} />
+              ))}
+          </div>
         </div>
       ) : null}
       <div className="absolute bottom-3 right-3 z-10 flex gap-1">

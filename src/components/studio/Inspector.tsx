@@ -22,7 +22,9 @@ import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { VirtualList } from "@/components/studio/VirtualList";
 import { recForCode } from "@/data/recommend";
 import { PageMeta } from "@/components/studio/PageMeta";
+import { EvidenceList } from "@/components/studio/EvidenceCard";
 import { Fold } from "@/components/studio/Fold";
+import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -71,6 +73,19 @@ export function Inspector() {
     [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
+  const evDoc = useEvidence();
+  const evIndex = useMemo(() => buildEvidenceIndex(evDoc), [evDoc]);
+  const evRoll = !node
+    ? null
+    : node.kind === "page"
+      ? evIndex.forPage(node.url)
+      : (node.kind === "product" || node.kind === "glossary") && node.brand && node.product
+        ? evIndex.forHub(node.brand, node.product)
+        : node.kind === "brand" && node.brand
+          ? evIndex.forBrand(node.brand)
+          : node.kind === "parent"
+            ? evIndex.forAll()
+            : null;
   const wantedId =
     tab === "issues"
       ? hoveredIssueId ?? selectedIssueId
@@ -139,6 +154,16 @@ export function Inspector() {
             <EntityChildren node={node} graph={graph} onSelect={selectNode} />
           </Fold>
         )}
+        {evDoc ? (
+          <Fold title={`Evidence Brief · ${evRoll?.count ?? 0}`} defaultOpen={!!evRoll}>
+            <div data-testid="inspector-evidence">
+              <EvidenceList
+                roll={evRoll}
+                emptyText={`No Evidence Brief rows match this node (brief ${evDoc.newestBrief.date}).`}
+              />
+            </div>
+          </Fold>
+        ) : null}
         {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
       </aside>
     );

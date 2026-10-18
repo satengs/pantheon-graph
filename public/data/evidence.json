@@ -14,6 +14,8 @@
     "briefRows": 96,
     "defects": 6,
     "matched": 32,
+    "matchedDrawnPage": 15,
+    "matchedBrandRollupOnly": 17,
     "siteWide": 52,
     "unmapped": 18,
     "screenshots": 25,
@@ -87,7 +89,7 @@
       "daysOpen": 25,
       "severity": "critical",
       "severityBasis": "brief labels the row \"P0-1\"",
-      "why": "→ Valpak fdrvp2406",
+      "why": "Valpak fdrvp2406",
       "fix": "apply noindex (re-curled 18:00)",
       "firstReport": "P0-1 www /apply 301 still bakes Valpak DM UTMs → Apply noindex",
       "links": [],
@@ -345,7 +347,7 @@
       "daysOpen": 25,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Achieve Loans only; Ads creatives still 5.75% APR HELOC (~400 ads); NEW live /heloc floor APRs from 6.10% / fixed 6.10%–15.17% (no 5.75% on page) — creative↔landing gap; /fast/heloc-loans 200 noindex→picker HOLD; Figure ~800 hold",
+      "why": "Achieve Loans only; Ads creatives still 5.75% APR HELOC (~400 ads); NEW live /heloc floor APRs from 6.10% / fixed 6.10%–15.17% (no 5.75% on page) — creative↔landing gap; /fast/heloc-loans 200 noindex→picker HOLD; Figure ~800 hold",
       "fix": "",
       "firstReport": "HELOC / second-lien boom (NY Fed HELOC $459B; ICE ~248k Q1 taps) → Achieve Loans scorecard only; /heloc + /home-equity-loan live",
       "links": [],
@@ -358,7 +360,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.achieve.com/fast/heloc-loans"
@@ -710,7 +713,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/facts"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/fees/"
@@ -1049,7 +1053,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -1109,7 +1114,8 @@
           "freedomdebtrelief.com/facts",
           "freedomdebtrelief.com/faq",
           "freedomdebtrelief.com/how-it-works"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/guarantee/",
@@ -1160,7 +1166,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/reviews"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -1183,7 +1190,7 @@
       "daysOpen": 11,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ 200 noindex,nofollow + APP_ENV:\"test\" — organic review traffic lands on the paid test shell (extends #7/#21)",
+      "why": "200 noindex,nofollow + APP_ENV:\"test\" — organic review traffic lands on the paid test shell (extends #7/#21)",
       "fix": "",
       "firstReport": "",
       "links": [],
@@ -1194,7 +1201,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/reviews"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://apply.freedomdebtrelief.com/fb"
@@ -1279,7 +1287,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/debt-relief"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.achieve.com/learn/debt-relief/credit-card-lawyer"
@@ -1333,7 +1342,7 @@
       "daysOpen": 10,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ apply.freedomdebtrelief.com (noindex). Credit-stressed audience = the TransUnion −96 / Disclosure Act narrative (row 32). Soft: which apply path; no spend",
+      "why": "apply.freedomdebtrelief.com (noindex). Credit-stressed audience = the TransUnion −96 / Disclosure Act narrative (row 32). Soft: which apply path; no spend",
       "fix": "",
       "firstReport": "",
       "links": [],
@@ -1448,7 +1457,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -1532,7 +1542,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -1604,7 +1615,7 @@
       "daysOpen": 10,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ 404 (real page /about/ 200). Re-curled 18:00: 404",
+      "why": "404 (real page /about/ 200). Re-curled 18:00: 404",
       "fix": "",
       "firstReport": "",
       "links": [],
@@ -1615,7 +1626,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/about"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/about-us/"
@@ -1682,7 +1694,8 @@
         "nodes": [
           "freedomdebtrelief.com/choose-freedom-debt-relief",
           "freedomdebtrelief.com/who-we-help/states"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -1747,7 +1760,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/debt-consolidation-near-me"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/debt-relief-near-me/"
@@ -1864,7 +1878,7 @@
       "daysOpen": 9,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ All 6 NDR EY posts still 200 index,follow; home / + /debt-relief/us-states/ latest-card no longer surfaces EY by-state (student-loan post now). FDR still 0 EY/ACDR URLs in sitemaps/newsroom",
+      "why": "All 6 NDR EY posts still 200 index,follow; home / + /debt-relief/us-states/ latest-card no longer surfaces EY by-state (student-loan post now). FDR still 0 EY/ACDR URLs in sitemaps/newsroom",
       "fix": "Public: EY explainer + /facts/ + newsroom links",
       "firstReport": "ACDR released EY-commissioned *Debt Settlement Program Outcomes 2016–2025* on Oct 5 (8.1M clients, $29.3B net savings after fees, $6,370 avg net savings for clients with a settled debt, $2.50 debt reduction per $1 fees, fees ≈22% of enrolled debt; EY did not verify company data; excludes ban/cap states — ACDR release + AccountsRecovery). NDR shipped 2 indexable \"Data and Research\" posts Oct 6 (~2.2–2.3k words each). FDR: nothing in sitemaps/newsroom (re-checked 18:03). Both ACDR members. Speed-to-publish gap on the exact \"savings after fees\" metric FDR leads on (NerdWallet 28% vs 20%, soft)",
       "links": [],
@@ -1877,7 +1891,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/facts"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -1910,7 +1925,7 @@
       "daysOpen": 8,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ CA guide (search read; direct 403) + FDR release Oct 6 (PRNewswire 302899442) + indexable newsroom item. Shelf win alongside CNBC #1 and NerdWallet. Reviews still NDR-better: 4.9/58,814 vs FDR 4.5/34,625 → Dashboard + Consult. Homepage badge is plain unlinked text (\"ConsumerAffairs - Debt Settlement (2026) - Best Overall\"; addendum #9)",
+      "why": "CA guide (search read; direct 403) + FDR release Oct 6 (PRNewswire 302899442) + indexable newsroom item. Shelf win alongside CNBC #1 and NerdWallet. Reviews still NDR-better: 4.9/58,814 vs FDR 4.5/34,625 → Dashboard + Consult. Homepage badge is plain unlinked text (\"ConsumerAffairs - Debt Settlement (2026) - Best Overall\"; addendum #9)",
       "fix": "Public: visible text linked to the guide; no AggregateRating markup for another site's rating",
       "firstReport": "",
       "links": [
@@ -1978,7 +1993,7 @@
       "daysOpen": 8,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ CA newsroom post \"More than 45% … within one month of their first program deposit and more than 70% within three months\" (start point stated; cohort Apr–Jun 2026 incl. affiliates); /faq/ (index) \"between months four and six\"; /choose-freedom-debt-relief/ \"Over 60% … first 3 months of enrollment\" (noindex,nofollow but in root sitemap — extends D3); releases Apr 14 2025 \"Over 40% … 1 month … more than 70% … three months\" and Feb 11 2026 \"over 40% … nearly 70%\". 45%/70% on 0 of 896 sitemapped pages; only the newsroom post + PR release (addendum #6–8)",
+      "why": "CA newsroom post \"More than 45% … within one month of their first program deposit and more than 70% within three months\" (start point stated; cohort Apr–Jun 2026 incl. affiliates); /faq/ (index) \"between months four and six\"; /choose-freedom-debt-relief/ \"Over 60% … first 3 months of enrollment\" (noindex,nofollow but in root sitemap — extends D3); releases Apr 14 2025 \"Over 40% … 1 month … more than 70% … three months\" and Feb 11 2026 \"over 40% … nearly 70%\". 45%/70% on 0 of 896 sitemapped pages; only the newsroom post + PR release (addendum #6–8)",
       "fix": "Claim-surface only; Compliance + Apply pick one version",
       "firstReport": "",
       "links": [],
@@ -1990,7 +2005,8 @@
         "nodes": [
           "freedomdebtrelief.com/choose-freedom-debt-relief",
           "freedomdebtrelief.com/faq"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -2013,7 +2029,7 @@
       "daysOpen": 8,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ /facts/ + homepage 1M/$20B (\"More than 1 million people… $20 billion+\"); Achieve /debt-relief \"$2M+ members served · $20B+\"; Oct 6 release 2M/$22B; ConsumerAffairs FDR profile repeats 1M/$20B (SOFT). Meta \"Get the facts\" lands on /facts/",
+      "why": "/facts/ + homepage 1M/$20B (\"More than 1 million people… $20 billion+\"); Achieve /debt-relief \"$2M+ members served · $20B+\"; Oct 6 release 2M/$22B; ConsumerAffairs FDR profile repeats 1M/$20B (SOFT). Meta \"Get the facts\" lands on /facts/",
       "fix": "Public; Compliance picks one before paid uses any; then ask CA to refresh",
       "firstReport": "",
       "links": [],
@@ -2024,7 +2040,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/facts"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.achieve.com/debt-relief"
@@ -2062,7 +2079,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/learn"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.achieve.com/debt-relief"
@@ -2092,7 +2110,7 @@
       "daysOpen": 8,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ only JSON-LD BreadcrumbList (no Article/author/date); breadcrumb parent /l/debt-solutions/ (unmapped); /learn/ + /learn/debt-solutions/ 404; not linked from /facts/, homepage or /press-releases/; /media-assets/ links only the PDF; /newsroom/ 301 → /; SSR Trustpilot widget \"0 / 5 … 0+ reviews\" (may hydrate; untested). CTA pid=learn,debt-solutions,deep-in-debt… collapses to pid=learn&campaign=home on Apply (addendum #1–5)",
+      "why": "only JSON-LD BreadcrumbList (no Article/author/date); breadcrumb parent /l/debt-solutions/ (unmapped); /learn/ + /learn/debt-solutions/ 404; not linked from /facts/, homepage or /press-releases/; /media-assets/ links only the PDF; /newsroom/ 301 → /; SSR Trustpilot widget \"0 / 5 … 0+ reviews\" (may hydrate; untested). CTA pid=learn,debt-solutions,deep-in-debt… collapses to pid=learn&campaign=home on Apply (addendum #1–5)",
       "fix": "Public (schema, links) + Apply (pid)",
       "firstReport": "",
       "links": [],
@@ -2105,7 +2123,8 @@
           "freedomdebtrelief.com/facts",
           "freedomdebtrelief.com/media-assets",
           "freedomdebtrelief.com/press-releases"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/l/debt-solutions/",
@@ -2158,7 +2177,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -2234,7 +2254,7 @@
       "daysOpen": 7,
       "severity": "critical",
       "severityBasis": "brief status \"UPDATE · FDR-self-inflicted · **P0**\"",
-      "why": "→ Extends Fri 5 publishers: NEW co-brand Pages usmagazine (Oct 9), Alea Hunt + Divorce Glow Collective (both Oct 12), plus Debt Help Now (Oct 12 → apply.freedomdebtrelief.com with FDR disclosure — affiliate, unconfirmed). \"Denied for a personal loan? No problem.\" now on ~75 ads. Destinations: still apply…/fb 200 APP_ENV\":\"test\"; NEW apply…/fbcfos 200 test; /testimonials/ (index); dgtracking→resilientscript (owner unknown). 0 Meta ads on vanity www…/apply → Valpak poison not fed by Meta. Server HTML on /fb still claim-absent (Mon Funnel)",
+      "why": "Extends Fri 5 publishers: NEW co-brand Pages usmagazine (Oct 9), Alea Hunt + Divorce Glow Collective (both Oct 12), plus Debt Help Now (Oct 12 → apply.freedomdebtrelief.com with FDR disclosure — affiliate, unconfirmed). \"Denied for a personal loan? No problem.\" now on ~75 ads. Destinations: still apply…/fb 200 APP_ENV\":\"test\"; NEW apply…/fbcfos 200 test; /testimonials/ (index); dgtracking→resilientscript (owner unknown). 0 Meta ads on vanity www…/apply → Valpak poison not fed by Meta. Server HTML on /fb still claim-absent (Mon Funnel)",
       "fix": "Apply: /fb + /fbcfos out of test + claim match; Compliance: BBB/scams/\"Denied\" framing",
       "firstReport": "Partnership ads pinned (closes Thu open). → 5 publishers (Thrillist, SB Nation, Scary Mommy, The Dodo NEW Sep 29, Granny Bibbins); \"Denied for a personal loan? No problem.\" → apply.freedomdebtrelief.com/fb?utm_source=facebook…&utm_publisher={{placement}} (Library detail 1103180942704547, 1617601613252924); /fb 200 test env (18:20). New image claim \"DON'T FALL FOR DEBT RELIEF SCAMS … BBB A+ RATED\". Nurture → /testimonials/ 4.6/51,466 + \"1 million+\". Macros unfilled in Library = stored template, not proof clicks lose IDs. → Apply: /fb out of test build; Compliance: BBB A+ / scams framing vs landing",
       "links": [],
@@ -2316,7 +2336,7 @@
       "daysOpen": 7,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Figure ~800 (\"America's Fast and Easy HELOC\", \"No In-Person Appraisal Needed\", \"Money's Best HELOC Picks\"), Unlock ~2K (\"HELOC Alternative\", 600+), Point ~300, OneMain ~2K (PL). Pacific Debt 4 \"A Top-Rated Debt Consolidation Company\" = second settlement-labeled-consolidation case (with NDR Spanish). CuraDebt 3 via a law office (Ch. 7/13). bills.com 0 on Meta + Google. Counts = Transparency totals, not SoV",
+      "why": "Figure ~800 (\"America's Fast and Easy HELOC\", \"No In-Person Appraisal Needed\", \"Money's Best HELOC Picks\"), Unlock ~2K (\"HELOC Alternative\", 600+), Point ~300, OneMain ~2K (PL). Pacific Debt 4 \"A Top-Rated Debt Consolidation Company\" = second settlement-labeled-consolidation case (with NDR Spanish). CuraDebt 3 via a law office (Ch. 7/13). bills.com 0 on Meta + Google. Counts = Transparency totals, not SoV",
       "fix": "",
       "firstReport": "",
       "links": [],
@@ -2327,7 +2347,8 @@
         "kind": "page",
         "nodes": [
           "bills.com"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -2347,7 +2368,7 @@
       "daysOpen": 7,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ SER + SEL confirm Google Search Central: rollout complete Oct 8 (started Sep 24, ~14 days). Connectors still unavailable (Ahrefs needsAuth; Treg failed_to_load / no TREG_TOKEN; GSC not in usable set). No SoV / rank-% invented. Window open for Evidence/Data Engineer once auth works. Don't cut SEO mid-flight",
+      "why": "SER + SEL confirm Google Search Central: rollout complete Oct 8 (started Sep 24, ~14 days). Connectors still unavailable (Ahrefs needsAuth; Treg failed_to_load / no TREG_TOKEN; GSC not in usable set). No SoV / rank-% invented. Window open for Evidence/Data Engineer once auth works. Don't cut SEO mid-flight",
       "fix": "",
       "firstReport": "Spam update closed Oct 8 (Status Dashboard; waves Sep 25–27 / Sep 30 / Oct 4–6; 4 spam updates in 2026). → Any Sep 24–Oct 8 dip is the update, not \"SEO failing\"; re-baseline Oct 8+ vs Sep 23 once Treg/Ahrefs/GSC data is back. Don't cut SEO mid-flight",
       "links": [],
@@ -2379,7 +2400,7 @@
       "daysOpen": 7,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ FDR + bills Google Transparency still 0 ads (Ads Tue + Fri), so Search/PMax auto-promotions that require location assets (Google Help) are likely N/A for FDR. Achieve Loans console-only — no status claimed from public tools. Oct 16 business-name change still open, console-only",
+      "why": "FDR + bills Google Transparency still 0 ads (Ads Tue + Fri), so Search/PMax auto-promotions that require location assets (Google Help) are likely N/A for FDR. Achieve Loans console-only — no status claimed from public tools. Oct 16 business-name change still open, console-only",
       "fix": "Loans console by Fri 16",
       "firstReport": "Google Ads auto-promotions opt-out deadline Oct 12 (Mon), business-name change Oct 16 → account settings, not visible in Transparency; status unknown. Owner Loans",
       "links": [
@@ -2413,7 +2434,7 @@
       "daysOpen": 7,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Creative Center: box browser not signed in (no login attempted). Lane stays unmeasurable without a signed-in Ads account (Satenik decision). AI Max also unmeasured",
+      "why": "Creative Center: box browser not signed in (no login attempted). Lane stays unmeasurable without a signed-in Ads account (Satenik decision). AI Max also unmeasured",
       "fix": "",
       "firstReport": "TikTok US unmeasurable from public tools (Creative Center needs login past 3 samples; Commercial Content Library has no US). Policy allows US debt relief with licensing (Foresight) → needs a signed-in TikTok Ads account, else lane stays \"unmeasured\"",
       "links": [],
@@ -2445,7 +2466,7 @@
       "daysOpen": 4,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Same as 61 UPDATE; tracked so Mon Scout handoff is visible on the spine. Owner: Public + Data Engineer (Ahrefs/Treg/GSC)",
+      "why": "Same as 61 UPDATE; tracked so Mon Scout handoff is visible on the spine. Owner: Public + Data Engineer (Ahrefs/Treg/GSC)",
       "fix": "",
       "firstReport": "",
       "links": [],
@@ -2477,7 +2498,7 @@
       "daysOpen": 4,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Freddie PMMS as of 10/08/2026: 30-yr 7.40% (prior week 7.28%; YoY 6.30%). Bankrate HELOC national avg 7.33% as of Oct 7 (↑4 bp, 3rd consecutive week up). Epiq/AACER Sep individual BK filings 49,672 (+7% YoY); YTD 444,252 (+7%). Relative signal only — not a \"debt surge\" for paid",
+      "why": "Freddie PMMS as of 10/08/2026: 30-yr 7.40% (prior week 7.28%; YoY 6.30%). Bankrate HELOC national avg 7.33% as of Oct 7 (↑4 bp, 3rd consecutive week up). Epiq/AACER Sep individual BK filings 49,672 (+7% YoY); YTD 444,252 (+7%). Relative signal only — not a \"debt surge\" for paid",
       "fix": "Loans (HELOC vs cash-out refi); Public education demand",
       "firstReport": "",
       "links": [],
@@ -2512,7 +2533,7 @@
       "daysOpen": 4,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ BestMoney FDR vs NDR (Oct 6): both 15–25%, $7,500 min; cites FDR 2019 CFPB + pending 2026 Georgia AG investigation (Atlanta News First Mar 10); NDR no CFPB/FTC found (Oct 2026 check). Money Oct shelf: FDR Best for Legal Support (legal-support landing gap unchanged). CNBC Select (updated Oct 3): FDR Best for customer service; Achieve as consolidation-loan alt. Funnel addendum: /vs/national-debt-relief/, /fees/, /cost/, /debt-relief-near-me/ all 404; homepage 0 mentions of \"National Debt Relief\"",
+      "why": "BestMoney FDR vs NDR (Oct 6): both 15–25%, $7,500 min; cites FDR 2019 CFPB + pending 2026 Georgia AG investigation (Atlanta News First Mar 10); NDR no CFPB/FTC found (Oct 2026 check). Money Oct shelf: FDR Best for Legal Support (legal-support landing gap unchanged). CNBC Select (updated Oct 3): FDR Best for customer service; Achieve as consolidation-loan alt. Funnel addendum: /vs/national-debt-relief/, /fees/, /cost/, /debt-relief-near-me/ all 404; homepage 0 mentions of \"National Debt Relief\"",
       "fix": "Public: owned vs + fee page; do not treat BestMoney framing as a template",
       "firstReport": "",
       "links": [],
@@ -2554,7 +2575,7 @@
       "daysOpen": 4,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ /es/espanol/ 200, byte-identical to Fri (CF HIT ~4.6d): html lang=\"es\" but no hreflang; H1 English \"DEBT RELIEF QUE FUNCIONA\"; JSON-LD inLanguage: \"en-US\" (×2); Org AggregateRating 4.6 / 49,928; body equates \"debt settlement and debt consolidation\". /es/ 404. CTA → apply /espanol 200 noindex, wildcard route, html lang=\"en\" around Spanish copy; links 3× to www /login → homepage. Secondary /como-funciona-el-programa-freedom-debt-relief/ 200. Disclosure Act: still discussion draft (July 22 hearing), no bill number — ad-rule adjacency on consolidation wording. Soft: \"alivio de deudas\" SERP not measured",
+      "why": "/es/espanol/ 200, byte-identical to Fri (CF HIT ~4.6d): html lang=\"es\" but no hreflang; H1 English \"DEBT RELIEF QUE FUNCIONA\"; JSON-LD inLanguage: \"en-US\" (×2); Org AggregateRating 4.6 / 49,928; body equates \"debt settlement and debt consolidation\". /es/ 404. CTA → apply /espanol 200 noindex, wildcard route, html lang=\"en\" around Spanish copy; links 3× to www /login → homepage. Secondary /como-funciona-el-programa-freedom-debt-relief/ 200. Disclosure Act: still discussion draft (July 22 hearing), no bill number — ad-rule adjacency on consolidation wording. Soft: \"alivio de deudas\" SERP not measured",
       "fix": "Public: hreflang + Spanish H1 + inLanguage: es; Apply: lang=\"es\" + out of test; Compliance before any Spanish paid",
       "firstReport": "",
       "links": [],
@@ -2566,7 +2587,8 @@
         "nodes": [
           "freedomdebtrelief.com/como-funciona-el-programa-freedom-debt-relief",
           "freedomdebtrelief.com/es/espanol"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/es/",
@@ -2612,7 +2634,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -2685,7 +2708,7 @@
       "daysOpen": 4,
       "severity": "critical",
       "severityBasis": "brief labels the row \"Same P0, new dest + new claim.\"",
-      "why": "→ Extends 59: NEW /fbcfos also test; NEW Meta claim \"$280 per month\" (see 72) also absent from homepage. Browser render still needed Thu",
+      "why": "Extends 59: NEW /fbcfos also test; NEW Meta claim \"$280 per month\" (see 72) also absent from homepage. Browser render still needed Thu",
       "fix": "Apply + Compliance",
       "firstReport": "Partnership ad claims absent from landing HTML. → Extends row 59: /fb and /fb?campaign=fb server HTML has 0 BBB / A+ / scam / \"denied\". Message match can't be shown to ad-review or search crawler without a browser render. → Apply + Compliance: align creative to landing (or landing to creative) after test-build exit",
       "links": [],
@@ -2758,7 +2781,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Ad 1104943982398289 (Oct 12): \"You could free up $280 per month\". Live curl 13:10: FDR homepage server HTML has 0 matches for $280. Contrast: \"1+ million\" / \"Award-winning\" (1082634924389450) = /facts/ 1M+ version (not release 2M); \"24-48 months\" (Alea Hunt) matches home + /faq/",
+      "why": "Ad 1104943982398289 (Oct 12): \"You could free up $280 per month\". Live curl 13:10: FDR homepage server HTML has 0 matches for $280. Contrast: \"1+ million\" / \"Award-winning\" (1082634924389450) = /facts/ 1M+ version (not release 2M); \"24-48 months\" (Alea Hunt) matches home + /faq/",
       "fix": "Compliance before amplify; Apply: landing claim match",
       "firstReport": "",
       "links": [],
@@ -2770,7 +2793,8 @@
         "nodes": [
           "freedomdebtrelief.com/facts",
           "freedomdebtrelief.com/faq"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -2812,7 +2836,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Ads 1636893724684124 (5-day) and Taste of Home 1051426217673202 (5.75% APR) both land on achieve.com/get-started?section=achieve-hl (200 noindex). Same 5-day ad: body \"as little as 5 days\" vs headline \"under 2 weeks\". NEW: Meta \"no in-person appraisals\" (1305511961123106) vs /heloc \"In most cases, a full in-person inspection… will not be necessary\" (AVM hedge). Figure /home-equity-line/ footnotes both promises (funding in as few as 5 days on loans ≤$400k; no in-person appraisal²). Achieve does not",
+      "why": "Ads 1636893724684124 (5-day) and Taste of Home 1051426217673202 (5.75% APR) both land on achieve.com/get-started?section=achieve-hl (200 noindex). Same 5-day ad: body \"as little as 5 days\" vs headline \"under 2 weeks\". NEW: Meta \"no in-person appraisals\" (1305511961123106) vs /heloc \"In most cases, a full in-person inspection… will not be necessary\" (AVM hedge). Figure /home-equity-line/ footnotes both promises (funding in as few as 5 days on loans ≤$400k; no in-person appraisal²). Achieve does not",
       "fix": "Loans + Compliance: one APR, one speed, one appraisal line across Meta + /heloc + HEL + get-started; footnote like Figure",
       "firstReport": "",
       "links": [],
@@ -2824,7 +2848,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.achieve.com/get-started"
@@ -2879,7 +2904,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ FDR Meta \"~75 Denied…\" · Americor via Mario Lopez (11 ads, Oct 8): \"federally regulated\" / 500,000 Americans / 40% lower payments / 50% reduce debt — lands americordebtrelief.com (noindex); \"federally regulated\" and \"500,000\" not in that page's server HTML; landing then shows a personal-loan APR disclosure (5.99%–29.99%). InCharge Google \"~200\": \"You Don't Need a Loan to Eliminate Credit Card Debt\". MMI Google 47: \"We Are Not A Loan Company\". FDR's version is the only one landing on a test-env build (/fb)",
+      "why": "FDR Meta \"~75 Denied…\" · Americor via Mario Lopez (11 ads, Oct 8): \"federally regulated\" / 500,000 Americans / 40% lower payments / 50% reduce debt — lands americordebtrelief.com (noindex); \"federally regulated\" and \"500,000\" not in that page's server HTML; landing then shows a personal-loan APR disclosure (5.99%–29.99%). InCharge Google \"~200\": \"You Don't Need a Loan to Eliminate Credit Card Debt\". MMI Google 47: \"We Are Not A Loan Company\". FDR's version is the only one landing on a test-env build (/fb)",
       "fix": "Apply: get /fb out of test before more anti-loan spend; Compliance: watch peer claim risk",
       "firstReport": "",
       "links": [],
@@ -2927,7 +2952,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Meta: \"A+ BBB Rated\", \"Over 1M People Helped\", \"Debt Free in 24-48 Months\", \"$1B\" saved, NerdWallet co-brand. So FDR's paid \"BBB A+\" badge is no longer distinctive. Spanish look-alike: IG accredited__relief → misspelled accreditedebitrelief.com (unverified impostor; Fri OCR item). ClearOne Meta = 0",
+      "why": "Meta: \"A+ BBB Rated\", \"Over 1M People Helped\", \"Debt Free in 24-48 Months\", \"$1B\" saved, NerdWallet co-brand. So FDR's paid \"BBB A+\" badge is no longer distinctive. Spanish look-alike: IG accredited__relief → misspelled accreditedebitrelief.com (unverified impostor; Fri OCR item). ClearOne Meta = 0",
       "fix": "Public + Compliance: badge differentiation; Fri verify impostor",
       "firstReport": "",
       "links": [],
@@ -2957,7 +2982,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ Point ~300 ads: \"Access Up To $600k For Home Improvements Or Debt Relief\" / \"No Monthly Payments For 30 Yrs\" (4.8★). MMI 47 · InCharge ~200 · LightStream ~300 (\"$0 Down, $0 Fees\") · Americor 96 · New Era 2 · Debt.com 6 (video only). Credit Associates / Iconic / Clean Start = 0 on Google. FDR + bills still 0",
+      "why": "Point ~300 ads: \"Access Up To $600k For Home Improvements Or Debt Relief\" / \"No Monthly Payments For 30 Yrs\" (4.8★). MMI 47 · InCharge ~200 · LightStream ~300 (\"$0 Down, $0 Fees\") · Americor 96 · New Era 2 · Debt.com 6 (video only). Credit Associates / Iconic / Clean Start = 0 on Google. FDR + bills still 0",
       "fix": "Loans: HEI-as-debt-relief shelf; Public: FDR still absent Search while peers fill anti-loan + HEI",
       "firstReport": "",
       "links": [],
@@ -2990,7 +3015,7 @@
       "daysOpen": 3,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ NDR: 56 creatives, 11,657 national airings 9/13–10/13 (spend #115, airing #29), incl. Spanish \"Jaime, Henry y Karina\". Accredited: 7 creatives / 1,743 airings, spokesperson Rob Lowe. FDR: 9 creatives (airings blurred) incl. Spanish \"Libre de deudas\" — Spanish TV while Fri Spanish Meta = 0. iSpot desc of \"Debt Free in Months\" cites \"settled over 8 billion in debt\" = fourth scale figure next to home $20B, /facts/ 1M+, release 2M/$22B (air date locked → soft/older spot). Achieve.com TV brand not found (iSpot \"Achieve\" = unrelated nonprofit)",
+      "why": "NDR: 56 creatives, 11,657 national airings 9/13–10/13 (spend #115, airing #29), incl. Spanish \"Jaime, Henry y Karina\". Accredited: 7 creatives / 1,743 airings, spokesperson Rob Lowe. FDR: 9 creatives (airings blurred) incl. Spanish \"Libre de deudas\" — Spanish TV while Fri Spanish Meta = 0. iSpot desc of \"Debt Free in Months\" cites \"settled over 8 billion in debt\" = fourth scale figure next to home $20B, /facts/ 1M+, release 2M/$22B (air date locked → soft/older spot). Achieve.com TV brand not found (iSpot \"Achieve\" = unrelated nonprofit)",
       "fix": "Public + Compliance: one scale figure across TV/paid/owned; Funnel Thu: where Spanish TV lands",
       "firstReport": "",
       "links": [],
@@ -3002,7 +3027,8 @@
         "nodes": [
           "achieve.com",
           "freedomdebtrelief.com/facts"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -3022,7 +3048,7 @@
       "daysOpen": 2,
       "severity": "unknown",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "→ NDR release (Martinsville Oct 31, 2026, CW; \"second time\"); Jayski pickup SOFT. FDR newest release still Oct 6 (press-releases byte-identical). Scoreboard News Parity → NDR; tally NDR 15 · FDR 4 · split 2 (was 14/4/2). Brand-awareness / newsroom cadence — not an SEO technical defect",
+      "why": "NDR release (Martinsville Oct 31, 2026, CW; \"second time\"); Jayski pickup SOFT. FDR newest release still Oct 6 (press-releases byte-identical). Scoreboard News Parity → NDR; tally NDR 15 · FDR 4 · split 2 (was 14/4/2). Brand-awareness / newsroom cadence — not an SEO technical defect",
       "fix": "Public: newsroom cadence; Ads Fri: Meta + iSpot NASCAR creatives/destinations (claim/reach only; already on ads-watch-2026-10-16-OPEN.md)",
       "firstReport": "",
       "links": [
@@ -3166,7 +3192,8 @@
         "kind": "page",
         "nodes": [
           "achieve.com/heloc"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [
         "https://www.achieve.com/get-started/loans/603/eligibility"
@@ -3222,7 +3249,8 @@
         "kind": "page",
         "nodes": [
           "bills.com"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.bills.com/reviews",
@@ -3263,7 +3291,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/scam"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/fraud/",
@@ -3369,7 +3398,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/debt-relief-program"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -3497,7 +3527,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/scam"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://apply.freedomdebtrelief.com/fb"
@@ -3577,7 +3608,8 @@
         "nodes": [
           "achieve.com/heloc",
           "achieve.com/personal-loans"
-        ]
+        ],
+        "drawn": true
       },
       "unmatchedUrls": [],
       "screenshots": [
@@ -3877,7 +3909,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [],
       "screenshots": []
@@ -3974,7 +4007,8 @@
         "kind": "page",
         "nodes": [
           "freedomdebtrelief.com/facts"
-        ]
+        ],
+        "drawn": false
       },
       "unmatchedUrls": [
         "https://www.freedomdebtrelief.com/fees/",
