@@ -262,7 +262,7 @@ function clip(t: string, n: number) {
 function brandArc(a: Pt, b: Pt): { c: Pt; apex: Pt } {
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2;
-  const c = { x: r2(mx), y: r2(Math.min(a.y, b.y) - 300) };
+  const c = { x: r2(mx), y: r2(Math.min(a.y, b.y) - 360) };
   return { c, apex: { x: r2(mx), y: r2(0.5 * my + 0.5 * c.y) } };
 }
 
