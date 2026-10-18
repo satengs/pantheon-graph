@@ -24,16 +24,19 @@ import {
 import {
   buildEvidenceIndex,
   EV_COLOR,
-  EV_GLYPH,
   EV_LABEL,
+  EV_TAG_FILL,
+  EV_TAG_STROKE,
   evRank,
+  evTagText,
+  evWorstRated,
   filterEvRollup,
   useEvidence,
   type EvRollup,
   type EvSeverityFilter,
   type SourceFilter,
 } from "@/lib/graph/evidence";
-import { EvidenceCard } from "@/components/studio/EvidenceCard";
+import { EvDiamond, EvidenceCard, EvTag } from "@/components/studio/EvidenceCard";
 
 type Pt = { x: number; y: number };
 
@@ -285,8 +288,8 @@ const SEV_CHIPS: { id: EvSeverityFilter; label: string }[] = [
   { id: "crit-high", label: "Critical + High" },
   ...SEVERITIES.map((s) => ({ id: s as EvSeverityFilter, label: SEVERITY_LABEL[s] })),
 ];
-/** Only Evidence Brief rows can be "unknown" (brief gave no P0 / severity wording). */
-const UNKNOWN_CHIP = { id: "unknown" as EvSeverityFilter, label: "Unknown" };
+/** Only Evidence Brief rows can be "unrated" (brief gave no P0 / severity wording). */
+const UNKNOWN_CHIP = { id: "unrated" as EvSeverityFilter, label: "Unrated" };
 const SOURCE_CHIPS: { id: SourceFilter; label: string }[] = [
   { id: "pantheon", label: "Pantheon" },
   { id: "evidence", label: "Evidence" },
@@ -344,9 +347,9 @@ export function GraphCanvas() {
   const [unmappedOpen, setUnmappedOpen] = useState(false);
   const showPantheon = source !== "evidence";
   const showEvidence = source !== "pantheon";
-  /** Pantheon rules never carry "unknown", so that chip matches none of them. */
-  const pMatch = (s: Severity) => sevFilter !== "unknown" && severityMatches(s, sevFilter);
-  const pRoll = (r: SevRollup | null) => (sevFilter === "unknown" ? null : filterRollup(r, sevFilter));
+  /** Pantheon rules never carry "unrated", so that chip matches none of them. */
+  const pMatch = (s: Severity) => sevFilter !== "unrated" && severityMatches(s, sevFilter);
+  const pRoll = (r: SevRollup | null) => (sevFilter === "unrated" ? null : filterRollup(r, sevFilter));
   const [sevHover, setSevHover] = useState<SevHover | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -621,6 +624,24 @@ export function GraphCanvas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.nodes, base, full, fitTick, ready, sevIndex]);
 
+  // Screen px per SVG unit, for zoom-aware Evidence tags (page tags appear once legible).
+  const [pxPerUnit, setPxPerUnit] = useState(0.5);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const upd = () => {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      setPxPerUnit(Math.min(r.width / (vb.w / zoom), r.height / (vb.h / zoom)));
+    };
+    upd();
+    const ro = new ResizeObserver(upd);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [vb, zoom, ready]);
+  /** Page-dot Evidence tags (text ≤ 14 units) appear once that reaches ~9px on screen (about 3 zoom-ins). */
+  const pagesLegible = pxPerUnit * 14 >= 9;
+
   function clientToSvg(e: RE<SVGSVGElement> | PointerEvent): Pt {
     const el = svgRef.current;
     if (!el) return { x: 0, y: 0 };
@@ -790,17 +811,11 @@ export function GraphCanvas() {
             type="button"
             role="radio"
             aria-checked={sevFilter === UNKNOWN_CHIP.id}
-            data-sev-chip="unknown"
+            data-sev-chip="unrated"
             onClick={() => setSevFilter(UNKNOWN_CHIP.id)}
-            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${sevFilter === "unknown" ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+            className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${sevFilter === "unrated" ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
           >
-            <span
-              className="inline-flex size-4 items-center justify-center rounded-[3px] text-[9px] font-bold text-[#0b0c0e]"
-              style={{ background: EV_COLOR.unknown }}
-              aria-hidden
-            >
-              ?
-            </span>
+            <EvDiamond />
             {UNKNOWN_CHIP.label}
           </button>
         ) : null}
@@ -815,7 +830,7 @@ export function GraphCanvas() {
               data-source-chip={c.id}
               onClick={() => {
                 setSource(c.id);
-                if (c.id === "pantheon" && sevFilter === "unknown") setSevFilter("all");
+                if (c.id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
               }}
               className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${source === c.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
             >
@@ -841,7 +856,7 @@ export function GraphCanvas() {
           </button>
         ) : null}
         <span className="hidden pl-1 text-[10px] text-subtle xl:inline">
-          Ring colour = worst open rule · pill = open rules per severity (C2 H1 = 2 critical + 1 high) · square “E” tag = Evidence Brief row
+          Ring colour = worst open rule · pill = open rules per severity (C2 H1 = 2 critical + 1 high) · ◇ outlined tag = Evidence Brief rows (count · worst rated)
           {evDoc ? ` (brief ${evDoc.newestBrief.date})` : ""} · hubs and brands roll up their pages · brand arc = cross-brand L2
         </span>
       </div>
@@ -1206,8 +1221,29 @@ export function GraphCanvas() {
               const evAll = showEvidence ? (evByNode.get(n.id) ?? null) : null;
               const evr = filterEvRollup(evAll, sevFilter);
               const sevDim = sevFilter !== "all" && !sev && !evr;
-              const evText = evr ? `E${EV_GLYPH[evr.worst]} ${evr.count}` : "";
-              const evW = n.kind === "page" ? 8 + evText.length * 4.4 : 10 + evText.length * 6.2;
+              // Page tags only once zoomed in enough to read; hubs/brands carry the roll-up until then.
+              const evShow = !!evr && (n.kind !== "page" || pagesLegible);
+              const evText = evShow ? evTagText(evr) : "";
+              // Brand / parent: one line left of the node, "◇ Evidence 60 · 2 critical". Hubs / pages sit
+              // ~45px apart at default zoom, so they get the compact form: "◇ 5" (5 rows, none rated) or a
+              // two-line "◇ 3" over "1 crit" when a row is rated. Legend explains both.
+              const evStack = n.kind !== "brand" && n.kind !== "parent";
+              const evRated = evWorstRated(evr);
+              const evLines = !evShow
+                ? []
+                : evStack
+                  ? [String(evr!.count), ...(evRated ? [evTagText(evr, true).split(" · ")[1]!] : [])]
+                  : [evText];
+              // ≥ ~10px text on screen at any zoom (world size grows as you zoom out), capped.
+              const evFs = n.kind === "page" ? Math.min(14, Math.max(7.5, 9.5 / pxPerUnit)) : Math.min(30, Math.max(10, 10.5 / pxPerUnit));
+              const evH = evFs * (evLines.length > 1 ? 2.75 : 1.7);
+              // Mono ≈ 0.6em/char; the diamond sits on line 1 only (1.45em), later lines start at 0.45em.
+              const evW =
+                evFs * (Math.max(0, ...evLines.map((l, li) => (li === 0 ? 1.45 : 0.45) + l.length * 0.6)) + 0.45);
+              // Tag box origin (top-left), node-local. Stacked tags sit just above the severity pill.
+              const evX = evStack ? -evW / 2 : -r - evW - evFs * 0.6;
+              const pillTop = n.kind === "glossary" ? -r * 1.15 - 8 : -r * 0.9 - (n.kind === "page" ? 5.5 : 8);
+              const evY = evStack ? pillTop - evH - evFs * 0.25 : -evH / 2;
               const sevTitle =
                 n.kind === "page"
                   ? pagePath(n.url ?? n.label)
@@ -1239,6 +1275,7 @@ export function GraphCanvas() {
                   data-sev-count={sev?.count}
                   data-ev={evr?.worst}
                   data-ev-count={evr?.count}
+                  data-ev-tag-text={evText || undefined}
                   opacity={sevDim ? 0.22 : 1}
                   transform={`translate(${p.x} ${p.y})`}
                   className="cursor-grab"
@@ -1440,29 +1477,33 @@ export function GraphCanvas() {
                       </text>
                     </g>
                   ) : null}
-                  {evr ? (
-                    <g pointerEvents="none" data-ev-marker={evr.worst}>
+                  {evr && evShow ? (
+                    <g pointerEvents="none" data-ev-marker={evr.worst} data-ev-label={evText}>
+                      {/* Neutral outline, square corners, hollow diamond: a row count, not a severity pill. */}
+                      <rect x={evX} y={evY} width={evW} height={evH} fill={EV_TAG_FILL} stroke={EV_TAG_STROKE} strokeWidth={evFs / 9} />
                       <rect
-                        x={-bx - evW + 2}
-                        y={by - badgeH / 2}
-                        width={evW}
-                        height={badgeH}
-                        rx={2}
-                        fill={EV_COLOR[evr.worst]}
-                        stroke="#0b0c0e"
-                        strokeWidth={1.2}
+                        x={evX + evFs * 0.55}
+                        y={evY + evFs * 0.85 - evFs * 0.27}
+                        width={evFs * 0.54}
+                        height={evFs * 0.54}
+                        fill="none"
+                        stroke={EV_TAG_STROKE}
+                        strokeWidth={evFs / 8}
+                        transform={`rotate(45 ${evX + evFs * 0.82} ${evY + evFs * 0.85})`}
                       />
-                      <text
-                        x={-bx - evW / 2 + 2}
-                        y={by + (small ? 2.6 : 3.6)}
-                        textAnchor="middle"
-                        fill="#0b0c0e"
-                        fontSize={small ? 7.5 : 10}
-                        fontWeight={700}
-                        fontFamily="IBM Plex Mono, monospace"
-                      >
-                        {evText}
-                      </text>
+                      {evLines.map((line, li) => (
+                        <text
+                          key={li}
+                          x={evX + evFs * (li === 0 ? 1.45 : 0.45)}
+                          y={evY + evFs * 0.85 + evFs * 0.36 + li * evFs * 1.1}
+                          fill={EV_TAG_STROKE}
+                          fontSize={evFs}
+                          fontWeight={500}
+                          fontFamily="IBM Plex Mono, monospace"
+                        >
+                          {line}
+                        </text>
+                      ))}
                     </g>
                   ) : null}
                 </g>
@@ -1558,14 +1599,7 @@ export function GraphCanvas() {
                 {SEVERITY_GLYPH[sevHover.roll.worst]}
               </span>
             ) : null}
-            {sevHover.ev ? (
-              <span
-                className="inline-flex h-4 min-w-5 items-center justify-center rounded-[3px] px-1 text-[9px] font-bold text-[#0b0c0e]"
-                style={{ background: EV_COLOR[sevHover.ev.worst] }}
-              >
-                E{EV_GLYPH[sevHover.ev.worst]}
-              </span>
-            ) : null}
+            {sevHover.ev ? <EvTag text={evTagText(sevHover.ev, true)} /> : null}
             <span className="truncate">{sevHover.title}</span>
           </p>
           {sevHover.roll ? (
@@ -1604,8 +1638,7 @@ export function GraphCanvas() {
           {sevHover.ev ? (
             <div data-testid="severity-tooltip-evidence" className={sevHover.roll ? "mt-2 border-t-2 border-border pt-1.5" : ""}>
               <p className="mt-0.5 text-[10px] text-subtle">
-                Evidence Brief · worst {EV_LABEL[sevHover.ev.worst]} · {sevHover.ev.count} row
-                {sevHover.ev.count === 1 ? "" : "s"}
+                {evTagText(sevHover.ev)} (row count · worst rated severity)
               </p>
               <ul className="mt-1 flex flex-col gap-1">
                 {sevHover.ev.items.slice(0, sevHover.roll ? 2 : 3).map((i) => (
@@ -1658,7 +1691,7 @@ export function GraphCanvas() {
               .slice()
               .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
               .map((i) => (
-                <EvidenceCard key={i.id} item={i} />
+                <EvidenceCard key={i.id} item={i} unmapped />
               ))}
           </div>
         </div>
@@ -1679,6 +1712,22 @@ export function GraphCanvas() {
           className="inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-surface px-2 text-sm text-fg shadow-[var(--shadow-border)]"
         >
           +
+        </button>
+        <button
+          type="button"
+          data-testid="reset-layout"
+          title="Clear dragged positions and re-fit"
+          onClick={() => {
+            offsetsRef.current = {};
+            setOffsets({});
+            window.localStorage.removeItem("origin.graphOffsets");
+            setZoom(1);
+            setPan({ x: 0, y: 0 });
+            setFitTick((t) => t + 1);
+          }}
+          className="inline-flex h-8 items-center justify-center rounded-md bg-surface px-2 text-xs text-fg shadow-[var(--shadow-border)]"
+        >
+          Reset layout
         </button>
         <button
           type="button"
@@ -1709,6 +1758,13 @@ export function GraphCanvas() {
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-px w-3 bg-danger" /> Conflict
         </span>
+        {showEvidence && evDoc ? (
+          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-evidence">
+            <EvTag text="Evidence 22 · 1 critical" /> = 22 Evidence Brief rows, worst rated 1 critical ·{" "}
+            <EvTag text="5" /> on products / pages = 5 rows, none rated
+            {pagesLegible ? "" : " · page tags show when zoomed in"}
+          </span>
+        ) : null}
         <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
       </div>
       </div>

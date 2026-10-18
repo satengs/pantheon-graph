@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -160,6 +160,8 @@ export function Backlog() {
     return html.length ? [...rules, HTML_DIVIDER, ...html] : rules;
   }, [familyFindings, visibleRules, query, kind, sortKey, sortDir, roadmap]);
 
+  const [htmlJump, setHtmlJump] = useState<{ index: number; tick: number } | null>(null);
+  const issuesSectionRef = useRef<HTMLElement>(null);
   const htmlCount = categories.filter((c) => c.source === "html" && c !== HTML_DIVIDER).length;
 
   useEffect(() => {
@@ -285,10 +287,21 @@ export function Backlog() {
         </Button>
         <span className="ml-auto inline-flex items-center gap-3">
           <SevTotals totals={familyTotals} label="Open rules" testId="issues-sev-totals" />
-          <span className="vh-whisper">
-            {categories.filter((c) => c.source === "rule").length} rules in view
-            {htmlCount ? ` · ${htmlCount} live HTML checks` : ""}
-          </span>
+          <span className="vh-whisper">{categories.filter((c) => c.source === "rule").length} rules in view</span>
+          {htmlCount ? (
+            <button
+              type="button"
+              data-testid="html-checks-chip"
+              title="Jump to the Live HTML checks section (not rules; not in the totals)"
+              onClick={() => {
+                setHtmlJump((j) => ({ index: categories.indexOf(HTML_DIVIDER), tick: (j?.tick ?? 0) + 1 }));
+                issuesSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+              }}
+              className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-raised px-2 text-[11px] text-muted hover:text-fg"
+            >
+              +{htmlCount} HTML checks
+            </button>
+          ) : null}
         </span>
       </div>
       {note ? <p className="mb-2 text-xs text-muted">{note}</p> : null}
@@ -300,7 +313,7 @@ export function Backlog() {
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
+      <section ref={issuesSectionRef} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
         <p className="vh-whisper px-3 pb-1">Page, then section, then the problem. One selected.</p>
         <p className="px-3 pb-2 text-[11px] text-muted">
@@ -311,6 +324,7 @@ export function Backlog() {
           className="min-h-0 flex-1 overflow-auto"
           items={categories}
           rowHeight={104}
+          jumpTo={htmlJump}
           getKey={(c) => c.code}
           selectedIndex={categories.findIndex((c) => c.code === selectedIssueId || RULES.find((r) => r.code === c.code)?.id === selectedIssueId)}
           rowWrapper={(c) => {

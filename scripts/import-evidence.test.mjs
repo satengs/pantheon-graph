@@ -34,10 +34,10 @@ test("named columns parse an extra Severity column", () => {
   assert.match(rows[0].point, /heloc/);
 });
 
-test("severity: P0 label → critical, passing mention ≠ P0, column wins, else unknown", () => {
+test("severity: P0 label → critical, passing mention ≠ P0, column wins, else unrated", () => {
   assert.equal(m.severityFrom(["**P0-2** cold Unauthorized"]).severity, "critical");
-  assert.equal(m.severityFrom(["**Hub** 2 CTAs (P0-4 reaches reviews)"]).severity, "unknown");
-  assert.equal(m.severityFrom(["x"], ["NEW · near-P0"]).severity, "unknown");
+  assert.equal(m.severityFrom(["**Hub** 2 CTAs (P0-4 reaches reviews)"]).severity, "unrated");
+  assert.equal(m.severityFrom(["x"], ["NEW · near-P0"]).severity, "unrated");
   assert.equal(m.severityFrom(["x"], ["UPDATE · **P0**"]).severity, "critical");
   assert.equal(m.severityFrom(["x"], [], "Medium").severity, "medium");
 });

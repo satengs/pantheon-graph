@@ -10,6 +10,7 @@ export function VirtualList<T>({
   getKey,
   renderRow,
   rowWrapper,
+  jumpTo,
 }: {
   items: T[];
   rowHeight: number;
@@ -19,6 +20,8 @@ export function VirtualList<T>({
   getKey: (item: T, index: number) => string;
   renderRow: (item: T, index: number) => ReactNode;
   rowWrapper?: (item: T, index: number) => { className?: string; style?: CSSProperties } | undefined;
+  /** Scroll so this row is at the top; bump `tick` to jump again to the same row. */
+  jumpTo?: { index: number; tick: number } | null;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -42,6 +45,14 @@ export function VirtualList<T>({
     if (top < el.scrollTop) el.scrollTop = top;
     else if (top + rowHeight > el.scrollTop + el.clientHeight) el.scrollTop = top + rowHeight - el.clientHeight;
   }, [selectedIndex, rowHeight]);
+
+  useEffect(() => {
+    if (!jumpTo || jumpTo.index < 0) return;
+    const el = ref.current;
+    if (!el) return;
+    el.scrollTop = jumpTo.index * rowHeight;
+    setScrollTop(el.scrollTop);
+  }, [jumpTo, rowHeight]);
 
   const { start, end } = windowRange(items.length, scrollTop, height, rowHeight, overscan);
   const slice = items.slice(start, end);

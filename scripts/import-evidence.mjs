@@ -178,7 +178,7 @@ function expandIds(id) {
  *    or a status cell with P0 ("STILL OPEN · P0"). A passing mention of another
  *    row's P0 ("P0-4 reaches reviews") does not count;
  *  - High/Medium/Low only from explicit wording ("severity: high", "**High**");
- *  - otherwise "unknown".
+ *  - otherwise "unrated".
  * Checked across every brief version of the row.
  */
 export function severityFrom(points, statuses = [], sevCol = "") {
@@ -202,7 +202,7 @@ export function severityFrom(points, statuses = [], sevCol = "") {
       return { severity: v, basis: `brief says "${w[0].replace(/\*/g, "")}"` };
     }
   }
-  return { severity: "unknown", basis: "no P0 label or severity wording in any brief version of this row" };
+  return { severity: "unrated", basis: "no P0 label or severity wording in any brief version of this row" };
 }
 
 export function statusFrom(s) {
@@ -558,7 +558,7 @@ function main() {
       lastSeen: asOfD,
       daysOpen: d.days,
       severity: sev.severity,
-      severityBasis: sev.severity === "unknown" ? "NDR-vs-FDR scoreboard gives no priority for this defect" : sev.basis,
+      severityBasis: sev.severity === "unrated" ? "NDR-vs-FDR scoreboard gives no priority for this defect" : sev.basis,
       why,
       fix: "",
       links: linksFrom(`${d.row} ${d.proof}`),
@@ -645,7 +645,7 @@ function main() {
     siteWide: count((i) => i.match.kind === "site-wide"),
     unmapped: count((i) => i.match.kind === "unmapped"),
     screenshots: used.size,
-    severity: Object.fromEntries(["critical", "high", "medium", "low", "unknown"].map((s) => [s, count((i) => i.severity === s)])),
+    severity: Object.fromEntries(["critical", "high", "medium", "low", "unrated"].map((s) => [s, count((i) => i.severity === s)])),
     status: Object.fromEntries(["open", "partly fixed", "fixed"].map((s) => [s, count((i) => i.status === s)])),
   };
   const doc = {

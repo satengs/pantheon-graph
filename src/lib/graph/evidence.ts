@@ -7,9 +7,9 @@ import { SEVERITIES, SEVERITY_COLOR, urlKey } from "@/lib/graph/severity";
 /**
  * Evidence Brief issues (public/data/evidence.json, built by `npm run import:evidence`).
  * Severity comes from the brief's own wording (P0 → critical); rows with no basis
- * stay "unknown". Nothing here re-scores them.
+ * stay "unrated". Nothing here re-scores them.
  */
-export type EvSeverity = Severity | "unknown";
+export type EvSeverity = Severity | "unrated";
 export type EvStatus = "open" | "partly fixed" | "fixed";
 
 export type EvidenceItem = {
@@ -45,20 +45,20 @@ export type EvidenceDoc = {
   items: EvidenceItem[];
 };
 
-export const EV_SEVERITIES: EvSeverity[] = [...SEVERITIES, "unknown"];
-export const EV_COLOR: Record<EvSeverity, string> = { ...SEVERITY_COLOR, unknown: "#9aa3ad" };
-export const EV_GLYPH: Record<EvSeverity, string> = { critical: "C", high: "H", medium: "M", low: "L", unknown: "?" };
+export const EV_SEVERITIES: EvSeverity[] = [...SEVERITIES, "unrated"];
+export const EV_COLOR: Record<EvSeverity, string> = { ...SEVERITY_COLOR, unrated: "#9aa3ad" };
+export const EV_GLYPH: Record<EvSeverity, string> = { critical: "C", high: "H", medium: "M", low: "L", unrated: "?" };
 export const EV_LABEL: Record<EvSeverity, string> = {
   critical: "Critical",
   high: "High",
   medium: "Medium",
   low: "Low",
-  unknown: "Unknown",
+  unrated: "Unrated",
 };
 
 export type SourceFilter = "pantheon" | "evidence" | "both";
-/** Severity chips plus "unknown", which only Evidence rows can carry. */
-export type EvSeverityFilter = SeverityFilter | "unknown";
+/** Severity chips plus "unrated", which only Evidence rows can carry. */
+export type EvSeverityFilter = SeverityFilter | "unrated";
 
 export function evRank(s: EvSeverity) {
   return EV_SEVERITIES.indexOf(s);
@@ -164,4 +164,30 @@ export function useEvidence(): EvidenceDoc | null {
     };
   }, [doc]);
   return doc;
+}
+
+/** Neutral colour for the Evidence tag: never a severity hue, so it can't read as a C/H/M/L pill. */
+export const EV_TAG_STROKE = "#c9d1d9";
+export const EV_TAG_FILL = "#0b0c0e";
+
+/** Worst *rated* severity in a roll-up and how many rows carry it (unrated rows are ignored). */
+export function evWorstRated(r: EvRollup | null): { sev: Severity; n: number } | null {
+  if (!r) return null;
+  const rated = r.items.filter((i) => i.severity !== "unrated");
+  if (!rated.length) return null;
+  const sev = rated[0]!.severity as Severity; // items are sorted worst-first
+  return { sev, n: rated.filter((i) => i.severity === sev).length };
+}
+
+/**
+ * Evidence tag text. The number is a count of Evidence Brief rows, never a severity count:
+ *  full    "Evidence 22 · 1 critical" / "Evidence 22 · unrated"
+ *  compact "Ev 3 · 1 crit" / "Ev 3 · unrated" (page dots)
+ */
+export function evTagText(r: EvRollup | null, compact = false): string {
+  if (!r) return "";
+  const w = evWorstRated(r);
+  const short: Record<Severity, string> = { critical: "crit", high: "high", medium: "med", low: "low" };
+  const tail = w ? `${w.n} ${compact ? short[w.sev] : w.sev}` : "unrated";
+  return `${compact ? "Ev" : "Evidence"} ${r.count} · ${tail}`;
 }
