@@ -19,6 +19,8 @@ const LAYOUTS: { id: GraphLayout; label: string }[] = [
 ];
 
 const DRAG_PX = 14;
+/** Page grid width under a tree hub: 3 × 42px fits inside the 128px hub column. */
+const TREE_PAGE_COLS = 3;
 
 function r2(n: number) {
   return Math.round(n * 100) / 100;
@@ -60,6 +62,22 @@ function controlPoint(a: Pt, b: Pt, idx: number, kind: GraphEdge["kind"], explod
 }
 
 
+/** Lay brands left to right with room for each brand's hub row, so sibling hubs never overlap. */
+function placeBrandsByWidth(brands: GraphNode[], hubs: GraphNode[], step: number, y: number, pos: Map<string, Pt>) {
+  const gap = 140;
+  const widths = brands.map((b) => {
+    const own = hubs.filter((h) => (h.brand ?? "fdr") === b.brand && h.kind !== "glossary" && h.product !== "glossary").length;
+    return Math.max(1, own) * step;
+  });
+  const total = widths.reduce((a, w) => a + w, 0) + gap * Math.max(0, brands.length - 1);
+  let x = -total / 2;
+  brands.forEach((b, i) => {
+    const w = widths[i]!;
+    pos.set(b.id, { x: r2(x + w / 2), y });
+    x += w + gap;
+  });
+}
+
 function layoutOf(
   kind: GraphLayout,
   nodes: GraphNode[],
@@ -97,9 +115,7 @@ function layoutOf(
       pos.set(n.id, { x: r2(((i % cols) - (cols - 1) / 2) * 170), y: r2(Math.floor(i / cols) * 120 - 80) });
     });
   } else if (kind === "breadthfirst") {
-    brands.forEach((b, i) => {
-      pos.set(b.id, { x: r2((i - (brands.length - 1) / 2) * 460), y: -230 });
-    });
+    placeBrandsByWidth(brands, hubs, 128, -230, pos);
     const byBrand = new Map<string, GraphNode[]>();
     for (const h of hubs) {
       const k = h.brand ?? "fdr";
@@ -112,9 +128,7 @@ function layoutOf(
       });
     }
   } else {
-    brands.forEach((b, i) => {
-      pos.set(b.id, { x: r2((i - (brands.length - 1) / 2) * 560), y: -230 });
-    });
+    placeBrandsByWidth(brands, hubs, 128, -230, pos);
     const byBrand = new Map<string, GraphNode[]>();
     for (const h of hubs) {
       const k = h.brand ?? "fdr";
@@ -130,10 +144,16 @@ function layoutOf(
           y: origin.y + 160,
         });
       });
+      // Glossary row sits below the deepest product page grid (3 columns) so they never overlap.
+      const rows = Math.max(
+        0,
+        ...products.map((h) => Math.ceil(pages.filter((pg) => edges.some((e) => e.source === h.id && e.target === pg.id)).length / TREE_PAGE_COLS)),
+      );
+      const glossY = rows ? 160 + 62 + rows * 38 + 56 : 300;
       gloss.forEach((h, i) => {
         pos.set(h.id, {
           x: r2(origin.x + (i - (gloss.length - 1) / 2) * 80),
-          y: origin.y + 300,
+          y: origin.y + glossY,
         });
       });
     }
@@ -204,7 +224,7 @@ function layoutOf(
           y: r2(origin.y + 58 + Math.floor(i / cols) * 40),
         });
       } else {
-        const cols = Math.min(5, Math.max(1, list.length));
+        const cols = Math.min(kind === "tree" ? TREE_PAGE_COLS : 5, Math.max(1, list.length));
         pos.set(p.id, {
           x: r2(origin.x + ((i % cols) - (cols - 1) / 2) * 42),
           y: r2(origin.y + 62 + Math.floor(i / cols) * 38),
@@ -277,6 +297,7 @@ export function GraphCanvas() {
   const [ready, setReady] = useState(false);
   const [hoverEdgeId, setHoverEdgeId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [fitTick, setFitTick] = useState(0);
   const lastExpand = useRef(0);
   const dragRef = useRef<typeof drag>(null);
   useEffect(() => {
@@ -295,6 +316,18 @@ export function GraphCanvas() {
       off();
     };
   }, [ready]);
+  useEffect(() => {
+    // React's onWheel is passive, so preventDefault there logs a warning per tick.
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dir = e.deltaY > 0 ? 1 / 1.12 : 1.12;
+      setZoom((z) => Math.min(2.8, Math.max(0.45, z * dir)));
+    };
+    svg.addEventListener("wheel", onWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", onWheel);
+  }, [ready, maximized]);
   const offsetsRef = useRef(offsets);
   offsetsRef.current = offsets;
 
@@ -408,9 +441,10 @@ export function GraphCanvas() {
     const distPx = Math.hypot(e.clientX - cur.cx, e.clientY - cur.cy);
     const moved = cur.moved || distPx > 4;
     if (!moved) return;
-    if (captureEl && "setPointerCapture" in captureEl) {
+    const capTarget = svgRef.current ?? captureEl;
+    if (capTarget && "setPointerCapture" in capTarget) {
       try {
-        (captureEl as SVGElement).setPointerCapture((e as PointerEvent).pointerId);
+        (capTarget as SVGElement).setPointerCapture((e as PointerEvent).pointerId);
       } catch {
         /* already captured */
       }
@@ -434,15 +468,19 @@ export function GraphCanvas() {
 
     // Fit from layout positions only. Drag offsets must not retarget the
   // camera — otherwise a hull drag looks stationary (viewBox follows).
+  // Fit (button, graph change) frames base + the drag offsets as they stand at that moment.
   const vb = useMemo(() => {
     const pts: Pt[] = [];
+    const off = offsetsRef.current;
     for (const n of graph.nodes) {
       const p = base.get(n.id);
       if (!p) continue;
-      pts.push(p);
+      const o = off[n.id];
+      pts.push(o ? { x: p.x + o.x, y: p.y + o.y } : p);
     }
     return fitView(pts, full ? 160 : 128);
-  }, [graph.nodes, base, full]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graph.nodes, base, full, fitTick, ready]);
 
   function clientToSvg(e: RE<SVGSVGElement> | PointerEvent): Pt {
     const el = svgRef.current;
@@ -621,11 +659,6 @@ export function GraphCanvas() {
           viewBox={`${r2(vb.x + (vb.w - vb.w / zoom) / 2)} ${r2(vb.y + (vb.h - vb.h / zoom) / 2)} ${r2(vb.w / zoom)} ${r2(vb.h / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
           className="absolute inset-0 h-full w-full touch-none select-none bg-bg"
-          onWheel={(e) => {
-            e.preventDefault();
-            const dir = e.deltaY > 0 ? 1 / 1.12 : 1.12;
-            setZoom((z) => Math.min(2.8, Math.max(0.45, z * dir)));
-          }}
           role="img"
           aria-label="Content graph. Double-click a node to load related nodes. Back undoes the last step."
           onPointerDown={(e) => {
@@ -703,6 +736,7 @@ export function GraphCanvas() {
                     className="cursor-grab"
                     onPointerDown={(ev) => {
                       ev.stopPropagation();
+                      if (ev.button !== 0) return;
                       const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                       const group = clusterIds(hub.id);
                       const snap = offsetsRef.current;
@@ -724,12 +758,10 @@ export function GraphCanvas() {
                       };
                       dragRef.current = gesture;
                       setDrag(gesture);
-                      try {
-                        svgRef.current?.setPointerCapture(ev.pointerId);
-                      } catch {
-                        /* capture unavailable */
-                      }
-                      if (ev.button === 0) selectNode(hub.id);
+                      // No pointer capture here: capturing on pointerdown retargets dblclick and
+                      // contextmenu to the <svg>, which killed fold and the inspector. Capture starts
+                      // once the pointer actually moves (applyClusterDrag).
+                      selectNode(hub.id);
                     }}
                     onPointerMove={(ev) => {
                       ev.stopPropagation();
@@ -876,6 +908,7 @@ export function GraphCanvas() {
                   className="cursor-grab"
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
+                    if (ev.button !== 0) return;
                     const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                     const snap = offsetsRef.current;
                     const o = snap[n.id] ?? { x: 0, y: 0 };
@@ -897,17 +930,11 @@ export function GraphCanvas() {
                     };
                     dragRef.current = gesture;
                     setDrag(gesture);
-                    try {
-                      svgRef.current?.setPointerCapture(ev.pointerId);
-                    } catch {
-                      /* capture unavailable */
-                    }
-                    if (ev.button === 0) {
-                      selectNode(n.id);
-                      if (n.issueId) {
-                        openIssueDrawer({ issueId: n.issueId });
-                        setTab("issues");
-                      }
+                    // Capture only after movement (see applyClusterDrag) so dblclick/contextmenu reach this node.
+                    selectNode(n.id);
+                    if (n.issueId) {
+                      openIssueDrawer({ issueId: n.issueId });
+                      setTab("issues");
                     }
                   }}
                   onPointerMove={(ev) => {
@@ -1006,12 +1033,16 @@ export function GraphCanvas() {
                           y={r + 12}
                           textAnchor="middle"
                           fill="var(--color-fg)"
+                          stroke="var(--color-bg)"
+                          strokeWidth={3}
+                          paintOrder="stroke"
                           pointerEvents="none"
                           fontSize={8}
                           fontWeight={600}
                           fontFamily="IBM Plex Sans, sans-serif"
                         >
-                          {label}
+                          <title>{n.label}</title>
+                          {n.kind === "page" || label.length <= 16 ? label : `${label.slice(0, 15)}…`}
                         </text>
                       )}
                     </>
@@ -1110,6 +1141,7 @@ export function GraphCanvas() {
           onClick={() => {
             setZoom(1);
             setPan({ x: 0, y: 0 });
+            setFitTick((t) => t + 1);
           }}
           className="inline-flex h-8 items-center justify-center rounded-md bg-surface px-2 text-xs text-fg shadow-[var(--shadow-border)]"
         >

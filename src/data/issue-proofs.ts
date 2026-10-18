@@ -17,6 +17,17 @@ export type IssueProofView = {
   residual?: Array<{ url: string; problem: string; fix: string; owner: string }>;
   /** Show crawl.redirected entries for this brand whose path contains this text. */
   redirected?: { brand: "fdr" | "achieve"; pathIncludes: string };
+  /**
+   * Full URL lists computed from the last crawl, so counts and rows always match.
+   * kind "crawl": live 200 pages in crawl.pages; kind "redirected": crawl.redirected rows.
+   */
+  lists?: Array<{
+    label: string;
+    kind: "crawl" | "redirected";
+    brand: "fdr" | "achieve";
+    prefix: string;
+    includes: string;
+  }>;
 };
 
 export const ISSUE_PROOFS: Record<string, IssueProofView> = {
@@ -316,16 +327,20 @@ export const ISSUE_PROOFS: Record<string, IssueProofView> = {
   },
   S24: {
     conflict:
-      "Cleared on product pages only. What's left: 6 specific items (including 21 indexable Achieve debt-relief learn URLs), 17 Achieve /learn/debt-basics/ articles still targeting FDR's debt-relief queries, and the URLs already fixed by redirect.",
+      "Cleared on product pages only. What's left: 6 specific items (including 26 indexable Achieve debt-relief learn URLs, all listed below), 17 Achieve /learn/debt-basics/ articles still targeting FDR's debt-relief queries, and the URLs already fixed by redirect.",
     residual: [
       { url: "https://www.achieve.com/sitemap-video.xml", problem: "Lists 17 /debt-relief* URLs (10× /debt-relief plus 7 subpage entries) that now 301 to FDR.", fix: "Remove them from the video sitemap.", owner: "Achieve public site" },
-      { url: "https://www.achieve.com/sitemap-articles.xml", problem: "21 Achieve learn URLs with a debt-relief slug (17 in sitemap-articles, 4 in sitemap-consumer-blog) still return 200, are indexable and self-canonical, e.g. /learn/debt-basics/debt-relief-program, /learn/debt-basics/is-debt-relief-legit, /learn/debt-solutions/how-achieve-debt-relief-works (77 “debt relief” mentions, CTAs to /get-started). The conflict is cleared on product pages only, not in content. Funnel Fix live check 2026-10-12 16:11–16:20. The 2026-10-13 recrawl also finds 5 /learn/achieve-insights/*-debt-relief-snapshot pages (26 total).", fix: "301 or noindex each one toward its FDR twin.", owner: "Achieve Public" },
-      { url: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief-video", problem: "8 /learn/debt-relief/*-video URLs 301 to /learn/debt-basics/*-video, which keep “debt relief” in the slug and title (e.g. “What is debt relief? | Achieve”) and stay indexable.", fix: "Point the 301s at FDR, or noindex the targets.", owner: "Achieve Public" },
+      { url: "https://www.achieve.com/sitemap-articles.xml", problem: "26 Achieve /learn/ URLs with debt-relief in the path still return 200, are indexable and self-canonical (2026-10-13 recrawl; every one is listed below). Funnel Fix's live check 2026-10-12 16:11–16:20 found 21 of them (17 in sitemap-articles, 4 in sitemap-consumer-blog); the recrawl adds 5 /learn/achieve-insights/*-debt-relief-snapshot pages. /learn/debt-solutions/how-achieve-debt-relief-works alone has 77 “debt relief” mentions and CTAs to /get-started. The conflict is cleared on product pages only, not in content.", fix: "301 or noindex each one toward its FDR twin.", owner: "Achieve Public" },
+      { url: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief-video", problem: "5 /learn/debt-relief/*-video URLs 301 to /learn/debt-basics/*-video (listed below), and the targets stay indexable. /learn/debt-basics/what-is-debt-relief-video keeps “debt relief” in the slug and title (“What is debt relief? | Achieve”).", fix: "Point the 301s at FDR, or noindex the targets.", owner: "Achieve Public" },
       { url: "https://www.achieve.com/sitemap-general.xml", problem: "Still lists /learn/debt-relief, 8 old /learn/debt-relief/* articles and /debt-relief, which all redirect.", fix: "List only final 200 URLs.", owner: "Achieve public site" },
       { url: "https://www.achieve.com/debt-relief/debt-relief-faq", problem: "Returns 404 (the other subpages 301 to FDR).", fix: "301 to https://www.freedomdebtrelief.com/faq/ or remove links to it.", owner: "Achieve public site" },
       { url: "https://www.freedomdebtrelief.com/l/debt-relief/", problem: "Is the target of Achieve’s /learn/debt-relief 301 but isn’t in any FDR sitemap.", fix: "Add it to FDR’s sitemap, or point the 301 at FDR /debt-relief/.", owner: "FDR public site" },
     ],
     redirected: { brand: "achieve", pathIncludes: "debt-relief" },
+    lists: [
+      { label: "Indexable Achieve /learn/ debt-relief URLs (200, last crawl)", kind: "crawl", brand: "achieve", prefix: "/learn/", includes: "debt-relief" },
+      { label: "Achieve /learn/debt-relief/*-video 301s (last crawl)", kind: "redirected", brand: "achieve", prefix: "/learn/debt-relief/", includes: "-video" },
+    ],
     pairs: [
       { query: "what is debt relief", fdr: "https://www.freedomdebtrelief.com/debt-relief/", achieve: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief" },
       { query: "what is debt relief (video)", fdr: "https://www.freedomdebtrelief.com/debt-relief/", achieve: "https://www.achieve.com/learn/debt-basics/what-is-debt-relief-video" },
