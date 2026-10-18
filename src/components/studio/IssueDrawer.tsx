@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RULES } from "@/data/rules-seed";
 import { ISSUE_PROOFS } from "@/data/issue-proofs";
 import { crawl } from "@/data/crawl";
+import { BRAND_HOST } from "@/lib/graph/types";
 import { listStudio } from "@/lib/server/studio-db";
 import { jsonLdDiff } from "@/lib/html/json-diff";
 import {
@@ -219,7 +220,22 @@ function ProofPairs({ code }: { code?: string }) {
   const r = proof.redirected;
   const redirected = r ? (crawl.redirected ?? []).filter((x) => x.b === r.brand && x.path.includes(r.pathIncludes)) : [];
   const residual = proof.residual ?? [];
-  if (!pairs.length && !redirected.length && !residual.length) return null;
+  const lists = (proof.lists ?? []).map((l) => ({
+    ...l,
+    rows:
+      l.kind === "crawl"
+        ? crawl.pages
+            .filter((p) => p.b === l.brand && p.path.startsWith(l.prefix) && p.path.includes(l.includes))
+            .map((p) => ({ key: p.path, url: `${BRAND_HOST[p.b]}${p.path}`, text: p.path }))
+        : (crawl.redirected ?? [])
+            .filter((x) => x.b === l.brand && x.path.startsWith(l.prefix) && x.path.includes(l.includes))
+            .map((x) => ({
+              key: x.path,
+              url: `${BRAND_HOST[x.b]}${x.path}`,
+              text: `${x.path} → ${x.status >= 400 ? x.status : x.to.replace(/^https?:\/\/(www\.)?/, "")}`,
+            })),
+  }));
+  if (!pairs.length && !redirected.length && !residual.length && !lists.length) return null;
   const short = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "");
   return (
     <div className="mb-5 flex flex-col gap-4">
@@ -241,6 +257,24 @@ function ProofPairs({ code }: { code?: string }) {
           </ol>
         </section>
       ) : null}
+      {lists.map((l) =>
+        l.rows.length ? (
+          <section key={l.label} data-proof-list={l.kind}>
+            <p className="vh-kicker">
+              {l.label} · {l.rows.length}
+            </p>
+            <ol className="mt-2 flex flex-col gap-1">
+              {l.rows.map((x, i) => (
+                <li key={x.key}>
+                  <a href={x.url} target="_blank" rel="noreferrer" className="block break-all font-mono text-[11px] text-muted hover:text-fg hover:underline">
+                    {i + 1}. {x.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null,
+      )}
       {pairs.length ? (
         <section>
           <p className="vh-kicker">Still competing · {pairs.length} FDR vs Achieve pairs</p>
