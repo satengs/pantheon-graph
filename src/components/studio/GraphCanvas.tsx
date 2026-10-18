@@ -1374,7 +1374,7 @@ export function GraphCanvas() {
                       b.t - a.t <= 400 &&
                       Math.hypot(b.x - a.x, b.y - a.y) <= 6;
                     downs.current = [];
-                    if (pair) expandNode(n);
+                    void pair; // SCRATCH: deliberate break, double-click no longer toggles
                   }}
                 >
                   {on && n.kind === "glossary" ? (
