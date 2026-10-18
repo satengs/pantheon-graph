@@ -29,13 +29,13 @@ import {
   EV_TAG_STROKE,
   evRank,
   evTagText,
-  evWorstRated,
   filterEvRollup,
   useEvidence,
   type EvRollup,
   type EvSeverityFilter,
   type SourceFilter,
 } from "@/lib/graph/evidence";
+import { evidenceLabel } from "@/lib/graph/evidence-label";
 import { EvDiamond, EvidenceCard, EvTag } from "@/components/studio/EvidenceCard";
 
 type Pt = { x: number; y: number };
@@ -335,6 +335,7 @@ export function GraphCanvas() {
   const pushGraphFocus = useStudio((s) => s.pushGraphFocus);
   const popGraphFocus = useStudio((s) => s.popGraphFocus);
   const toggleCluster = useStudio((s) => s.toggleCluster);
+  const resetClusters = useStudio((s) => s.resetClusters);
   const collapsedClusters = useStudio((s) => s.collapsedClusters);
   const includeParent = useStudio((s) => s.includeParent);
   const setIncludeParent = useStudio((s) => s.setIncludeParent);
@@ -373,6 +374,8 @@ export function GraphCanvas() {
   const [zoom, setZoom] = useState(1);
   const [fitTick, setFitTick] = useState(0);
   const lastExpand = useRef(0);
+  /** Last two primary pointerdowns on nodes, to confirm a dblclick is one quick, still pair on one node. */
+  const downs = useRef<{ id: string; t: number; x: number; y: number }[]>([]);
   const dragRef = useRef<typeof drag>(null);
   useEffect(() => {
     // No blue text selection while dragging a group or panning.
@@ -502,6 +505,22 @@ export function GraphCanvas() {
     }
     return m;
   }, [graph.nodes, evIndex]);
+
+  // Legend examples come from the same roll-ups and the same label function as the canvas tags,
+  // so the legend and the tags can't disagree. Nothing until evidence.json has loaded.
+  const { legendFull, legendCompact } = useMemo(() => {
+    if (!evDoc) return { legendFull: null, legendCompact: null };
+    const pick = (kinds: string[]) =>
+      graph.nodes
+        .filter((n) => kinds.includes(n.kind))
+        .map((n) => filterEvRollup(evByNode.get(n.id) ?? null, sevFilter))
+        .filter((r): r is EvRollup => !!r)
+        .sort((a, b) => b.count - a.count)[0] ?? null;
+    return {
+      legendFull: evidenceLabel(pick(["parent", "brand"])?.items),
+      legendCompact: evidenceLabel(pick(["product", "glossary"])?.items),
+    };
+  }, [evDoc, graph.nodes, evByNode, sevFilter]);
 
   const brandEdges = useMemo(
     () =>
@@ -1223,17 +1242,13 @@ export function GraphCanvas() {
               const sevDim = sevFilter !== "all" && !sev && !evr;
               // Page tags only once zoomed in enough to read; hubs/brands carry the roll-up until then.
               const evShow = !!evr && (n.kind !== "page" || pagesLegible);
-              const evText = evShow ? evTagText(evr) : "";
+              const evLbl = evShow ? evidenceLabel(evr!.items) : null;
+              const evText = evLbl?.full ?? "";
               // Brand / parent: one line left of the node, "◇ Evidence 60 · 2 critical". Hubs / pages sit
               // ~45px apart at default zoom, so they get the compact form: "◇ 5" (5 rows, none rated) or a
               // two-line "◇ 3" over "1 crit" when a row is rated. Legend explains both.
               const evStack = n.kind !== "brand" && n.kind !== "parent";
-              const evRated = evWorstRated(evr);
-              const evLines = !evShow
-                ? []
-                : evStack
-                  ? [String(evr!.count), ...(evRated ? [evTagText(evr, true).split(" · ")[1]!] : [])]
-                  : [evText];
+              const evLines = !evLbl ? [] : evStack ? evLbl.compact : [evLbl.full];
               // ≥ ~10px text on screen at any zoom (world size grows as you zoom out), capped.
               const evFs = n.kind === "page" ? Math.min(14, Math.max(7.5, 9.5 / pxPerUnit)) : Math.min(30, Math.max(10, 10.5 / pxPerUnit));
               const evH = evFs * (evLines.length > 1 ? 2.75 : 1.7);
@@ -1284,6 +1299,7 @@ export function GraphCanvas() {
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
                     if (ev.button !== 0) return;
+                    downs.current = [...downs.current, { id: n.id, t: ev.timeStamp, x: ev.clientX, y: ev.clientY }].slice(-2);
                     const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
                     const snap = offsetsRef.current;
                     const o = snap[n.id] ?? { x: 0, y: 0 };
@@ -1346,7 +1362,19 @@ export function GraphCanvas() {
                   onDoubleClick={(ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();
-                    expandNode(n);
+                    // Only a genuine double-click toggles: a native dblclick (detail 2) whose two presses
+                    // landed on this node within 400ms and ~6px. Two separate left-clicks only select.
+                    const [a, b] = downs.current;
+                    const pair =
+                      ev.detail >= 2 &&
+                      !!a &&
+                      !!b &&
+                      a.id === n.id &&
+                      b.id === n.id &&
+                      b.t - a.t <= 400 &&
+                      Math.hypot(b.x - a.x, b.y - a.y) <= 6;
+                    downs.current = [];
+                    if (pair) expandNode(n);
                   }}
                 >
                   {on && n.kind === "glossary" ? (
@@ -1477,7 +1505,7 @@ export function GraphCanvas() {
                       </text>
                     </g>
                   ) : null}
-                  {evr && evShow ? (
+                  {evr && evLbl ? (
                     <g pointerEvents="none" data-ev-marker={evr.worst} data-ev-label={evText}>
                       {/* Neutral outline, square corners, hollow diamond: a row count, not a severity pill. */}
                       <rect x={evX} y={evY} width={evW} height={evH} fill={EV_TAG_FILL} stroke={EV_TAG_STROKE} strokeWidth={evFs / 9} />
@@ -1716,11 +1744,13 @@ export function GraphCanvas() {
         <button
           type="button"
           data-testid="reset-layout"
-          title="Clear dragged positions and re-fit"
+          title="Clear dragged positions, restore the issues-only expansion and re-fit"
           onClick={() => {
             offsetsRef.current = {};
             setOffsets({});
             window.localStorage.removeItem("origin.graphOffsets");
+            // Back to the default view: issues-only expansion, nothing manually collapsed.
+            resetClusters();
             setZoom(1);
             setPan({ x: 0, y: 0 });
             setFitTick((t) => t + 1);
@@ -1758,10 +1788,30 @@ export function GraphCanvas() {
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-px w-3 bg-danger" /> Conflict
         </span>
-        {showEvidence && evDoc ? (
+        {showPantheon ? (
+          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-sev-pill">
+            <span
+              className="inline-flex h-4 items-center rounded-full px-1.5 text-[9px] font-bold text-[#0b0c0e]"
+              style={{ background: SEVERITY_COLOR.critical }}
+            >
+              C2 H1
+            </span>
+            = open Pantheon rules per severity (fill = worst)
+          </span>
+        ) : null}
+        {showEvidence && evDoc && legendFull ? (
           <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-evidence">
-            <EvTag text="Evidence 22 · 1 critical" /> = 22 Evidence Brief rows, worst rated 1 critical ·{" "}
-            <EvTag text="5" /> on products / pages = 5 rows, none rated
+            <EvTag text={legendFull.full} /> = {legendFull.count} Evidence Brief rows,{" "}
+            {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
+            {legendCompact ? (
+              <>
+                {" "}
+                · <EvTag text={legendCompact.compact.join(" / ")} /> on products / pages ={" "}
+                {legendCompact.worst
+                  ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
+                  : `${legendCompact.count} rows, none rated`}
+              </>
+            ) : null}
             {pagesLegible ? "" : " · page tags show when zoomed in"}
           </span>
         ) : null}

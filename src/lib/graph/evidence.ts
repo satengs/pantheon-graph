@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { crawl, pageUrl } from "@/data/crawl";
 import type { Severity, SeverityFilter } from "@/lib/graph/severity";
 import { SEVERITIES, SEVERITY_COLOR, urlKey } from "@/lib/graph/severity";
+import { evidenceLabel, normSeverity } from "@/lib/graph/evidence-label";
+import { BUILD_SHA } from "@/lib/build-info";
 
 /**
  * Evidence Brief issues (public/data/evidence.json, built by `npm run import:evidence`).
@@ -143,11 +145,23 @@ export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string 
 let cache: EvidenceDoc | null = null;
 let inflight: Promise<EvidenceDoc | null> | null = null;
 
+/**
+ * Coerce a fetched evidence.json into the current shape. Severity goes through normSeverity, so a
+ * legacy "unknown" key (pre-rename file, or an old copy from the HTTP cache) or a missing field
+ * becomes "unrated" instead of leaking into labels as "unknown" / "undefined".
+ */
+export function normalizeEvidenceDoc(raw: unknown): EvidenceDoc | null {
+  const d = raw as Partial<EvidenceDoc> | null;
+  if (!d || !Array.isArray(d.items) || !d.newestBrief) return null;
+  return { ...(d as EvidenceDoc), items: d.items.map((i) => ({ ...i, severity: normSeverity(i?.severity) })) };
+}
+
 function load(): Promise<EvidenceDoc | null> {
   if (cache) return Promise.resolve(cache);
-  inflight ??= fetch("/data/evidence.json")
-    .then((r) => (r.ok ? (r.json() as Promise<EvidenceDoc>) : null))
-    .then((d) => (cache = d))
+  // Build-keyed URL + revalidate: a new deployment never reads an older deployment's cached file.
+  inflight ??= fetch(`/data/evidence.json?v=${encodeURIComponent(BUILD_SHA)}`, { cache: "no-cache" })
+    .then((r) => (r.ok ? (r.json() as Promise<unknown>) : null))
+    .then((d) => (cache = normalizeEvidenceDoc(d)))
     .catch(() => null);
   return inflight;
 }
@@ -170,24 +184,14 @@ export function useEvidence(): EvidenceDoc | null {
 export const EV_TAG_STROKE = "#c9d1d9";
 export const EV_TAG_FILL = "#0b0c0e";
 
-/** Worst *rated* severity in a roll-up and how many rows carry it (unrated rows are ignored). */
+/** Worst *rated* severity in a roll-up and how many rows carry it (unrated / legacy keys ignored). */
 export function evWorstRated(r: EvRollup | null): { sev: Severity; n: number } | null {
-  if (!r) return null;
-  const rated = r.items.filter((i) => i.severity !== "unrated");
-  if (!rated.length) return null;
-  const sev = rated[0]!.severity as Severity; // items are sorted worst-first
-  return { sev, n: rated.filter((i) => i.severity === sev).length };
+  return evidenceLabel(r?.items)?.worst ?? null;
 }
 
-/**
- * Evidence tag text. The number is a count of Evidence Brief rows, never a severity count:
- *  full    "Evidence 22 · 1 critical" / "Evidence 22 · unrated"
- *  compact "Ev 3 · 1 crit" / "Ev 3 · unrated" (page dots)
- */
+/** Thin wrapper over the single label function (evidence-label.ts). "" when there are no rows. */
 export function evTagText(r: EvRollup | null, compact = false): string {
-  if (!r) return "";
-  const w = evWorstRated(r);
-  const short: Record<Severity, string> = { critical: "crit", high: "high", medium: "med", low: "low" };
-  const tail = w ? `${w.n} ${compact ? short[w.sev] : w.sev}` : "unrated";
-  return `${compact ? "Ev" : "Evidence"} ${r.count} · ${tail}`;
+  const l = evidenceLabel(r?.items);
+  if (!l) return "";
+  return compact ? `Ev ${l.compact.join(" · ")}` : l.full;
 }
