@@ -210,6 +210,9 @@ export function buildGraph(opts: {
   includeParent?: boolean;
   org?: GraphOrg;
   ruleCodes?: string[];
+  /** Hubs that auto-open on load (they or their pages carry an open rule). Others start
+   *  collapsed and open on double-click. Omit to auto-open every hub (old behaviour). */
+  issueHubs?: string[];
 }): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
@@ -294,9 +297,10 @@ export function buildGraph(opts: {
   function addPagesForHub(b: BrandId, p: ProductId, cap: number) {
     const parent = hubId(b, p);
     ensureNode(parent);
-    crawl.pages
-      .filter((page) => page.b === b && page.p === p)
-      .slice(0, cap)
+    const list = crawl.pages.filter((page) => page.b === b && page.p === p).slice(0, cap);
+    const hub = nodes.find((x) => x.id === parent);
+    if (hub) hub.shown = list.length;
+    list
       .forEach((page, i) => {
         const id = `page:${b}:${p}:${i}`;
         addN({
@@ -514,6 +518,7 @@ export function buildGraph(opts: {
   if (opts.explode) {
     for (const n of [...nodes]) {
       if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product && !clusterHidden(n)) {
+        if (opts.issueHubs && !opts.issueHubs.includes(n.id) && !(opts.expandIds ?? []).includes(n.id)) continue;
         addPagesForHub(n.brand, n.product, EXPLODE_CAP);
       }
     }

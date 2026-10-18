@@ -28,6 +28,7 @@ import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
+  const issueHubs = useStudio((s) => s.issueHubs);
   const brand = useStudio((s) => s.brand);
   const product = useStudio((s) => s.product);
   const layer = useStudio((s) => s.layer);
@@ -35,7 +36,6 @@ export function Inspector() {
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
   const selectedState = useStudio((s) => s.selectedState);
   const tab = useStudio((s) => s.tab);
-  const hoveredIssueId = useStudio((s) => s.hoveredIssueId);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
   const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const selectIssue = useStudio((s) => s.selectIssue);
@@ -69,8 +69,9 @@ export function Inspector() {
         includeParent,
         org: graphOrg ?? undefined,
         ruleCodes: attachedRuleCodes,
+        issueHubs,
       }),
-    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes],
+    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes, issueHubs],
   );
   const node = graph.nodes.find((n) => n.id === selectedNodeId) ?? null;
   const evDoc = useEvidence();
@@ -86,11 +87,13 @@ export function Inspector() {
           : node.kind === "parent"
             ? evIndex.forAll()
             : null;
-  const wantedId =
-    tab === "issues"
-      ? hoveredIssueId ?? selectedIssueId
-      : null;
-  const rawIssue = RULES.find((i) => i.id === wantedId && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code))) ?? null;
+  // The panel follows the selected (highlighted) row only. Hover no longer swaps it, so the
+  // row the list marks and the detail shown can't disagree (QA: S01 marked, S24 shown).
+  const wantedId = tab === "issues" ? selectedIssueId : null;
+  const rawIssue =
+    RULES.find(
+      (i) => (i.id === wantedId || i.code === wantedId) && (!attachedRuleCodes.length || attachedRuleCodes.includes(i.code)),
+    ) ?? null;
   const issue = rawIssue && !isHiddenUiCode(rawIssue.code) && issueFitsFamily(rawIssue, graphOrg, parentSlug) ? rawIssue : null;
   const familyFindings = findings.filter((f) => (seedFamily ? true : urlInFamily(f.url, graphOrg)));
   const toneText = issue ? `${issue.title} ${issue.reason} ${issue.fix}` : "";
@@ -142,7 +145,19 @@ export function Inspector() {
             </a>
           ) : null}
           {node.count != null && node.kind !== "page" ? (
-            <p className="text-sm text-muted">{node.count.toLocaleString()} pages</p>
+            <p className="text-sm text-muted" data-testid="inspector-page-count">
+              {node.count.toLocaleString()} pages
+              {node.kind === "product" || node.kind === "glossary" ? (
+                <span className="text-subtle">
+                  {" · "}
+                  {node.shown
+                    ? node.shown < node.count
+                      ? `${node.shown} of ${node.count.toLocaleString()} shown on the graph`
+                      : "all shown on the graph"
+                    : "none shown — double-click the hub to show pages"}
+                </span>
+              ) : null}
+            </p>
           ) : null}
         </Fold>
         {node.kind === "page" ? (

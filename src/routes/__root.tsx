@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { BUILD_SHA, BUILD_TIME, shortSha } from "@/lib/build-info";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Origin";
@@ -39,6 +40,14 @@ export const Route = createRootRoute({
         <AuthProvider>
           <Outlet />
         </AuthProvider>
+        <a
+          href="/version"
+          data-testid="build-footer"
+          title={`Deployed commit ${BUILD_SHA}${BUILD_TIME ? ` · built ${BUILD_TIME}` : ""}`}
+          className="fixed bottom-1 left-1/2 z-[80] -translate-x-1/2 rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[10px] text-subtle hover:text-fg"
+        >
+          build {shortSha(BUILD_SHA)}
+        </a>
         <Scripts />
       </body>
     </html>

@@ -88,7 +88,10 @@ type StudioState = {
   setMaximized: (v: Maximized) => void;
   pushGraphFocus: (id: string) => void;
   popGraphFocus: () => void;
-  toggleCluster: (id: string) => void;
+  toggleCluster: (id: string, showingNow?: boolean) => void;
+  /** Hubs auto-opened on load (open rule on the hub or its pages); set by the graph canvas. */
+  issueHubs: string[] | undefined;
+  setIssueHubs: (ids: string[]) => void;
   setIncludeParent: (v: boolean) => void;
   setGraphInspectorOpen: (v: boolean) => void;
   setParentSlug: (v: string) => void;
@@ -288,11 +291,16 @@ export const useStudio = create<StudioState>((set, get) => ({
   pushGraphFocus: (id) =>
     set((s) => (s.graphFocusStack.includes(id) ? s : { graphFocusStack: [...s.graphFocusStack, id] })),
   popGraphFocus: () => set((s) => ({ graphFocusStack: s.graphFocusStack.slice(0, -1) })),
-  toggleCluster: (id) =>
+  issueHubs: undefined,
+  setIssueHubs: (ids) =>
+    set((s) => (s.issueHubs && s.issueHubs.join("|") === ids.join("|") ? s : { issueHubs: ids })),
+  toggleCluster: (id, showingNow) =>
     set((s) => {
       const expanded = s.graphFocusStack.includes(id);
       const collapsed = s.collapsedClusters.includes(id);
-      const showing = expanded || (s.explode && !collapsed);
+      // The canvas knows whether pages are drawn (issue hubs auto-open, the rest start
+      // collapsed), so trust it when given; fall back to the old guess otherwise.
+      const showing = showingNow ?? (expanded || (s.explode && !collapsed));
       if (showing) {
         return {
           graphFocusStack: s.graphFocusStack.filter((x) => x !== id),

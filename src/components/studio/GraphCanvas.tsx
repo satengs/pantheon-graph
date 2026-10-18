@@ -8,8 +8,8 @@ import { useStudio, type GraphLayout } from "@/store/studio";
 import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 import { RULES } from "@/data/rules-seed";
-import { filterIssues } from "@/lib/studio/query";
-import { issueFitsFamily } from "@/lib/org/catalog";
+import { familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
+import { SevTotals } from "@/components/studio/SevTotals";
 import {
   buildSeverityIndex,
   filterRollup,
@@ -441,6 +441,12 @@ export function GraphCanvas() {
     setPan({ x: 0, y: 0 });
   }, [graphFocusStack.length, full, graphLayout]);
 
+  // Same rule set as the Issues overlay (Backlog): filterIssues + family fit. Severity = rule.impact.
+  const sevIndex = useMemo(() => {
+    const rules = familyIssues({ codes: attachedRuleCodes, org: graphOrg, parentSlug, brand, product, layer });
+    return buildSeverityIndex(rules);
+  }, [brand, product, layer, attachedRuleCodes, graphOrg, parentSlug]);
+
   const graph = useMemo(
     () =>
       buildGraph({
@@ -453,26 +459,18 @@ export function GraphCanvas() {
         includeParent,
         org: graphOrg ?? undefined,
         ruleCodes: attachedRuleCodes,
+        issueHubs: sevIndex.issueHubs,
       }),
-    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes],
+    [explode, brand, product, layer, graphFocusStack, collapsedClusters, includeParent, graphOrg, attachedRuleCodes, sevIndex],
   );
+  const setIssueHubs = useStudio((s) => s.setIssueHubs);
+  const familyRules = useFamilyIssues();
+  const familyTotals = useMemo(() => severityTotals(familyRules), [familyRules]);
+  useEffect(() => setIssueHubs(sevIndex.issueHubs), [sevIndex, setIssueHubs]);
   const base = useMemo(
     () => layoutOf(graphLayout, graph.nodes, graph.edges, explode),
     [graph.nodes, graph.edges, explode, graphLayout],
   );
-
-  // Same rule set as the Issues overlay (Backlog): filterIssues + family fit. Severity = rule.impact.
-  const sevIndex = useMemo(() => {
-    const rules = filterIssues(RULES, {
-      brand,
-      product,
-      layer,
-      impact: "all",
-      query: "",
-      codes: attachedRuleCodes.length ? attachedRuleCodes : undefined,
-    }).filter((r) => issueFitsFamily(r, graphOrg, parentSlug));
-    return buildSeverityIndex(rules);
-  }, [brand, product, layer, attachedRuleCodes, graphOrg, parentSlug]);
 
   const sevByNode = useMemo(() => {
     const m = new Map<string, SevRollup | null>();
@@ -670,7 +668,11 @@ export function GraphCanvas() {
     lastExpand.current = now;
     if (n.kind === "page") return;
     if (n.kind === "product" || n.kind === "glossary" || n.kind === "brand") {
-      toggleCluster(n.id);
+      const showing =
+        n.kind === "brand"
+          ? graph.nodes.some((x) => x.kind === "page" && x.brand === n.brand)
+          : graph.nodes.some((x) => x.kind === "page" && x.brand === n.brand && x.product === n.product);
+      toggleCluster(n.id, showing);
       selectNode(n.id);
       return;
     }
@@ -754,7 +756,8 @@ export function GraphCanvas() {
         aria-label="Severity filter"
         data-testid="severity-bar"
       >
-        <span className="pr-1 text-[10px] uppercase tracking-wide text-subtle">Severity</span>
+        <SevTotals totals={familyTotals} label="Open rules" testId="graph-sev-totals" />
+        <span className="pl-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Filter</span>
         {SEV_CHIPS.map((c) => {
           const on = sevFilter === c.id;
           const swatches = c.id === "all" ? [] : c.id === "crit-high" ? (["critical", "high"] as const) : [c.id];
@@ -838,7 +841,7 @@ export function GraphCanvas() {
           </button>
         ) : null}
         <span className="hidden pl-1 text-[10px] text-subtle xl:inline">
-          Round ring + pill = Pantheon rule (worst · count) · square “E” tag = Evidence Brief row
+          Ring colour = worst open rule · pill = open rules per severity (C2 H1 = 2 critical + 1 high) · square “E” tag = Evidence Brief row
           {evDoc ? ` (brief ${evDoc.newestBrief.date})` : ""} · hubs and brands roll up their pages · brand arc = cross-brand L2
         </span>
       </div>
@@ -1031,7 +1034,10 @@ export function GraphCanvas() {
               const color = SEVERITY_COLOR[worst];
               const { c, apex } = brandArc(a, b);
               const shown = dim ? be.issues : issues;
-              const tag = `L2 ${SEVERITY_GLYPH[worst]} ${shown.length}`;
+              const tag = `L2 ${SEVERITIES.map((k) => [k, shown.filter((i) => i.impact === k).length] as const)
+                .filter(([, c]) => c > 0)
+                .map(([k, c]) => `${SEVERITY_GLYPH[k]}${c}`)
+                .join(" ")}`;
               const roll: SevRollup = {
                 worst,
                 count: shown.length,
@@ -1212,8 +1218,14 @@ export function GraphCanvas() {
                       : `${nodeLabel(`brand:${n.brand}`)} · ${n.label} · all pages`;
               const small = n.kind === "page";
               const badgeH = small ? 11 : 16;
-              const badgeText = sev ? `${SEVERITY_GLYPH[sev.worst]} ${sev.count}` : "";
-              const badgeW = small ? 7 + badgeText.length * 4.6 : 10 + badgeText.length * 6.4;
+              // Per-severity counts ("C2 H1" = 2 critical + 1 high), not worst-letter + total.
+              const badgeText = sev
+                ? SEVERITIES.map((k) => [k, sev.issues.filter((i) => i.impact === k).length] as const)
+                    .filter(([, c]) => c > 0)
+                    .map(([k, c]) => `${SEVERITY_GLYPH[k]}${c}`)
+                    .join(" ")
+                : "";
+              const badgeW = small ? 6 + badgeText.length * 4.5 : 9 + badgeText.length * 6.3;
               const bx = n.kind === "glossary" ? r * 0.55 : r * 0.62;
               const by = n.kind === "glossary" ? -r * 1.15 : -r * 0.9;
               return (
@@ -1372,10 +1384,32 @@ export function GraphCanvas() {
                           {n.kind === "page" || label.length <= 16 ? label : `${label.slice(0, 15)}…`}
                         </text>
                       )}
+                      {(n.kind === "product" || n.kind === "glossary") && n.count && (n.shown ?? 0) < n.count ? (
+                        <text
+                          data-testid="hub-shown"
+                          y={r + 21}
+                          textAnchor="middle"
+                          fill="var(--color-muted)"
+                          stroke="var(--color-bg)"
+                          strokeWidth={3}
+                          paintOrder="stroke"
+                          pointerEvents="none"
+                          fontSize={7}
+                          fontFamily="IBM Plex Sans, sans-serif"
+                        >
+                          {n.shown ? `${n.shown} of ${n.count.toLocaleString()} shown` : `${n.count.toLocaleString()} pages`}
+                        </text>
+                      ) : null}
                     </>
                   ) : null}
                   {sev ? (
-                    <g pointerEvents="none" data-sev-marker={sev.worst}>
+                    <g pointerEvents="none" data-sev-marker={sev.worst} data-sev-badge={badgeText}>
+                      <circle
+                        r={r + (small ? 2.5 : 4)}
+                        fill="none"
+                        stroke="#0b0c0e"
+                        strokeWidth={small ? 3.6 : 5}
+                      />
                       <circle
                         r={r + (small ? 2.5 : 4)}
                         fill="none"
