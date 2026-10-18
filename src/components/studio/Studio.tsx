@@ -64,8 +64,6 @@ const URL_VIEWS = ["graph", "issues", "validation", "rules", "gate", "states", "
 export function Studio() {
   const tab = useStudio((s) => s.tab);
   const setTab = useStudio((s) => s.setTab);
-  const explode = useStudio((s) => s.explode);
-  const setExplode = useStudio((s) => s.setExplode);
   const brand = useStudio((s) => s.brand);
   const setBrand = useStudio((s) => s.setBrand);
   const product = useStudio((s) => s.product);
@@ -125,7 +123,8 @@ export function Studio() {
   }, [applyFamilyContext]);
 
   // Each view has its own URL (?view=graph, ?view=issues&issue=S24) so a hard reload keeps it.
-  const [urlRead, setUrlRead] = useState(false);
+  // Read the URL once, then write it straight from the store on every change (not from a
+  // render effect with captured values), and once more on pagehide — the last state always wins.
   useEffect(() => {
     try {
       const q = new URLSearchParams(window.location.search);
@@ -136,21 +135,29 @@ export function Studio() {
     } catch {
       /* ignore */
     }
-    setUrlRead(true);
+    const write = () => {
+      try {
+        const { tab: t, selectedIssueId: id } = useStudio.getState();
+        const u = new URL(window.location.href);
+        u.searchParams.set("view", t);
+        if (t === "issues" && id) u.searchParams.set("issue", id);
+        else u.searchParams.delete("issue");
+        if (u.href !== window.location.href) window.history.replaceState(window.history.state, "", u.href);
+      } catch {
+        /* ignore */
+      }
+    };
+    write();
+    const unsub = useStudio.subscribe((st, prev) => {
+      if (st.tab !== prev.tab || st.selectedIssueId !== prev.selectedIssueId) write();
+    });
+    window.addEventListener("pagehide", write);
+    return () => {
+      unsub();
+      window.removeEventListener("pagehide", write);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => {
-    if (!urlRead) return;
-    try {
-      const u = new URL(window.location.href);
-      u.searchParams.set("view", tab);
-      if (tab === "issues" && selectedIssueId) u.searchParams.set("issue", selectedIssueId);
-      else u.searchParams.delete("issue");
-      if (u.href !== window.location.href) window.history.replaceState(window.history.state, "", u.href);
-    } catch {
-      /* ignore */
-    }
-  }, [tab, selectedIssueId, urlRead]);
 
   const firstIssueCode = visibleIssues[0]?.code ?? null;
   const issueFitsSelection = Boolean(selectedIssueId && visibleIssues.some((i) => i.code === selectedIssueId || i.id === selectedIssueId));
@@ -385,16 +392,13 @@ export function Studio() {
         </div>
         <div className="g-cluster" role="group" aria-label="Actions">
         {tab === "graph" ? (
-        <label className="flex h-8 items-center gap-2 px-1 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={explode}
-            onChange={(e) => setExplode(e.target.checked)}
-            suppressHydrationWarning
-            className="size-4 accent-[var(--color-accent)]"
-          />
-          Expand nodes
-        </label>
+        <span
+          className="flex h-8 items-center px-1 text-xs text-muted"
+          data-testid="expand-hint"
+          title="Products with an open rule show their pages; the rest stay collapsed with their page count. Double-click any brand or product to open or fold it."
+        >
+          Pages open where there are issues · double-click to open more
+        </span>
         ) : null}
         {(tab === "graph" || tab === "states" || tab === "validation") && (
           <Button

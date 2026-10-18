@@ -18,6 +18,9 @@ export type IssueCategory = {
   impact: string;
   layer: string;
   pages: CategoryPage[];
+  /** "rule" = an open Pantheon rule (has a severity, counts in C/H/M/L);
+   *  "html" = a live-HTML check from the server run (no severity, separate group). */
+  source: "rule" | "html";
 };
 
 export type FindingHit = {
@@ -44,22 +47,22 @@ function norm(url: string): string {
   return url.replace(/\/+$/, "").toLowerCase();
 }
 
-function addPage(out: CategoryPage[], seen: Set<string>, url: string, note: string) {
+function addPage(out: CategoryPage[], seen: Set<string>, url: string, note: string, cap = PAGE_CAP) {
   const u = url.trim();
   if (!u.startsWith("http")) return;
   const key = norm(u);
   if (seen.has(key)) return;
   seen.add(key);
-  if (out.length >= PAGE_CAP) return;
+  if (out.length >= cap) return;
   out.push({ url: u, path: pagePath(u), note });
 }
 
-function crawlHits(code: string, out: CategoryPage[], seen: Set<string>) {
+function crawlHits(code: string, out: CategoryPage[], seen: Set<string>, cap = PAGE_CAP) {
   if (code === "S01" || code === "S25") {
     const rows = code === "S01" ? crawl.glossaryOverlap : crawl.glossaryOverlap.filter((p) => /apr|mortgage|personal-loan|interest-rate|heloc|home-equity/i.test(p.slug));
     for (const p of rows) {
-      addPage(out, seen, p.fdr, p.slug);
-      addPage(out, seen, p.achieve, p.slug);
+      addPage(out, seen, p.fdr, p.slug, cap);
+      addPage(out, seen, p.achieve, p.slug, cap);
     }
     return;
   }
@@ -67,14 +70,14 @@ function crawlHits(code: string, out: CategoryPage[], seen: Set<string>) {
     for (const p of crawl.pages) {
       if (p.b !== "fdr") continue;
       if (p.p !== "heloc" && p.p !== "hel" && p.p !== "personal-loan") continue;
-      addPage(out, seen, pageUrl(p), p.p);
+      addPage(out, seen, pageUrl(p), p.p, cap);
     }
     return;
   }
   if (code === "S26") {
     for (const p of crawl.pages) {
       if (p.b !== "achieve" || p.k !== "g") continue;
-      addPage(out, seen, pageUrl(p), "glossary");
+      addPage(out, seen, pageUrl(p), "glossary", cap);
     }
     return;
   }
@@ -82,32 +85,33 @@ function crawlHits(code: string, out: CategoryPage[], seen: Set<string>) {
     // Indexable Achieve learn URLs still targeting debt relief (crawl keeps only live 200s).
     for (const p of crawl.pages) {
       if (p.b !== "achieve" || !p.path.startsWith("/learn/") || !p.path.includes("debt-relief")) continue;
-      addPage(out, seen, pageUrl(p), "debt-relief learn page");
+      addPage(out, seen, pageUrl(p), "debt-relief learn page", cap);
     }
     return;
   }
   if (code === "S22") {
     for (const p of crawl.pages) {
       if (p.p !== "debt-relief" || (p.k !== "r" && p.k !== "p")) continue;
-      addPage(out, seen, pageUrl(p), p.b);
+      addPage(out, seen, pageUrl(p), p.b, cap);
     }
   }
 }
 
-export function pagesForRule(rule: BacklogItem, findings: FindingHit[]): CategoryPage[] {
+/** Pages for a rule. The Issues overlay keeps PAGE_CAP; the graph severity index passes Infinity. */
+export function pagesForRule(rule: BacklogItem, findings: FindingHit[], cap = PAGE_CAP): CategoryPage[] {
   const out: CategoryPage[] = [];
   const seen = new Set<string>();
-  for (const u of rule.urls.slice(0, 1)) addPage(out, seen, u, rule.title);
+  for (const u of rule.urls.slice(0, 1)) addPage(out, seen, u, rule.title, cap);
   for (const c of rule.citations) {
     if (/related|do not edit/i.test(`${c.whyReal} ${c.location}`)) continue;
-    addPage(out, seen, c.url, c.location || "");
+    addPage(out, seen, c.url, c.location || "", cap);
   }
-  for (const row of ISSUE_PROOFS[rule.code]?.rows ?? []) addPage(out, seen, row.url, row.h1);
+  for (const row of ISSUE_PROOFS[rule.code]?.rows ?? []) addPage(out, seen, row.url, row.h1, cap);
   for (const f of findings) {
     if (f.code !== rule.code) continue;
-    addPage(out, seen, f.url, f.title);
+    addPage(out, seen, f.url, f.title, cap);
   }
-  crawlHits(rule.code, out, seen);
+  crawlHits(rule.code, out, seen, cap);
   return out;
 }
 
@@ -128,23 +132,39 @@ export function htmlCategories(findings: FindingHit[], used: Set<string>): Issue
     code,
     title: HTML_TITLE[code] ?? code,
     statement: pages[0]?.note || "HTML finding on these pages.",
-    impact: "high",
+    impact: "",
     layer: "L1",
     pages,
+    source: "html" as const,
   }));
 }
 
-export function issueCategories(findings: FindingHit[], rules: BacklogItem[] = RULES): IssueCategory[] {
+/**
+ * Every open rule is listed, even with no page hit yet (it still counts in the
+ * C/H/M/L totals, so dropping it made Issues disagree with the graph and Gate —
+ * S31/S32). `ruleFindings` adds page evidence for rules only (the crawl-derived
+ * findings the graph uses); live-HTML categories come from `findings` alone.
+ */
+export function issueCategories(
+  findings: FindingHit[],
+  rules: BacklogItem[] = RULES,
+  ruleFindings: FindingHit[] = [],
+): IssueCategory[] {
   const open = rules.filter((r) => isOpenIssue(r.status));
   const used = new Set(open.map((r) => r.code));
+  const all = ruleFindings.length ? [...findings, ...ruleFindings] : findings;
   const cats: IssueCategory[] = open.map((r) => ({
     code: r.code,
     title: RULE_TITLE[r.code] ?? r.title,
     statement: RULE_SCOPE[r.code] ?? r.reason,
     impact: r.impact,
     layer: r.layer,
-    pages: pagesForRule(r, findings),
+    pages: pagesForRule(
+      r,
+      all.filter((f) => f.code === r.code),
+    ),
+    source: "rule" as const,
   }));
-  cats.push(...htmlCategories(findings, used));
-  return cats.filter((c) => c.pages.length > 0);
+  cats.push(...htmlCategories(findings, used).filter((c) => c.pages.length > 0));
+  return cats;
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { RULES } from "@/data/rules-seed";
+import { SevTotals } from "@/components/studio/SevTotals";
+import { severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
 import { crawl } from "@/data/crawl";
 import { crawlMetrics, pct } from "@/lib/studio/crawl-metrics";
 import {
@@ -26,11 +28,14 @@ export function Gate() {
   const graphOrg = useStudio((s) => s.graphOrg);
   const parentSlug = useStudio((s) => s.parentSlug);
   const selectIssue = useStudio((s) => s.selectIssue);
+  // Same source as the graph and the Issues header (family rules, open, no view filters).
+  const familyRules = useFamilyIssues();
   if (!isSeedFamily(graphOrg, parentSlug)) {
     return <EmptyFamilyCrawl title={`No gate data for ${graphOrg?.parent?.name ?? "this family"}`} />;
   }
-  const openCritical = RULES.filter((i) => i.status === "open" && i.impact === "critical");
-  const openHigh = RULES.filter((i) => i.status === "open" && i.impact === "high");
+  const openCritical = familyRules.filter((i) => i.impact === "critical");
+  const openHigh = familyRules.filter((i) => i.impact === "high");
+  const totals = severityTotals(familyRules);
   const gloss = crawl.glossaryNear.map((n) => ({
     ...n,
     score: jaccard(n.fdr_slug, n.ach_slug),
@@ -61,6 +66,9 @@ export function Gate() {
           {blocked
             ? `${openCritical.length} critical open items. Publish is refused until content and JSON-LD owners land.`
             : "No critical L1/L2 items remain."}
+        </p>
+        <p className="mt-2">
+          <SevTotals totals={totals} label="Open rules" testId="gate-sev-totals" />
         </p>
       </div>
 
@@ -99,7 +107,9 @@ export function Gate() {
       </section>
 
       <section>
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">Open queue</h3>
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-subtle">
+          Open queue · critical + high ({openCritical.length + openHigh.length} of {totals.total})
+        </h3>
         <div className="mt-2 overflow-hidden rounded-lg bg-surface/40">
           {[...openCritical, ...openHigh].map((i) => (
             <IssueRow

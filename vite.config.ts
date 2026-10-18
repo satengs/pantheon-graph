@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
@@ -147,7 +148,25 @@ function authPopupPlugin(): Plugin {
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
+/** Deployed commit for /version and the footer: Vercel's SHA, else local git, else "dev". */
+function buildSha(): string {
+  const v = process.env.VERCEL_GIT_COMMIT_SHA?.trim();
+  if (v) return v;
+  try {
+    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "dev";
+  }
+}
+const BUILD_SHA = buildSha();
+const BUILD_TIME = new Date().toISOString();
+
 export default defineConfig(({ command, isPreview }) => ({
+  define: {
+    __BUILD_SHA__: JSON.stringify(BUILD_SHA),
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+    __BUILD_REF__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_REF ?? ""),
+  },
   server: {
     host: "0.0.0.0",
     port: 8080,

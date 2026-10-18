@@ -68,7 +68,7 @@ export function GraphClickNote() {
   return (
     <aside
       className="absolute z-30 w-[14.5rem] rounded-md border border-border bg-surface text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
-      style={pos.x < 0 ? { right: 12, top: pos.y, left: "auto", borderLeftWidth: 3, borderLeftColor: "#c4b8a4" } : { left: pos.x, top: pos.y, borderLeftWidth: 3, borderLeftColor: "#c4b8a4" }}
+      style={pos.x < 0 ? { right: 12, top: pos.y, left: "auto" } : { left: pos.x, top: pos.y }}
       onPointerDown={stop}
       onPointerMove={stop}
       onPointerUp={stop}

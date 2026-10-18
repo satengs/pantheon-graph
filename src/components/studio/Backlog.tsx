@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useStudio } from "@/store/studio";
 import { listStudio, upsertTask } from "@/lib/server/studio-db";
 import { runValidation } from "@/lib/server/validate-run";
-import { filterIssues, isHiddenUiCode } from "@/lib/studio/query";
+import { isHiddenUiCode } from "@/lib/studio/query";
+import { crawlFindings, familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
+import { SevTotals } from "@/components/studio/SevTotals";
 import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
@@ -60,6 +62,16 @@ function RadioRow({
   );
 }
 
+const HTML_DIVIDER: IssueCategory = {
+  code: "__html-checks",
+  title: "Live HTML checks",
+  statement: "",
+  impact: "",
+  layer: "",
+  pages: [],
+  source: "html",
+};
+
 export function Backlog() {
   const brand = useStudio((s) => s.brand);
   const product = useStudio((s) => s.product);
@@ -87,13 +99,13 @@ export function Backlog() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [roadmap, setRoadmap] = useState<"all" | RecCategory>("all");
 
+  // One issue source (issue-source.ts) for the graph, this list and the Gate.
   const visibleRules = useMemo(
-    () =>
-      filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes.length ? attachedRuleCodes : undefined }).filter((r) =>
-        issueFitsFamily(r, graphOrg, parentSlug),
-      ),
+    () => familyIssues({ codes: attachedRuleCodes, org: graphOrg, parentSlug, brand, product, layer, impact, query }),
     [brand, product, layer, impact, query, attachedRuleCodes, graphOrg, parentSlug],
   );
+  const familyRules = useFamilyIssues();
+  const familyTotals = useMemo(() => severityTotals(familyRules), [familyRules]);
 
   const familyFindings = useMemo(
     () =>
@@ -104,7 +116,7 @@ export function Backlog() {
   );
 
   const categories = useMemo(() => {
-    const cats = issueCategories(familyFindings, visibleRules).filter((c) => {
+    const cats = issueCategories(familyFindings, visibleRules, crawlFindings()).filter((c) => {
       if (kind !== "all" && KIND[c.code] !== kind) return false;
       if (roadmap !== "all" && recCategoryForCode(c.code) !== roadmap) return false;
       return true;
@@ -118,7 +130,7 @@ export function Backlog() {
         )
       : cats;
     const dir = sortDir === "asc" ? 1 : -1;
-    return filtered.slice().sort((a, b) => {
+    const sorted = filtered.slice().sort((a, b) => {
       const av =
         sortKey === "pages"
           ? a.pages.length
@@ -143,7 +155,12 @@ export function Backlog() {
       if (av > bv) return 1 * dir;
       return 0;
     });
+    const rules = sorted.filter((c) => c.source === "rule");
+    const html = sorted.filter((c) => c.source === "html");
+    return html.length ? [...rules, HTML_DIVIDER, ...html] : rules;
   }, [familyFindings, visibleRules, query, kind, sortKey, sortDir, roadmap]);
+
+  const htmlCount = categories.filter((c) => c.source === "html" && c !== HTML_DIVIDER).length;
 
   useEffect(() => {
     void listStudio()
@@ -169,7 +186,8 @@ export function Backlog() {
       const rows = suggestionRows().filter((r) => codes.has(r.code));
       text = fmt === "md" ? formatSuggestionsMarkdown(rows) : formatSuggestionsJson(rows);
     } else {
-      text = fmt === "md" ? exportMarkdown(categories) : JSON.stringify(categories, null, 2);
+      const out = categories.filter((c) => c !== HTML_DIVIDER);
+      text = fmt === "md" ? exportMarkdown(out) : JSON.stringify(out, null, 2);
     }
     void navigator.clipboard.writeText(text).then(() => {
       setCopied(fmt);
@@ -265,7 +283,13 @@ export function Backlog() {
           {copied === "json" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
           JSON
         </Button>
-        <span className="vh-whisper ml-auto">{categories.length} in view</span>
+        <span className="ml-auto inline-flex items-center gap-3">
+          <SevTotals totals={familyTotals} label="Open rules" testId="issues-sev-totals" />
+          <span className="vh-whisper">
+            {categories.filter((c) => c.source === "rule").length} rules in view
+            {htmlCount ? ` · ${htmlCount} live HTML checks` : ""}
+          </span>
+        </span>
       </div>
       {note ? <p className="mb-2 text-xs text-muted">{note}</p> : null}
       <details className="mb-2 shrink-0">
@@ -299,12 +323,24 @@ export function Backlog() {
             };
           }}
           renderRow={(c) => {
+            if (c === HTML_DIVIDER) {
+              return (
+                <div className="flex h-full flex-col justify-end border-t-2 border-border bg-bg px-3 pb-2" data-testid="html-checks-group">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-fg">Live HTML checks</p>
+                  <p className="text-xs text-muted">
+                    Server-side checks of live HTML (heading outline, main/related blocks…). Not Pantheon rules: no
+                    severity, not in the C/H/M/L totals, not in the graph or Gate.
+                  </p>
+                </div>
+              );
+            }
             const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             const page = c.pages[0];
             const recCat = recCategoryForCode(c.code);
             const catLabel = recCat ? CATEGORIES[recCat].label : null;
             return (
               <IssueRow
+                htmlCheck={c.source === "html"}
                 selected={on}
                 onHover={(h) => hoverIssue(h ? c.code : null)}
                 onOpen={() => {
