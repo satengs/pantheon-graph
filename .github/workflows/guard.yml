@@ -1,0 +1,88 @@
+# Guard checks for the behaviours Satenik signed off on 2026-10-19. See GUARDRAILS.md.
+# Each locked behaviour is its own job, so each shows as its own check on a PR.
+name: guard
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Interaction guards: unit tests for the logic first (fail fast), then Playwright
+  # against a locally built + served production bundle (vite preview, 127.0.0.1:8081).
+  e2e:
+    name: ${{ matrix.guard.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        guard:
+          - name: "guard: click map"
+            unit: ""
+            e2e: tests/e2e/click-map.e2e.mjs
+          - name: "guard: page links S01/S06 only"
+            unit: npx vitest run tests/guard/page-links.test.ts
+            e2e: tests/e2e/page-links.e2e.mjs
+          - name: "guard: one issue source"
+            unit: npx vitest run tests/guard/one-issue-source.test.ts
+            e2e: tests/e2e/one-issue-source.e2e.mjs
+          - name: "guard: evidence labels"
+            unit: npx vitest run tests/guard/evidence-labels.test.ts && node --experimental-strip-types --test src/lib/graph/evidence-label.test.ts
+            e2e: tests/e2e/evidence-labels.e2e.mjs
+          - name: "guard: expand on issues only"
+            unit: npx vitest run tests/guard/expand-on-issues.test.ts
+            e2e: tests/e2e/expand-on-issues.e2e.mjs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests
+        if: matrix.guard.unit != ''
+        run: ${{ matrix.guard.unit }}
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build (no DATABASE_URL → PGLite, migrations skipped)
+        run: npm run build
+      - name: Serve the build
+        run: |
+          nohup npm run preview > preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:8081/version && exit 0
+            sleep 1
+          done
+          cat preview.log; exit 1
+      - name: E2E
+        run: node --test --test-reporter=spec ${{ matrix.guard.e2e }}
+      - name: Preview log
+        if: failure()
+        run: cat preview.log
+
+  style:
+    name: "guard: no pink / no stripe cards"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scanner self-test
+        run: node --test scripts/guard-ui-style.test.mjs
+      - name: Scan src/
+        run: node scripts/guard-ui-style.mjs
