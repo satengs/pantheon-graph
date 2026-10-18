@@ -46,6 +46,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # The lockfile is written by npm 11; Node 22's bundled npm 10 rejects it in `npm ci`.
+      - run: npm install -g npm@11
       - run: npm ci
       - name: Unit tests
         if: matrix.guard.unit != ''
