@@ -1,5 +1,7 @@
 # Origin
 
+[![guard](https://github.com/satengs/pantheon-graph/actions/workflows/guard.yml/badge.svg?branch=master)](https://github.com/satengs/pantheon-graph/actions/workflows/guard.yml) — locked behaviours: [GUARDRAILS.md](GUARDRAILS.md)
+
 Content graph studio for [Freedom Debt Relief](https://www.freedomdebtrelief.com/) and [Achieve](https://www.achieve.com/). It stops entity confusion, keyword stealing, glossary duplicates, and outline twins before they ship.
 
 Live crawl snapshot in this repo: **1,159 FDR URLs** and **1,114 Achieve URLs**.
