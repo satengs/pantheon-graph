@@ -8,6 +8,19 @@ import { useStudio, type GraphLayout } from "@/store/studio";
 import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 import { RULES } from "@/data/rules-seed";
+import { filterIssues } from "@/lib/studio/query";
+import { issueFitsFamily } from "@/lib/org/catalog";
+import {
+  buildSeverityIndex,
+  filterRollup,
+  severityMatches,
+  SEVERITIES,
+  SEVERITY_COLOR,
+  SEVERITY_GLYPH,
+  SEVERITY_LABEL,
+  type SeverityFilter,
+  type SevRollup,
+} from "@/lib/graph/severity";
 
 type Pt = { x: number; y: number };
 
@@ -234,6 +247,32 @@ function fitView(pts: Pt[], pad: number) {
 
 const NODE_Z: Record<string, number> = { page: 0, glossary: 1, product: 2, brand: 3, parent: 4, issue: 5 };
 
+const SEV_CHIPS: { id: SeverityFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "crit-high", label: "Critical + High" },
+  ...SEVERITIES.map((s) => ({ id: s as SeverityFilter, label: SEVERITY_LABEL[s] })),
+];
+
+function clip(t: string, n: number) {
+  const s = t.replace(/\s+/g, " ").trim();
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+}
+
+/** Brand-pair L2 edge bends above the brand row, clear of the S01/S06 issue rail. */
+function brandArc(a: Pt, b: Pt): { c: Pt; apex: Pt } {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const c = { x: r2(mx), y: r2(Math.min(a.y, b.y) - 300) };
+  return { c, apex: { x: r2(mx), y: r2(0.5 * my + 0.5 * c.y) } };
+}
+
+type SevHover = {
+  x: number;
+  y: number;
+  title: string;
+  roll: SevRollup;
+};
+
 export function GraphCanvas() {
   const explode = useStudio((s) => s.explode);
   const brand = useStudio((s) => s.brand);
@@ -258,6 +297,10 @@ export function GraphCanvas() {
   const parentId = useStudio((s) => s.parentId);
   const graphOrg = useStudio((s) => s.graphOrg);
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
+  const parentSlug = useStudio((s) => s.parentSlug);
+  const [sevFilter, setSevFilter] = useState<SeverityFilter>("all");
+  const [sevHover, setSevHover] = useState<SevHover | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<null | {
@@ -357,6 +400,47 @@ export function GraphCanvas() {
     [graph.nodes, graph.edges, explode, graphLayout],
   );
 
+  // Same rule set as the Issues overlay (Backlog): filterIssues + family fit. Severity = rule.impact.
+  const sevIndex = useMemo(() => {
+    const rules = filterIssues(RULES, {
+      brand,
+      product,
+      layer,
+      impact: "all",
+      query: "",
+      codes: attachedRuleCodes.length ? attachedRuleCodes : undefined,
+    }).filter((r) => issueFitsFamily(r, graphOrg, parentSlug));
+    return buildSeverityIndex(rules);
+  }, [brand, product, layer, attachedRuleCodes, graphOrg, parentSlug]);
+
+  const sevByNode = useMemo(() => {
+    const m = new Map<string, SevRollup | null>();
+    for (const n of graph.nodes) {
+      let r: SevRollup | null = null;
+      if (n.kind === "page") r = sevIndex.forPage(n.url);
+      else if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product) r = sevIndex.forHub(n.brand, n.product);
+      else if (n.kind === "brand" && n.brand) r = sevIndex.forBrand(n.brand);
+      else if (n.kind === "parent") r = sevIndex.forAll();
+      m.set(n.id, r);
+    }
+    return m;
+  }, [graph.nodes, sevIndex]);
+
+  const brandEdges = useMemo(
+    () =>
+      sevIndex.brandEdges.filter(
+        (e) => graph.nodes.some((n) => n.id === `brand:${e.a}`) && graph.nodes.some((n) => n.id === `brand:${e.b}`),
+      ),
+    [sevIndex, graph.nodes],
+  );
+
+  function showSev(ev: { clientX: number; clientY: number }, title: string, roll: SevRollup | null) {
+    if (!roll || dragRef.current?.moved) return;
+    const box = canvasRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setSevHover({ x: ev.clientX - box.left, y: ev.clientY - box.top, title, roll });
+  }
+
   const edgePairIndex = useMemo(() => {
     const counts = new Map<string, number>();
     const idx = new Map<string, number>();
@@ -441,8 +525,13 @@ export function GraphCanvas() {
       if (!p) continue;
       pts.push(p);
     }
+    for (const e of sevIndex.brandEdges) {
+      const a = base.get(`brand:${e.a}`);
+      const b = base.get(`brand:${e.b}`);
+      if (a && b) pts.push({ ...brandArc(a, b).apex, y: brandArc(a, b).apex.y - 14 });
+    }
     return fitView(pts, full ? 160 : 128);
-  }, [graph.nodes, base, full]);
+  }, [graph.nodes, base, full, sevIndex]);
 
   function clientToSvg(e: RE<SVGSVGElement> | PointerEvent): Pt {
     const el = svgRef.current;
@@ -569,6 +658,44 @@ export function GraphCanvas() {
           {full ? "Exit" : "Full screen"}
         </button>
       </div>
+      <div
+        className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border bg-bg px-2 py-1.5"
+        role="radiogroup"
+        aria-label="Severity filter"
+        data-testid="severity-bar"
+      >
+        <span className="pr-1 text-[10px] uppercase tracking-wide text-subtle">Severity</span>
+        {SEV_CHIPS.map((c) => {
+          const on = sevFilter === c.id;
+          const swatches = c.id === "all" ? [] : c.id === "crit-high" ? (["critical", "high"] as const) : [c.id];
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              data-sev-chip={c.id}
+              onClick={() => setSevFilter(c.id)}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${on ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
+            >
+              {swatches.map((s) => (
+                <span
+                  key={s}
+                  className="inline-flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-[#0b0c0e]"
+                  style={{ background: SEVERITY_COLOR[s as keyof typeof SEVERITY_COLOR] }}
+                  aria-hidden
+                >
+                  {SEVERITY_GLYPH[s as keyof typeof SEVERITY_GLYPH]}
+                </span>
+              ))}
+              {c.label}
+            </button>
+          );
+        })}
+        <span className="hidden pl-1 text-[10px] text-subtle lg:inline">
+          Ring + letter = worst open issue · number = issues · hubs and brands roll up all their pages · brand arc = cross-brand L2
+        </span>
+      </div>
       {graph.nodes.some((n) => n.kind === "issue") ? (
         <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-border bg-bg px-2 py-2">
           {graph.nodes
@@ -613,7 +740,7 @@ export function GraphCanvas() {
             })}
         </div>
       ) : null}
-      <div className="relative min-h-0 flex-1">
+      <div ref={canvasRef} className="relative min-h-0 flex-1" onPointerLeave={() => setSevHover(null)}>
       <GraphClickNote />
       {ready ? (
         <svg
@@ -639,6 +766,7 @@ export function GraphCanvas() {
           onPointerMove={(e) => {
             const cur = dragRef.current;
             if (!cur) return;
+            if (sevHover) setSevHover(null);
             const s = clientToSvg(e);
             const dist = Math.hypot(s.x - cur.x, s.y - cur.y);
             const moved = cur.moved || dist > DRAG_PX;
@@ -722,6 +850,7 @@ export function GraphCanvas() {
                         oy: o.y,
                         moved: false,
                       };
+                      setSevHover(null);
                       dragRef.current = gesture;
                       setDrag(gesture);
                       try {
@@ -752,6 +881,66 @@ export function GraphCanvas() {
                   />
                 );
               })}
+            {brandEdges.map((be) => {
+              const a = at(`brand:${be.a}`);
+              const b = at(`brand:${be.b}`);
+              if (!a || !b) return null;
+              const issues = be.issues.filter((i) => severityMatches(i.impact, sevFilter));
+              const dim = issues.length === 0;
+              const worst = (issues[0] ?? be.issues[0])!.impact;
+              const color = SEVERITY_COLOR[worst];
+              const { c, apex } = brandArc(a, b);
+              const shown = dim ? be.issues : issues;
+              const tag = `L2 ${SEVERITY_GLYPH[worst]} ${shown.length}`;
+              const roll: SevRollup = {
+                worst,
+                count: shown.length,
+                pages: 0,
+                issues: shown.map((i) => ({ ...i, pages: 0 })),
+              };
+              const title = `${nodeLabel(`brand:${be.a}`)} ↔ ${nodeLabel(`brand:${be.b}`)} · cross-brand L2`;
+              return (
+                <g
+                  key={`brandsev:${be.a}:${be.b}`}
+                  data-brand-edge={`${be.a}|${be.b}`}
+                  data-sev={worst}
+                  data-sev-count={shown.length}
+                  opacity={dim ? 0.2 : 1}
+                  className="cursor-pointer"
+                  onPointerEnter={(ev) => showSev(ev, title, roll)}
+                  onPointerMove={(ev) => showSev(ev, title, roll)}
+                  onPointerLeave={() => setSevHover(null)}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    openIssueDrawer({ issueId: shown[0]!.code });
+                    setTab("issues");
+                  }}
+                >
+                  <path d={`M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`} fill="none" stroke="transparent" strokeWidth={14} />
+                  <path
+                    d={`M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={worst === "critical" ? 3 : worst === "high" ? 2.4 : 1.8}
+                    strokeDasharray={worst === "critical" ? undefined : worst === "high" ? "8 4" : "3 4"}
+                    pointerEvents="stroke"
+                  />
+                  <g transform={`translate(${apex.x} ${apex.y})`}>
+                    <rect x={-30} y={-10} width={60} height={20} rx={10} fill={color} />
+                    <text
+                      y={4}
+                      textAnchor="middle"
+                      fill="#0b0c0e"
+                      fontSize={11}
+                      fontWeight={700}
+                      fontFamily="IBM Plex Sans, sans-serif"
+                    >
+                      {tag}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
             {graph.edges.map((e) => {
               const a = at(e.source);
               const b = at(e.target);
@@ -866,14 +1055,37 @@ export function GraphCanvas() {
                     : selectedNodeId && !on
                       ? "color-mix(in oklab, var(--color-bg) 35%, var(--color-surface))"
                       : nodeFill(n);
+              const sevAll = sevByNode.get(n.id) ?? null;
+              const sev = filterRollup(sevAll, sevFilter);
+              const sevDim = sevFilter !== "all" && !sev;
+              const sevTitle =
+                n.kind === "page"
+                  ? pagePath(n.url ?? n.label)
+                  : n.kind === "brand"
+                    ? `${n.label} · all pages`
+                    : n.kind === "parent"
+                      ? `${n.label} · whole family`
+                      : `${nodeLabel(`brand:${n.brand}`)} · ${n.label} · all pages`;
+              const small = n.kind === "page";
+              const badgeH = small ? 11 : 16;
+              const badgeText = sev ? `${SEVERITY_GLYPH[sev.worst]} ${sev.count}` : "";
+              const badgeW = small ? 7 + badgeText.length * 4.6 : 10 + badgeText.length * 6.4;
+              const bx = n.kind === "glossary" ? r * 0.55 : r * 0.62;
+              const by = n.kind === "glossary" ? -r * 1.15 : -r * 0.9;
               return (
                 <g
                   key={n.id}
                   data-kind={n.kind}
                   data-url={n.url ?? ""}
+                  data-node-id={n.id}
                   data-selected={on ? "true" : undefined}
+                  data-sev={sev?.worst}
+                  data-sev-count={sev?.count}
+                  opacity={sevDim ? 0.22 : 1}
                   transform={`translate(${p.x} ${p.y})`}
                   className="cursor-grab"
+                  onPointerEnter={(ev) => showSev(ev, sevTitle, sev)}
+                  onPointerLeave={() => setSevHover(null)}
                   onPointerDown={(ev) => {
                     ev.stopPropagation();
                     const spt = clientToSvg(ev as unknown as RE<SVGSVGElement>);
@@ -895,6 +1107,7 @@ export function GraphCanvas() {
                       oy: o.y,
                       moved: false,
                     };
+                    setSevHover(null);
                     dragRef.current = gesture;
                     setDrag(gesture);
                     try {
@@ -1016,6 +1229,38 @@ export function GraphCanvas() {
                       )}
                     </>
                   ) : null}
+                  {sev ? (
+                    <g pointerEvents="none" data-sev-marker={sev.worst}>
+                      <circle
+                        r={r + (small ? 2.5 : 4)}
+                        fill="none"
+                        stroke={SEVERITY_COLOR[sev.worst]}
+                        strokeWidth={small ? 2 : 3}
+                        strokeDasharray={sev.worst === "critical" ? undefined : sev.worst === "high" ? "6 3" : "2 3"}
+                      />
+                      <rect
+                        x={bx - 2}
+                        y={by - badgeH / 2}
+                        width={badgeW}
+                        height={badgeH}
+                        rx={badgeH / 2}
+                        fill={SEVERITY_COLOR[sev.worst]}
+                        stroke="var(--color-bg)"
+                        strokeWidth={1.2}
+                      />
+                      <text
+                        x={bx - 2 + badgeW / 2}
+                        y={by + (small ? 2.6 : 3.6)}
+                        textAnchor="middle"
+                        fill="#0b0c0e"
+                        fontSize={small ? 7.5 : 10}
+                        fontWeight={700}
+                        fontFamily="IBM Plex Sans, sans-serif"
+                      >
+                        {badgeText}
+                      </text>
+                    </g>
+                  ) : null}
                 </g>
               );
             })}
@@ -1027,6 +1272,8 @@ export function GraphCanvas() {
                 const on = n.id === selectedNodeId;
                 const r = on ? 30 : 24;
                 const kind = TREE_SUGGESTIONS.find((t) => t.code === n.issueId)?.kind;
+                const issueImpact = RULES.find((x) => x.code === n.issueId)?.impact;
+                const issueDim = sevFilter !== "all" && !(issueImpact && severityMatches(issueImpact, sevFilter));
                 const stroke =
                   kind === "conflict" ? "var(--color-danger)" : kind === "sameAs" ? "var(--color-accent)" : "var(--color-achieve)";
                 return (
@@ -1034,6 +1281,7 @@ export function GraphCanvas() {
                     key={n.id}
                     data-kind="issue"
                     data-selected={on ? "true" : undefined}
+                    opacity={issueDim ? 0.22 : 1}
                     transform={`translate(${p.x} ${p.y})`}
                     className="cursor-pointer"
                     onPointerDown={(ev) => {
@@ -1087,6 +1335,55 @@ export function GraphCanvas() {
       ) : (
         <div className="absolute inset-0 bg-bg" />
       )}
+      {sevHover ? (
+        <div
+          role="tooltip"
+          data-testid="severity-tooltip"
+          className="pointer-events-none absolute z-40 w-[20rem] rounded-md border border-border bg-surface p-2.5 text-[11px] leading-snug text-fg shadow-[var(--shadow-border)]"
+          style={{
+            left: Math.max(8, Math.min(sevHover.x + 14, (canvasRef.current?.clientWidth ?? 9999) - 336)),
+            top: Math.max(8, Math.min(sevHover.y + 14, (canvasRef.current?.clientHeight ?? 9999) - 260)),
+          }}
+        >
+          <p className="flex items-center gap-1.5 font-medium">
+            <span
+              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#0b0c0e]"
+              style={{ background: SEVERITY_COLOR[sevHover.roll.worst] }}
+            >
+              {SEVERITY_GLYPH[sevHover.roll.worst]}
+            </span>
+            <span className="truncate">{sevHover.title}</span>
+          </p>
+          <p className="mt-0.5 text-[10px] text-subtle">
+            Worst {SEVERITY_LABEL[sevHover.roll.worst]} · {sevHover.roll.count} issue{sevHover.roll.count === 1 ? "" : "s"}
+            {sevHover.roll.pages > 1 ? ` on ${sevHover.roll.pages} pages` : ""}
+          </p>
+          <ul className="mt-1.5 flex flex-col gap-1.5">
+            {sevHover.roll.issues.slice(0, 3).map((i) => (
+              <li key={i.code} className="border-t border-border pt-1.5">
+                <p className="font-medium">
+                  <span style={{ color: SEVERITY_COLOR[i.impact] }}>
+                    {SEVERITY_LABEL[i.impact]}
+                  </span>{" "}
+                  · {i.code} · {i.title}
+                  {i.pages > 1 ? <span className="text-subtle"> · {i.pages} pages</span> : null}
+                </p>
+                <p className="text-muted">
+                  <span className="text-subtle">Why </span>
+                  {clip(i.why, 150)}
+                </p>
+                <p className="text-muted">
+                  <span className="text-subtle">Fix </span>
+                  {clip(i.fix, 150)}
+                </p>
+              </li>
+            ))}
+          </ul>
+          {sevHover.roll.issues.length > 3 ? (
+            <p className="mt-1 text-[10px] text-subtle">+{sevHover.roll.issues.length - 3} more in Issues</p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="absolute bottom-3 right-3 z-10 flex gap-1">
         <button
           type="button"
