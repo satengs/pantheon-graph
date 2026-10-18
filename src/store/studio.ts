@@ -89,6 +89,8 @@ type StudioState = {
   pushGraphFocus: (id: string) => void;
   popGraphFocus: () => void;
   toggleCluster: (id: string, showingNow?: boolean) => void;
+  /** Drop every manual expand/collapse so the issues-only default applies again (Reset layout). */
+  resetClusters: () => void;
   /** Hubs auto-opened on load (open rule on the hub or its pages); set by the graph canvas. */
   issueHubs: string[] | undefined;
   setIssueHubs: (ids: string[]) => void;
@@ -312,6 +314,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         collapsedClusters: s.collapsedClusters.filter((x) => x !== id),
       };
     }),
+  resetClusters: () => set({ graphFocusStack: [], collapsedClusters: [] }),
   setGraphInspectorOpen: (graphInspectorOpen) => set({ graphInspectorOpen }),
   setIncludeParent: (includeParent) =>
     set((s) => ({
