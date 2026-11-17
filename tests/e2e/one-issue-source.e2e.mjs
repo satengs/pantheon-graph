@@ -91,4 +91,27 @@ describe("guard: one issue source", () => {
     const ch = [...seen.rows].filter(([, s]) => s === "critical" || s === "high").map(([c]) => c).sort();
     assert.deepEqual([...seen.gateRows.keys()].sort(), ch, "Gate queue = every critical + high rule");
   });
+
+  test("Issues column shows S01 and scrolls, with Evidence stacked below the list", async () => {
+    await tab(page, "Issues");
+    const col = page.locator('[data-testid="issues-column"]');
+    await col.waitFor({ timeout: 15_000 });
+    const s01 = page.locator('[data-testid="issues-list"] [role="button"]').filter({ hasText: "S01" }).first();
+    assert.equal(await s01.isVisible(), true, "S01 should be visible at the top of Issues");
+    const before = await col.evaluate((el) => el.scrollTop);
+    await col.evaluate((el) => {
+      el.scrollTop = Math.min(el.scrollHeight, 600);
+    });
+    const after = await col.evaluate((el) => el.scrollTop);
+    assert.ok(after > before, `column should scroll (before=${before}, after=${after})`);
+    const ev = page.locator('[data-testid="issues-evidence"]');
+    assert.equal(await ev.count(), 1);
+    const stacked = await page.evaluate(() => {
+      const list = document.querySelector('[data-testid="issues-list"]')?.getBoundingClientRect();
+      const ev = document.querySelector('[data-testid="issues-evidence"]')?.getBoundingClientRect();
+      if (!list || !ev) return { ok: false };
+      return { ok: ev.top >= list.bottom - 1, listBottom: list.bottom, evTop: ev.top };
+    });
+    assert.ok(stacked.ok, `Evidence should sit below the Issues list: ${JSON.stringify(stacked)}`);
+  });
 });

@@ -16,8 +16,8 @@
     "matched": 54,
     "matchedDrawnPage": 26,
     "matchedBrandRollupOnly": 28,
-    "siteWide": 101,
-    "unmapped": 10,
+    "siteWide": 111,
+    "unmapped": 0,
     "screenshots": 26,
     "severity": {
       "critical": 10,
@@ -2795,7 +2795,7 @@
         "https://apply.freedomdebtrelief.com/fbcfos",
         "https://apply.freedomdebtrelief.com/testimonials/"
       ],
-      "owner": "Apply + Compliance",
+      "owner": "Apply",
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-09",
@@ -2822,9 +2822,11 @@
       "flags": {},
       "verificationNote": "Confirmed by Funnel Fix 2026-11-12 (WR-FF-02)",
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -3325,7 +3327,7 @@
       "urls": [
         "https://apply.freedomdebtrelief.com/fbcfos"
       ],
-      "owner": "Apply + Compliance",
+      "owner": "Apply",
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-12",
@@ -3349,9 +3351,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -3544,7 +3548,7 @@
       "urls": [
         "https://apply.freedomdebtrelief.com/fb"
       ],
-      "owner": "Public / Apply (competitor)",
+      "owner": "Apply",
       "status": "open",
       "statusText": "NEW · competitor crowded",
       "firstSeen": "2026-10-13",
@@ -3566,9 +3570,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -3782,9 +3788,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -4227,9 +4235,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -4746,9 +4756,11 @@
       "flags": {},
       "verificationNote": "Confirmed by Funnel Fix 2026-11-12 (WR-FF-02)",
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -4786,7 +4798,7 @@
       "urls": [
         "https://apply.freedomdebtrelief.com/fbcfos"
       ],
-      "owner": "Apply (creative)",
+      "owner": "Apply",
       "status": "open",
       "statusText": "HOLD",
       "firstSeen": "2026-10-30",
@@ -4809,9 +4821,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -5309,7 +5323,7 @@
       "urls": [
         "https://apply.freedomdebtrelief.com/fb"
       ],
-      "owner": "Paid",
+      "owner": "Apply",
       "status": "open",
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-10-30",
@@ -5331,9 +5345,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -5564,9 +5580,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {
@@ -6190,9 +6208,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "unmapped",
-        "nodes": [],
-        "reason": "off-site ad host (apply.freedomdebtrelief.com)"
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       },
       "screenshots": [
         {

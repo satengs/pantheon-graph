@@ -10,8 +10,9 @@ import { crawlFindings, familyIssues, severityTotals, useFamilyIssues } from "@/
 import { SevTotals } from "@/components/studio/SevTotals";
 import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
 import { EvidenceCard } from "@/components/studio/EvidenceCard";
-import { evidenceMatchesSource, familyEvidenceQueue, showsEvidence } from "@/lib/graph/evidence-filter";
-import { useEvidence } from "@/lib/graph/evidence";
+import { familyEvidenceQueue, filterEvBySource, showsEvidence } from "@/lib/graph/evidence-filter";
+import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
+import { evidenceLabel } from "@/lib/graph/evidence-label";
 import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
@@ -112,12 +113,14 @@ export function Backlog() {
   const familyTotals = useMemo(() => severityTotals(familyRules), [familyRules]);
   const evDoc = useEvidence();
   const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
+  const evIndex = useMemo(() => buildEvidenceIndex(evDoc), [evDoc]);
   const source = useStudio((st) => st.issueSourceFilter);
   const setSource = useStudio((st) => st.setIssueSourceFilter);
-  const evidenceRows = useMemo(
-    () => (evDoc?.items ?? []).filter((i) => showsEvidence(source) && evidenceMatchesSource(i, source)),
-    [evDoc, source],
-  );
+  const evidenceRows = useMemo(() => {
+    if (!showsEvidence(source)) return [];
+    return filterEvBySource(evIndex.forAll(), source)?.items ?? [];
+  }, [evIndex, source]);
+  const evidenceHeading = evidenceLabel(evidenceRows);
 
   const familyFindings = useMemo(
     () =>
@@ -218,7 +221,7 @@ export function Backlog() {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
+    <div className="min-h-0 flex-1 overflow-auto p-3" data-testid="issues-column">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
       {seedFamily ? (
         <section className="mb-3 rounded-lg bg-surface p-3">
@@ -328,7 +331,7 @@ export function Backlog() {
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
 
-      <section ref={issuesSectionRef} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
+      <section ref={issuesSectionRef} className="rounded-lg bg-surface" data-testid="issues-list">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
         <p className="vh-whisper px-3 pb-1">Page, then section, then the problem. One selected.</p>
         <p className="px-3 pb-2 text-[11px] text-muted">
@@ -336,7 +339,6 @@ export function Backlog() {
           <span className="text-subtle"> (family graph / ownership checks)</span>
         </p>
         <VirtualList
-          className="min-h-0 flex-1 overflow-auto"
           items={categories}
           rowHeight="auto"
           jumpTo={htmlJump}
@@ -406,6 +408,7 @@ export function Backlog() {
         <section className="mt-3 flex flex-col gap-1.5" data-testid="issues-evidence">
           <h2 className="px-1 text-sm text-fg">Evidence</h2>
           <p className="px-1 text-[11px] text-subtle">
+            {evidenceHeading ? `${evidenceHeading.full} — same on-graph set as the canvas tag.` : "No on-graph Evidence rows for this source filter."}{" "}
             Page or scope, problem, why, fix and owner are on every row. These are not counted in Gate until verified.
           </p>
           {evidenceRows.length ? (

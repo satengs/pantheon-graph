@@ -117,17 +117,30 @@ export type EvidenceIndex = {
 export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string | "all" = "all"): EvidenceIndex {
   const byUrl = new Map<string, EvidenceItem[]>();
   const siteWide = new Map<string, EvidenceItem[]>();
+  const hubWide = new Map<string, EvidenceItem[]>();
   const unmapped: EvidenceItem[] = [];
   const items = (doc?.items ?? []).filter((i) => brandFilter === "all" || i.brand === brandFilter);
   for (const it of items) {
     if (it.match.kind === "page") {
       for (const k of it.match.nodes) byUrl.set(k, [...(byUrl.get(k) ?? []), it]);
     } else if (it.match.kind === "site-wide") {
+      const hubs = (it.match.nodes ?? [])
+        .map((n) => /^hub:([^:]+):([^:]+)$/.exec(n))
+        .filter((m): m is RegExpExecArray => !!m);
       const brands = (it.match.nodes ?? [])
         .filter((n) => n.startsWith("brand:"))
         .map((n) => n.slice("brand:".length));
-      const list = brands.length ? brands : [it.brand];
-      for (const b of list) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
+      for (const m of hubs) {
+        const key = `${m[1]}:${m[2]}`;
+        hubWide.set(key, [...(hubWide.get(key) ?? []), it]);
+        if (m[1]) siteWide.set(m[1], [...(siteWide.get(m[1]) ?? []), it]);
+      }
+      if (!hubs.length) {
+        const list = brands.length ? brands : [it.brand];
+        for (const b of list) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
+      } else {
+        for (const b of brands) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
+      }
     } else unmapped.push(it);
   }
   const keysOf = (pred: (b: string, p: string) => boolean) =>
@@ -148,7 +161,7 @@ export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string 
     siteWide,
     unmapped,
     forPage: (url) => (url ? rollKeys([urlKey(url)]) : null),
-    forHub: (b, p) => rollKeys(keysOf((pb, pp) => pb === b && pp === p)),
+    forHub: (b, p) => rollKeys(keysOf((pb, pp) => pb === b && pp === p), hubWide.get(`${b}:${p}`) ?? []),
     forBrand: (b) => rollKeys(keysOf((pb) => pb === b), siteWide.get(b) ?? []),
     siteWideFor: (b) => roll(siteWide.get(b) ?? [], 0),
     forAll: () => rollKeys([...byUrl.keys()], [...siteWide.values()].flat()),

@@ -58,17 +58,33 @@ describe("guard: evidence source totals", () => {
     expect(roll?.items.map((i) => i.id).sort()).toEqual(["MS01", "MS02", "MS03", "MS04", "MS05"]);
   });
 
-  test("parent evidence label is Evidence 155 · 9 critical after Funnel severities and remaps", () => {
+  test("parent evidence label is Evidence 165 · 10 critical after Apply remaps", () => {
     const idx = buildEvidenceIndex(doc);
-    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 155 · 9 critical");
+    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 165 · 10 critical");
   });
 
-  test("every unmapped row has a visible reason", () => {
+  test("every unmapped row has a visible reason (none expected after Apply remap)", () => {
     const unmapped = doc.items.filter((i) => i.match.kind === "unmapped");
-    expect(unmapped.length).toBe(10);
+    expect(unmapped.length).toBe(0);
     for (const i of unmapped) {
       expect(i.match.reason && i.match.reason.length > 0, i.id).toBeTruthy();
     }
+  });
+
+  test("FDR Apply hub carries the ten apply.freedomdebtrelief.com rows, including E70", () => {
+    const idx = buildEvidenceIndex(doc);
+    const ids = ["E59", "E70", "E74", "E79", "E88", "E98", "E99", "E111", "E115", "E131"];
+    for (const id of ids) {
+      const row = doc.items.find((i) => i.id === id)!;
+      expect(row.brand).toBe("fdr");
+      expect(row.owner).toBe("Apply");
+      expect(row.match.kind).toBe("site-wide");
+      expect(row.match.nodes).toEqual(["hub:fdr:apply"]);
+    }
+    const hub = idx.forHub("fdr", "apply");
+    expect(ids.every((id) => hub?.items.some((i) => i.id === id))).toBe(true);
+    expect(idx.forBrand("fdr")?.items.some((i) => i.id === "E70")).toBe(true);
+    expect(hub?.items.some((i) => i.id === "E70" && i.severity === "critical")).toBe(true);
   });
 
   test("E133 sits on the FDR brand, not Achieve, and is Funnel-confirmed high", () => {

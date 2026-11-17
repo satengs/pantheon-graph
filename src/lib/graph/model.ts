@@ -23,6 +23,7 @@ export const PRODUCT_ORDER: ProductId[] = [
   "credit-cards",
   "student-loans",
   "insurance",
+  "apply",
   "other",
 ];
 
@@ -37,11 +38,12 @@ const OWNER: Partial<Record<ProductId, BrandId>> = {
   "credit-cards": "bills",
   "student-loans": "bills",
   insurance: "bills",
+  apply: "fdr",
 };
 
 /** Default hubs per brand — seed/OWNER structure, not every crawl bucket. */
 const SEED_PRODUCTS: Record<string, ProductId[]> = {
-  fdr: ["settlement", "debt-relief", "consolidation", "glossary"],
+  fdr: ["settlement", "debt-relief", "consolidation", "glossary", "apply"],
   achieve: ["personal-loan", "heloc", "hel", "wellness", "debt-relief", "glossary"],
   bills: ["consolidation", "hel", "heloc", "personal-loan", "credit-cards", "student-loans", "insurance"],
 };
@@ -183,7 +185,7 @@ const FALLBACK_ORG: GraphOrg = {
       slug: "fdr",
       name: "Freedom Debt Relief",
       url: "https://www.freedomdebtrelief.com/",
-      products: ["settlement", "debt-relief", "consolidation", "glossary"],
+      products: ["settlement", "debt-relief", "consolidation", "glossary", "apply"],
     },
     {
       slug: "achieve",

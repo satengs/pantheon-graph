@@ -18,7 +18,7 @@ export const SEED_BRANDS = [
     name: "Freedom Debt Relief",
     website: "https://www.freedomdebtrelief.com/",
     host: "www.freedomdebtrelief.com",
-    products: ["settlement", "debt-relief", "consolidation", "glossary"] as ProductId[],
+    products: ["settlement", "debt-relief", "consolidation", "glossary", "apply"] as ProductId[],
   },
   {
     slug: "achieve",

@@ -266,8 +266,8 @@ function layoutOf(
   return pos;
 }
 
-function fitView(pts: Pt[], pad: number) {
-  if (!pts.length) return { x: -560, y: -340, w: 1120, h: 720 };
+function fitView(pts: Pt[], pad: number, bottomExtra = 0) {
+  if (!pts.length) return { x: -560, y: -340, w: 1120, h: 720 + bottomExtra };
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -279,7 +279,7 @@ function fitView(pts: Pt[], pad: number) {
     maxY = Math.max(maxY, p.y);
   }
   const w = Math.max(640, maxX - minX + pad * 2);
-  const h = Math.max(420, maxY - minY + pad * 2);
+  const h = Math.max(420, maxY - minY + pad * 2) + bottomExtra;
   return { x: r2(minX - pad), y: r2(minY - pad), w: r2(w), h: r2(h) };
 }
 
@@ -645,7 +645,8 @@ export function GraphCanvas() {
       const b = pb ? { x: pb.x + ob.x, y: pb.y + ob.y } : undefined;
       if (a && b) pts.push({ ...brandArc(a, b).apex, y: brandArc(a, b).apex.y - 14 });
     }
-    return fitView(pts, full ? 160 : 128);
+    // Extra bottom space so Fit doesn't sit clusters under the canvas legend.
+    return fitView(pts, full ? 160 : 128, full ? 140 : 110);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.nodes, base, full, fitTick, ready, sevIndex]);
 
@@ -853,7 +854,7 @@ export function GraphCanvas() {
             if (id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
           }}
         />
-        {showEvidence && evDoc ? (
+        {showEvidence && evDoc && evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length ? (
           <button
             type="button"
             data-testid="unmapped-toggle"
@@ -1705,13 +1706,19 @@ export function GraphCanvas() {
             </button>
           </div>
           <div className="flex min-h-0 flex-col gap-1.5 overflow-y-auto p-2">
-            {evIndex.unmapped
-              .filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)))
-              .slice()
-              .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
-              .map((i) => (
-                <EvidenceCard key={i.id} item={i} unmapped />
-              ))}
+            {evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length ? (
+              evIndex.unmapped
+                .filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)))
+                .slice()
+                .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
+                .map((i) => (
+                  <EvidenceCard key={i.id} item={i} unmapped />
+                ))
+            ) : (
+              <p className="px-1 py-3 text-xs text-subtle" data-testid="unmapped-empty">
+                No unmapped rows — every Evidence row sits on a brand or page.
+              </p>
+            )}
           </div>
         </div>
       ) : null}
@@ -1764,7 +1771,7 @@ export function GraphCanvas() {
         </button>
       </div>
       <div
-        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-9rem)] flex-col gap-1 text-[10px] uppercase tracking-wide text-subtle"
+        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-9rem)] flex-col gap-1 rounded-md bg-bg/95 px-2.5 py-2 text-[10px] uppercase tracking-wide text-subtle shadow-[var(--shadow-border)]"
         data-testid="graph-legend"
       >
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">

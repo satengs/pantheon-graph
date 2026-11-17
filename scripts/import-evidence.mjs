@@ -693,8 +693,15 @@ function hostOf(url) {
 }
 
 /** Off-graph acquisition / ad / app hosts that belong to a brand but have no crawl page. */
+/** FDR's own Apply service (separate team), not an off-site ad host. */
+export function isFdrApplyHost(host) {
+  const h = (host ?? "").replace(/^www\./, "").toLowerCase();
+  return h === "apply.freedomdebtrelief.com";
+}
+
 export function isOffsiteAdHost(host) {
   const h = (host ?? "").replace(/^www\./, "");
+  if (isFdrApplyHost(h)) return false;
   if (/^apply\./i.test(h) && brandOfHost(h)) return true;
   if (/^start\.freedomfinancialnetwork\.com$/i.test(h)) return true;
   if (/^(app|go|ads|track)\./i.test(h) && brandOfHost(h)) return true;
@@ -705,6 +712,15 @@ export function classifyUrl(url, crawlKeys) {
   const key = urlKey(url);
   if (crawlKeys.has(key)) return { kind: "crawl", key, product: crawlKeys.get(key), url };
   const host = hostOf(url);
+  if (isFdrApplyHost(host)) {
+    return {
+      kind: "fdr-apply",
+      host,
+      brand: "fdr",
+      reason: "FDR Apply service — rolled up to the Apply hub",
+      url,
+    };
+  }
   if (isOffsiteAdHost(host)) {
     return { kind: "off-site-ad-host", host, brand: brandOfHost(host) ?? "fdr", reason: `off-site ad host (${host})`, url };
   }
@@ -749,6 +765,17 @@ export function matchEvidenceItem(it, crawlKeys) {
   const hostOnly = it.urls.every((u) => /^[^/]+$/.test(urlKey(u)));
   if (hostOnly) {
     it.match = { kind: "site-wide", nodes: [`brand:${it.brand}`] };
+    return it.match;
+  }
+  const applyHits = classes.filter((c) => c.kind === "fdr-apply");
+  if (applyHits.length && !classes.some((c) => c.kind === "own-off-crawl")) {
+    it.brand = "fdr";
+    it.owner = "Apply";
+    it.match = {
+      kind: "site-wide",
+      nodes: ["hub:fdr:apply"],
+      reason: "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub",
+    };
     return it.match;
   }
   const own = classes.filter((c) => c.kind === "own-off-crawl");

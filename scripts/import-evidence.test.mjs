@@ -87,7 +87,7 @@ test("applyReplacements strips personal names and box paths", () => {
   assert.match(m.applyReplacements("see /workspace/seo-vs-mkt/pack.md"), /^\s*see \(evidence pack\)/);
 });
 
-test("own-brand URLs not in the crawl roll up to the brand; apply hosts stay unmapped with a reason", () => {
+test("own-brand URLs not in the crawl roll up to the brand; FDR Apply hosts roll up to the Apply hub", () => {
   const crawl = new Map([["freedomdebtrelief.com/scam", "other"]]);
   const vanity = { id: "E2", brand: "fdr", urls: ["https://www.freedomdebtrelief.com/apply"] };
   m.matchEvidenceItem(vanity, crawl);
@@ -97,9 +97,11 @@ test("own-brand URLs not in the crawl roll up to the brand; apply hosts stay unm
 
   const apply = { id: "E98", brand: "fdr", urls: ["https://apply.freedomdebtrelief.com/fb"] };
   m.matchEvidenceItem(apply, crawl);
-  assert.equal(apply.match.kind, "unmapped");
-  assert.equal(apply.match.reason, "off-site ad host (apply.freedomdebtrelief.com)");
-  assert.ok(apply.match.reason, "unmapped rows must have a visible reason");
+  assert.equal(apply.match.kind, "site-wide");
+  assert.deepEqual(apply.match.nodes, ["hub:fdr:apply"]);
+  assert.equal(apply.brand, "fdr");
+  assert.equal(apply.owner, "Apply");
+  assert.match(apply.match.reason, /Apply hub/);
 
   const crawlHit = { id: "E83", brand: "fdr", urls: ["https://www.freedomdebtrelief.com/scam/"] };
   m.matchEvidenceItem(crawlHit, crawl);
