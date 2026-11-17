@@ -33,9 +33,42 @@ describe("guard: evidence labels", () => {
     for (const t of r.tags) assert.match(t, LABEL);
   });
 
-  test("snapshot: parent reads 'Evidence 84 · 4 critical'", async () => {
+  // Data change pending sign-off: Apply-host rows now roll up to the FDR Apply hub,
+  // so all 165 rows are on-graph and all 10 criticals (including E70) count at the parent.
+  // Was 'Evidence 84 · 4 critical' on the 2026-10-19 lock, then 'Evidence 135 · 5 critical',
+  // then 'Evidence 155 · 9 critical' before the Apply remap.
+  test("snapshot: parent reads 'Evidence 165 · 10 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 84 · 4 critical");
+    assert.equal(t, "Evidence 165 · 10 critical");
+  });
+
+  test("collapsed Apply hub shows a critical evidence marker and an off-crawl findings label", async () => {
+    const r = await page.evaluate(() => {
+      const g = document.querySelector('g[data-node-id="hub:fdr:apply"]');
+      const marker = g?.querySelector("[data-ev-sev-marker]");
+      return {
+        evMarker: marker?.getAttribute("data-ev-sev-marker"),
+        label: marker?.getAttribute("data-ev-sev-label") ?? marker?.textContent?.trim(),
+        shown: g?.querySelector('[data-testid="hub-shown"]')?.textContent,
+        sev: g?.getAttribute("data-sev"),
+        legend: document.querySelector('[data-testid="legend-ev-critical-ring"]')?.textContent?.replace(/\s+/g, " ").trim(),
+      };
+    });
+    assert.equal(r.sev, null, "Apply has no Pantheon issue; data-sev stays unset");
+    assert.equal(r.evMarker, "critical");
+    // Caption is evidenceLabel().full — not a bare Pantheon-style "C1" pill.
+    assert.equal(r.label, "Evidence 10 · 1 critical");
+    assert.equal(r.shown, "Off-crawl · 10 findings");
+    assert.match(r.legend ?? "", /Outlined red = critical evidence finding, not counted in Pantheon C\/H\/M\/L/);
+  });
+
+  test("legend shows separate to-verify and unverified chips", async () => {
+    const r = await page.evaluate(() => ({
+      toVerify: document.querySelector('[data-testid="legend-to-verify-chip"]')?.textContent?.trim(),
+      unverified: document.querySelector('[data-testid="legend-unverified-chip"]')?.textContent?.trim(),
+    }));
+    assert.equal(r.toVerify, "? to verify");
+    assert.equal(r.unverified, "unverified");
   });
 
   test("no 'undefined' / 'unknown' on Graph", async () => {

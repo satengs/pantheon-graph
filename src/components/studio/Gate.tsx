@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RULES } from "@/data/rules-seed";
 import { SevTotals } from "@/components/studio/SevTotals";
+import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
+import { familyEvidenceQueue } from "@/lib/graph/evidence-filter";
+import { useEvidence } from "@/lib/graph/evidence";
 import { severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
 import { crawl } from "@/data/crawl";
 import { crawlMetrics, pct } from "@/lib/studio/crawl-metrics";
@@ -30,6 +33,10 @@ export function Gate() {
   const selectIssue = useStudio((s) => s.selectIssue);
   // Same source as the graph and the Issues header (family rules, open, no view filters).
   const familyRules = useFamilyIssues();
+  const evDoc = useEvidence();
+  const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
+  const source = useStudio((st) => st.issueSourceFilter);
+  const setSource = useStudio((st) => st.setIssueSourceFilter);
   if (!isSeedFamily(graphOrg, parentSlug)) {
     return <EmptyFamilyCrawl title={`No gate data for ${graphOrg?.parent?.name ?? "this family"}`} />;
   }
@@ -69,6 +76,13 @@ export function Gate() {
         </p>
         <p className="mt-2">
           <SevTotals totals={totals} label="Open rules" testId="gate-sev-totals" />
+        </p>
+        <p className="mt-2">
+          <ToVerifyNote toVerify={evQueue.toVerify} unverified={evQueue.unverified} testId="gate-to-verify" />
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wide text-subtle">Source</span>
+          <SourceBar value={source} onChange={setSource} />
         </p>
       </div>
 

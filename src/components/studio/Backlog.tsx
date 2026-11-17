@@ -8,6 +8,11 @@ import { runValidation } from "@/lib/server/validate-run";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { crawlFindings, familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
 import { SevTotals } from "@/components/studio/SevTotals";
+import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
+import { EvidenceCard } from "@/components/studio/EvidenceCard";
+import { familyEvidenceQueue, filterEvBySource, showsEvidence } from "@/lib/graph/evidence-filter";
+import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
+import { evidenceLabel } from "@/lib/graph/evidence-label";
 import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
@@ -106,6 +111,16 @@ export function Backlog() {
   );
   const familyRules = useFamilyIssues();
   const familyTotals = useMemo(() => severityTotals(familyRules), [familyRules]);
+  const evDoc = useEvidence();
+  const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
+  const evIndex = useMemo(() => buildEvidenceIndex(evDoc), [evDoc]);
+  const source = useStudio((st) => st.issueSourceFilter);
+  const setSource = useStudio((st) => st.setIssueSourceFilter);
+  const evidenceRows = useMemo(() => {
+    if (!showsEvidence(source)) return [];
+    return filterEvBySource(evIndex.forAll(), source)?.items ?? [];
+  }, [evIndex, source]);
+  const evidenceHeading = evidenceLabel(evidenceRows);
 
   const familyFindings = useMemo(
     () =>
@@ -206,7 +221,7 @@ export function Backlog() {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
+    <div className="min-h-0 flex-1 overflow-auto p-3" data-testid="issues-column">
       {err ? <p className="mb-2 text-sm text-danger">{err}</p> : null}
       {seedFamily ? (
         <section className="mb-3 rounded-lg bg-surface p-3">
@@ -261,6 +276,8 @@ export function Backlog() {
       </section>
 
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-wide text-subtle">Source</span>
+        <SourceBar value={source} onChange={setSource} />
         <Button
           size="sm"
           variant="ghost"
@@ -287,6 +304,7 @@ export function Backlog() {
         </Button>
         <span className="ml-auto inline-flex items-center gap-3">
           <SevTotals totals={familyTotals} label="Open rules" testId="issues-sev-totals" />
+          <ToVerifyNote toVerify={evQueue.toVerify} unverified={evQueue.unverified} testId="issues-to-verify" />
           <span className="vh-whisper">{categories.filter((c) => c.source === "rule").length} rules in view</span>
           {htmlCount ? (
             <button
@@ -313,7 +331,7 @@ export function Backlog() {
         <EmptyFamilyCrawl title={`No issues for ${graphOrg?.parent?.name ?? "this family"}`} />
       ) : null}
 
-      <section ref={issuesSectionRef} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-surface">
+      <section ref={issuesSectionRef} className="rounded-lg bg-surface" data-testid="issues-list">
         <h2 className="px-3 pt-3 text-sm text-fg">Issues</h2>
         <p className="vh-whisper px-3 pb-1">Page, then section, then the problem. One selected.</p>
         <p className="px-3 pb-2 text-[11px] text-muted">
@@ -321,19 +339,15 @@ export function Backlog() {
           <span className="text-subtle"> (family graph / ownership checks)</span>
         </p>
         <VirtualList
-          className="min-h-0 flex-1 overflow-auto"
           items={categories}
-          rowHeight={104}
+          rowHeight="auto"
           jumpTo={htmlJump}
           getKey={(c) => c.code}
           selectedIndex={categories.findIndex((c) => c.code === selectedIssueId || RULES.find((r) => r.code === c.code)?.id === selectedIssueId)}
           rowWrapper={(c) => {
             const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             return {
-              className: "overflow-visible",
-              style: on
-                ? { overflow: "visible", background: "#c4b8a4", color: "#1c1814" }
-                : { overflow: "visible" },
+              style: on ? { background: "#c4b8a4", color: "#1c1814" } : undefined,
             };
           }}
           renderRow={(c) => {
@@ -389,6 +403,21 @@ export function Backlog() {
           <p className="px-3 py-8 text-center text-sm text-muted">No issues match these filters.</p>
         ) : null}
       </section>
+
+      {showsEvidence(source) ? (
+        <section className="mt-3 flex flex-col gap-1.5" data-testid="issues-evidence">
+          <h2 className="px-1 text-sm text-fg">Evidence</h2>
+          <p className="px-1 text-[11px] text-subtle">
+            {evidenceHeading ? `${evidenceHeading.full} — same on-graph set as the canvas tag.` : "No on-graph Evidence rows for this source filter."}{" "}
+            Page or scope, problem, why, fix and owner are on every row. These are not counted in Gate until verified.
+          </p>
+          {evidenceRows.length ? (
+            evidenceRows.map((i) => <EvidenceCard key={i.id} item={i} unmapped={i.match.kind === "unmapped"} />)
+          ) : (
+            <p className="px-1 text-xs text-subtle">No evidence rows for this source filter.</p>
+          )}
+        </section>
+      ) : null}
 
       <details className="mt-2 text-sm">
         <summary className="cursor-pointer text-xs text-subtle">Add a check</summary>

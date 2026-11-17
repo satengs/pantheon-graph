@@ -28,6 +28,7 @@ const SEO = path.join(ROOT, "seo-vs-mkt");
 const NVF = path.join(ROOT, "ndr-vs-fdr");
 const OUT_JSON = path.join(REPO, "public/data/evidence.json");
 const OUT_DIR = path.join(REPO, "public/evidence");
+const MANUAL_DIR = path.join(REPO, "data/evidence-manual");
 const MAX_W = Number(process.env.EVIDENCE_MAX_W ?? 1280);
 const DRY = process.argv.includes("--dry");
 
@@ -445,6 +446,375 @@ function parseDefects() {
   return { items, source: f };
 }
 
+
+/* ───────────────────────── manual Scout rows + Funnel cross-check ───────────────────────── */
+
+/** Normalise a title for dedupe (URL + title, or id). */
+export function normTitle(t) {
+  return `${t ?? ""}`.toLowerCase().replace(/["“”]/g, "").replace(/\s+/g, " ").trim();
+}
+
+export function defaultSources(it) {
+  if (it.source === "scout") return ["scout"];
+  if (it.source === "ndr-vs-fdr") return ["evidence-brief"];
+  return ["evidence-brief"];
+}
+
+function loadManualFiles() {
+  if (!fs.existsSync(MANUAL_DIR)) return [];
+  return fs
+    .readdirSync(MANUAL_DIR)
+    .filter((f) => f.endsWith(".json") && !/confirmations|overrides/i.test(f))
+    .sort()
+    .map((f) => ({ file: path.join(MANUAL_DIR, f), doc: JSON.parse(fs.readFileSync(path.join(MANUAL_DIR, f), "utf8")) }));
+}
+
+export function isDupe(items, raw) {
+  const id = raw.id;
+  if (id && items.some((i) => i.id === id)) return { reason: `id ${id}` };
+  const title = normTitle(raw.title);
+  const urls = new Set((raw.urls ?? []).map(urlKey));
+  for (const it of items) {
+    if (title && normTitle(it.title) === title) {
+      const overlap = (it.urls ?? []).some((u) => urls.has(urlKey(u)));
+      if (overlap || urls.size === 0 && (it.urls ?? []).length === 0) return { reason: `title+url ${it.id}` };
+    }
+  }
+  return null;
+}
+
+export function manualToItem(raw, pack) {
+  const source = raw.source ?? pack.source ?? "scout";
+  const brands = raw.brands ?? (raw.brand ? [raw.brand] : ["fdr"]);
+  const item = {
+    id: raw.id,
+    row: raw.row ?? null,
+    source,
+    title: raw.title,
+    brand: raw.brand ?? brands[0],
+    urls: raw.urls ?? [],
+    owner: raw.owner ?? "",
+    status: statusFrom(raw.status ?? "open"),
+    statusText: raw.statusText ?? raw.status ?? "open",
+    firstSeen: raw.firstSeen ?? pack.asOf,
+    lastSeen: raw.lastSeen ?? pack.asOf,
+    daysOpen: raw.daysOpen ?? daysBetween(raw.firstSeen ?? pack.asOf, raw.lastSeen ?? pack.asOf),
+    severity: raw.severity ?? "unrated",
+    severityBasis: raw.severityBasis ?? "manual row gives no P0 label or severity wording",
+    why: raw.why ?? "",
+    fix: raw.fix ?? "",
+    firstReport: raw.firstReport ?? "",
+    links: raw.links ?? [],
+    refs: raw.refs ?? [pack.sourceLabel ?? pack.file],
+    sources: raw.sources ?? defaultSources({ source }),
+    confirmations: raw.confirmations ?? [],
+    verification: raw.verification ?? "to_verify",
+    flags: raw.flags ?? {},
+    scope: raw.scope ?? "",
+    _text: `${raw.title} ${raw.why ?? ""} ${raw.fix ?? ""}`,
+  };
+  if (raw.verificationNote) item.verificationNote = raw.verificationNote;
+  if (raw.match) item.match = raw.match;
+  return item;
+}
+
+/** Fold curated manual packs (e.g. Market Scout Nov 16) into the brief/defect list. Dedupe by id or URL+title. */
+export function mergeManual(items) {
+  const added = [];
+  const skipped = [];
+  for (const { file, doc } of loadManualFiles()) {
+    const pack = { ...doc, file: rel(file) };
+    for (const raw of doc.items ?? []) {
+      const dupe = isDupe(items, raw);
+      if (dupe) {
+        skipped.push({ id: raw.id, reason: dupe.reason, file: pack.file });
+        continue;
+      }
+      const item = manualToItem(raw, pack);
+      items.push(item);
+      added.push(item.id);
+    }
+  }
+  return { added, skipped };
+}
+
+function loadConfirmationMap() {
+  const f = path.join(MANUAL_DIR, "funnel-fix-confirmations-2026-11-12.json");
+  if (!fs.existsSync(f)) return null;
+  return JSON.parse(fs.readFileSync(f, "utf8"));
+}
+
+export const SEV_RANK = { critical: 4, high: 3, medium: 2, low: 1 };
+
+export function worseSev(a, b) {
+  if (!a || !SEV_RANK[a]) return b;
+  if (!b || !SEV_RANK[b]) return a;
+  return SEV_RANK[a] >= SEV_RANK[b] ? a : b;
+}
+
+/**
+ * Stamp Funnel Fix confirmations onto existing rows. Does not add Funnel rows as a source.
+ * WR-FF-11 (Googlebot) is unverified, which is a separate status from "to verify".
+ * Confirmed rows take their severity from the Funnel Fix impact (vendored from
+ * funnel-fix-highlights-2026-11-17.json). To-verify and unverified rows stay Unrated.
+ * When one row maps to more than one Funnel item, the worse impact is kept.
+ */
+export function applyConfirmations(items) {
+  const map = loadConfirmationMap();
+  const index = new Map(items.map((i) => [i.id, i]));
+  const stamped = { confirmed: [], unverified: [], missing: [], severities: [] };
+  if (!map) return stamped;
+  const acc = new Map(); // id → { sev, codes, prior }
+  for (const row of map.confirmed ?? []) {
+    for (const id of row.evidenceIds ?? []) {
+      const it = index.get(id);
+      if (!it) {
+        stamped.missing.push(id);
+        continue;
+      }
+      if (!it.confirmations.includes("funnel-fix")) it.confirmations.push("funnel-fix");
+      it.verification = "confirmed";
+      it.verificationNote = `Confirmed by Funnel Fix 2026-11-12 (${row.funnel})`;
+      stamped.confirmed.push(id);
+      if (row.impact && SEV_RANK[row.impact] && it.verification !== "to_verify") {
+        const cur = acc.get(id) ?? { sev: null, codes: [], prior: it.severity };
+        if (!cur.codes.includes(row.funnel)) cur.codes.push(row.funnel);
+        cur.sev = worseSev(cur.sev, row.impact);
+        acc.set(id, cur);
+      }
+    }
+  }
+  for (const [id, cur] of acc) {
+    const it = index.get(id);
+    if (!it || !cur.sev) continue;
+    it.severity = cur.sev;
+    it.severityBasis =
+      cur.codes.length > 1
+        ? `Funnel Fix 2026-11-12 (${cur.codes.join(", ")}; worst impact: ${cur.sev})`
+        : `Funnel Fix 2026-11-12 (${cur.codes[0]}) impact: ${cur.sev}`;
+    stamped.severities.push({ id, from: cur.prior, to: cur.sev, codes: cur.codes });
+  }
+  for (const row of map.unverified ?? []) {
+    for (const id of row.evidenceIds ?? []) {
+      const it = index.get(id);
+      if (!it) {
+        stamped.missing.push(id);
+        continue;
+      }
+      it.verification = "unverified";
+      it.verificationNote = row.verificationNote ?? "unverified: needs Search Console or Cloudflare access";
+      stamped.unverified.push(id);
+      // Funnel may record an impact, but unverified rows stay Unrated.
+    }
+  }
+  return stamped;
+}
+
+const UI_TEXT_FIELDS = [
+  "title",
+  "why",
+  "fix",
+  "firstReport",
+  "statusText",
+  "severityBasis",
+  "verificationNote",
+  "owner",
+  "scope",
+];
+
+export function loadOverrides() {
+  const f = path.join(MANUAL_DIR, "evidence-overrides.json");
+  if (!fs.existsSync(f)) return { items: {}, replacements: [] };
+  return JSON.parse(fs.readFileSync(f, "utf8"));
+}
+
+/** Apply brand / URL / match / text overrides by id. Must run before matching. */
+export function applyOverrides(items, ov = loadOverrides()) {
+  const applied = [];
+  for (const it of items) {
+    const spec = ov.items?.[it.id];
+    if (!spec) continue;
+    if (spec.brand) it.brand = spec.brand;
+    if (Array.isArray(spec.urls)) it.urls = spec.urls;
+    if (spec.match) it.match = spec.match;
+    if (typeof spec.why === "string") it.why = spec.why;
+    if (spec.whySuffix && !(it.why ?? "").includes(spec.whySuffix)) {
+      const base = (it.why ?? "").replace(/\s*$/, "");
+      const sep = !base ? "" : /[.!?]$/.test(base) ? " " : ". ";
+      it.why = `${base}${sep}${spec.whySuffix}`;
+    }
+    applied.push(it.id);
+  }
+  return applied;
+}
+
+export function applyReplacements(s, replacements = []) {
+  let out = scrub(String(s));
+  for (const { find, replace } of replacements) {
+    if (!find) continue;
+    out = out.split(find).join(replace ?? "");
+  }
+  return out;
+}
+
+/** Neutralise personal names and box paths in every UI string. */
+export function sanitizeUiText(items, replacements) {
+  const ov = replacements ?? loadOverrides().replacements ?? [];
+  for (const it of items) {
+    for (const f of UI_TEXT_FIELDS) {
+      if (typeof it[f] === "string") it[f] = applyReplacements(it[f], ov);
+    }
+    if (Array.isArray(it.refs)) it.refs = it.refs.map((r) => applyReplacements(r, ov));
+  }
+}
+
+const NAME_OR_PATH = /Satenik|Alea Hunt|(?:^|[^A-Za-z])\/workspace\//i;
+export function assertCleanUiText(items) {
+  for (const it of items) {
+    for (const f of UI_TEXT_FIELDS) {
+      if (typeof it[f] === "string" && NAME_OR_PATH.test(it[f])) {
+        throw new Error(`UI text still contains a personal name or box path (${it.id}.${f})`);
+      }
+    }
+    for (const r of it.refs ?? []) {
+      if (NAME_OR_PATH.test(String(r))) {
+        throw new Error(`UI text still contains a personal name or box path (${it.id}.refs)`);
+      }
+    }
+  }
+}
+
+function hostOf(url) {
+  try {
+    return new URL(/^https?:/i.test(url) ? url : `https://${url}`).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/** Off-graph acquisition / ad / app hosts that belong to a brand but have no crawl page. */
+/** FDR's own Apply service (separate team), not an off-site ad host. */
+export function isFdrApplyHost(host) {
+  const h = (host ?? "").replace(/^www\./, "").toLowerCase();
+  return h === "apply.freedomdebtrelief.com";
+}
+
+export function isOffsiteAdHost(host) {
+  const h = (host ?? "").replace(/^www\./, "");
+  if (isFdrApplyHost(h)) return false;
+  if (/^apply\./i.test(h) && brandOfHost(h)) return true;
+  if (/^start\.freedomfinancialnetwork\.com$/i.test(h)) return true;
+  if (/^(app|go|ads|track)\./i.test(h) && brandOfHost(h)) return true;
+  return false;
+}
+
+export function classifyUrl(url, crawlKeys) {
+  const key = urlKey(url);
+  if (crawlKeys.has(key)) return { kind: "crawl", key, product: crawlKeys.get(key), url };
+  const host = hostOf(url);
+  if (isFdrApplyHost(host)) {
+    return {
+      kind: "fdr-apply",
+      host,
+      brand: "fdr",
+      reason: "FDR Apply service — rolled up to the Apply hub",
+      url,
+    };
+  }
+  if (isOffsiteAdHost(host)) {
+    return { kind: "off-site-ad-host", host, brand: brandOfHost(host) ?? "fdr", reason: `off-site ad host (${host})`, url };
+  }
+  const brand = brandOfHost(host);
+  if (brand) {
+    return {
+      kind: "own-off-crawl",
+      host,
+      brand,
+      key,
+      reason: "own URL not in crawl (404, off-sitemap or vanity)",
+      url,
+    };
+  }
+  if (/nationaldebtrelief\.com$/i.test(host.replace(/^www\./, ""))) {
+    return { kind: "competitor", host, reason: "competitor-only (NDR)", url };
+  }
+  if (!host && !key) return { kind: "no-url", reason: "no URL in brief", url };
+  return { kind: "other", host, reason: "URL not in the Pantheon crawl", url };
+}
+
+/**
+ * Place a row on a brand or page node when we can; otherwise leave it unmapped
+ * with a specific visible reason (never a blank reason).
+ */
+export function matchEvidenceItem(it, crawlKeys) {
+  if (it.match && it.match.kind) return it.match;
+  if (!it.urls.length) {
+    const nodes = (it.brands ?? [it.brand]).filter(Boolean).map((b) => `brand:${b}`);
+    it.match = { kind: "site-wide", nodes: nodes.length ? nodes : [`brand:${it.brand}`] };
+    return it.match;
+  }
+  const classes = it.urls.map((u) => classifyUrl(u, crawlKeys));
+  const crawl = classes.filter((c) => c.kind === "crawl");
+  if (crawl.length) {
+    const drawn = crawl.some((c) => c.product !== "other");
+    it.match = { kind: "page", nodes: [...new Set(crawl.map((c) => c.key))].sort(), drawn };
+    const leftover = classes.filter((c) => c.kind !== "crawl").map((c) => c.url);
+    if (leftover.length) it.unmatchedUrls = leftover;
+    return it.match;
+  }
+  const hostOnly = it.urls.every((u) => /^[^/]+$/.test(urlKey(u)));
+  if (hostOnly) {
+    it.match = { kind: "site-wide", nodes: [`brand:${it.brand}`] };
+    return it.match;
+  }
+  const applyHits = classes.filter((c) => c.kind === "fdr-apply");
+  if (applyHits.length && !classes.some((c) => c.kind === "own-off-crawl")) {
+    it.brand = "fdr";
+    it.owner = "Apply";
+    it.match = {
+      kind: "site-wide",
+      nodes: ["hub:fdr:apply"],
+      reason: "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub",
+    };
+    return it.match;
+  }
+  const own = classes.filter((c) => c.kind === "own-off-crawl");
+  if (own.length) {
+    const brands = [...new Set(own.map((c) => c.brand))];
+    it.match = {
+      kind: "site-wide",
+      nodes: brands.map((b) => `brand:${b}`),
+      reason: "own URL not in crawl (404, off-sitemap or vanity) — rolled up to the brand",
+    };
+    const leftover = classes.filter((c) => c.kind !== "own-off-crawl").map((c) => c.url);
+    if (leftover.length) it.unmatchedUrls = leftover;
+    return it.match;
+  }
+  if (classes.every((c) => c.kind === "off-site-ad-host") || classes.some((c) => c.kind === "off-site-ad-host")) {
+    const hosts = [...new Set(classes.filter((c) => c.kind === "off-site-ad-host").map((c) => c.host))];
+    it.match = { kind: "unmapped", nodes: [], reason: `off-site ad host (${hosts.join(", ")})` };
+    return it.match;
+  }
+  if (classes.every((c) => c.kind === "competitor")) {
+    it.match = { kind: "unmapped", nodes: [], reason: "competitor-only (NDR)" };
+    return it.match;
+  }
+  if (classes.every((c) => c.kind === "no-url")) {
+    it.match = { kind: "unmapped", nodes: [], reason: "no URL in brief" };
+    return it.match;
+  }
+  it.match = { kind: "unmapped", nodes: [], reason: classes[0]?.reason ?? "URL(s) not in the Pantheon crawl" };
+  return it.match;
+}
+
+export function annotateSources(items) {
+  for (const it of items) {
+    it.sources = it.sources ?? defaultSources(it);
+    it.confirmations = it.confirmations ?? [];
+    if (!it.verification) it.verification = "reported";
+  }
+}
+
 /* ───────────────────────── main ───────────────────────── */
 
 function main() {
@@ -533,6 +903,10 @@ function main() {
       firstReport: firstReport && firstReport !== cleanTxt(scrub(s.point)) ? firstReport : "",
       links: linksFrom(s.point),
       refs: [...new Set(s.statuses.map((x) => `Evidence Brief ${x.date}`))].slice(-3),
+      sources: ["evidence-brief"],
+      confirmations: [],
+      verification: "reported",
+      flags: {},
       _text: allText,
     });
   }
@@ -563,28 +937,23 @@ function main() {
       fix: "",
       links: linksFrom(`${d.row} ${d.proof}`),
       refs: [`NDR vs FDR scoreboard ${asOfD}`, ...(note ? [`Evidence Brief ${note.date}`] : []), d.proof ? `proof: ${d.proof.replace(/`/g, "")}` : ""].filter(Boolean),
+      sources: ["evidence-brief"],
+      confirmations: [],
+      verification: "reported",
+      flags: {},
       _text: `${d.row} ${d.fdr} ${d.proof}`,
     });
   }
 
-  /* match to graph nodes */
-  for (const it of items) {
-    const hits = it.urls.filter((u) => crawlKeys.has(urlKey(u)));
-    if (it.urls.length === 0) {
-      it.match = { kind: "site-wide", nodes: [`brand:${it.brand}`] };
-    } else if (hits.length) {
-      // Pages in product hubs are drawn as page nodes; "other" pages (/scam/, /facts/ …)
-      // are in the crawl but only roll up to their brand node.
-      const drawn = hits.some((u) => crawlKeys.get(urlKey(u)) !== "other");
-      it.match = { kind: "page", nodes: hits.map((u) => urlKey(u)).sort(), drawn };
-      it.unmatchedUrls = it.urls.filter((u) => !crawlKeys.has(urlKey(u)));
-    } else {
-      const hostOnly = it.urls.every((u) => /^[^/]+$/.test(urlKey(u)));
-      it.match = hostOnly
-        ? { kind: "site-wide", nodes: [`brand:${it.brand}`] }
-        : { kind: "unmapped", nodes: [], reason: "URL(s) not in the Pantheon crawl (off-sitemap, subdomain or 404)" };
-    }
-  }
+  const manual = mergeManual(items);
+  annotateSources(items);
+  const overridden = applyOverrides(items);
+  const stamped = applyConfirmations(items);
+  sanitizeUiText(items);
+  assertCleanUiText(items);
+
+  /* match to graph nodes (honor a pre-set match from a manual pack or override). */
+  for (const it of items) matchEvidenceItem(it, crawlKeys);
 
   /* screenshots: A = filename quoted in the row, B = 10+ digit ad ID in filename & row,
      C = pack line naming the file also names an own URL / ad ID the row has. */
@@ -647,6 +1016,15 @@ function main() {
     screenshots: used.size,
     severity: Object.fromEntries(["critical", "high", "medium", "low", "unrated"].map((s) => [s, count((i) => i.severity === s)])),
     status: Object.fromEntries(["open", "partly fixed", "fixed"].map((s) => [s, count((i) => i.status === s)])),
+    scout: count((i) => (i.sources ?? []).includes("scout")),
+    toVerify: count((i) => i.verification === "to_verify"),
+    unverified: count((i) => i.verification === "unverified"),
+    funnelConfirmed: count((i) => (i.confirmations ?? []).includes("funnel-fix")),
+    manualAdded: manual.added,
+    manualSkipped: manual.skipped,
+    confirmationMissing: stamped.missing,
+    overridesApplied: overridden,
+    funnelSeverities: stamped.severities,
   };
   const doc = {
     version: 1,

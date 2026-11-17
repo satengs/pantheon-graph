@@ -13,11 +13,14 @@ import { BUILD_SHA } from "@/lib/build-info";
  */
 export type EvSeverity = Severity | "unrated";
 export type EvStatus = "open" | "partly fixed" | "fixed";
+export type EvVerification = "reported" | "confirmed" | "to_verify" | "unverified";
+export type EvSourceName = "evidence-brief" | "scout";
+export type EvConfirmation = "funnel-fix";
 
 export type EvidenceItem = {
   id: string;
   row: number | null;
-  source: "brief" | "ndr-vs-fdr";
+  source: "brief" | "ndr-vs-fdr" | "scout";
   title: string;
   brand: string;
   urls: string[];
@@ -37,6 +40,12 @@ export type EvidenceItem = {
   screenshots: Array<{ file: string; name: string; pack: string; date: string }>;
   match: { kind: "page" | "site-wide" | "unmapped"; nodes: string[]; reason?: string; drawn?: boolean };
   unmatchedUrls?: string[];
+  sources?: EvSourceName[];
+  confirmations?: EvConfirmation[];
+  verification?: EvVerification;
+  verificationNote?: string;
+  flags?: { directional?: boolean; gap?: boolean; cluster?: boolean };
+  scope?: string;
 };
 
 export type EvidenceDoc = {
@@ -58,7 +67,7 @@ export const EV_LABEL: Record<EvSeverity, string> = {
   unrated: "Unrated",
 };
 
-export type SourceFilter = "pantheon" | "evidence" | "both";
+export type SourceFilter = "pantheon" | "evidence" | "both" | "evidence-brief" | "funnel-fix" | "scout";
 /** Severity chips plus "unrated", which only Evidence rows can carry. */
 export type EvSeverityFilter = SeverityFilter | "unrated";
 
@@ -108,13 +117,30 @@ export type EvidenceIndex = {
 export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string | "all" = "all"): EvidenceIndex {
   const byUrl = new Map<string, EvidenceItem[]>();
   const siteWide = new Map<string, EvidenceItem[]>();
+  const hubWide = new Map<string, EvidenceItem[]>();
   const unmapped: EvidenceItem[] = [];
   const items = (doc?.items ?? []).filter((i) => brandFilter === "all" || i.brand === brandFilter);
   for (const it of items) {
     if (it.match.kind === "page") {
       for (const k of it.match.nodes) byUrl.set(k, [...(byUrl.get(k) ?? []), it]);
     } else if (it.match.kind === "site-wide") {
-      siteWide.set(it.brand, [...(siteWide.get(it.brand) ?? []), it]);
+      const hubs = (it.match.nodes ?? [])
+        .map((n) => /^hub:([^:]+):([^:]+)$/.exec(n))
+        .filter((m): m is RegExpExecArray => !!m);
+      const brands = (it.match.nodes ?? [])
+        .filter((n) => n.startsWith("brand:"))
+        .map((n) => n.slice("brand:".length));
+      for (const m of hubs) {
+        const key = `${m[1]}:${m[2]}`;
+        hubWide.set(key, [...(hubWide.get(key) ?? []), it]);
+        if (m[1]) siteWide.set(m[1], [...(siteWide.get(m[1]) ?? []), it]);
+      }
+      if (!hubs.length) {
+        const list = brands.length ? brands : [it.brand];
+        for (const b of list) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
+      } else {
+        for (const b of brands) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
+      }
     } else unmapped.push(it);
   }
   const keysOf = (pred: (b: string, p: string) => boolean) =>
@@ -135,7 +161,7 @@ export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string 
     siteWide,
     unmapped,
     forPage: (url) => (url ? rollKeys([urlKey(url)]) : null),
-    forHub: (b, p) => rollKeys(keysOf((pb, pp) => pb === b && pp === p)),
+    forHub: (b, p) => rollKeys(keysOf((pb, pp) => pb === b && pp === p), hubWide.get(`${b}:${p}`) ?? []),
     forBrand: (b) => rollKeys(keysOf((pb) => pb === b), siteWide.get(b) ?? []),
     siteWideFor: (b) => roll(siteWide.get(b) ?? [], 0),
     forAll: () => rollKeys([...byUrl.keys()], [...siteWide.values()].flat()),
@@ -153,7 +179,17 @@ let inflight: Promise<EvidenceDoc | null> | null = null;
 export function normalizeEvidenceDoc(raw: unknown): EvidenceDoc | null {
   const d = raw as Partial<EvidenceDoc> | null;
   if (!d || !Array.isArray(d.items) || !d.newestBrief) return null;
-  return { ...(d as EvidenceDoc), items: d.items.map((i) => ({ ...i, severity: normSeverity(i?.severity) })) };
+  return {
+    ...(d as EvidenceDoc),
+    items: d.items.map((i) => ({
+      ...i,
+      severity: normSeverity(i?.severity),
+      sources: i.sources?.length ? i.sources : i.source === "scout" ? ["scout"] : ["evidence-brief"],
+      confirmations: i.confirmations ?? [],
+      verification: i.verification ?? "reported",
+      flags: i.flags ?? {},
+    })),
+  };
 }
 
 function load(): Promise<EvidenceDoc | null> {

@@ -57,10 +57,61 @@ describe("guard: one issue source", () => {
     for (const [code, s] of seen.rows) if (s === "html") assert.ok(!/^S\d+$/.test(code), `${code} is a rule, not an HTML check`);
   });
 
+  test("to-verify counts match on graph, Issues and Gate and stay put under every source filter", async () => {
+    const queue = (id) =>
+      page.evaluate((tid) => {
+        const e = document.querySelector(`[data-testid="${tid}"]`);
+        return e ? { toVerify: +e.dataset.toVerify, unverified: +e.dataset.unverified } : null;
+      }, id);
+    const filters = ["both", "pantheon", "evidence-brief", "funnel-fix", "scout"];
+    let baseline;
+    for (const f of filters) {
+      await page.click(`[data-source-chip="${f}"]`);
+      await tab(page, "Graph");
+      const graph = { totals: await totals(page, "graph-sev-totals"), queue: await queue("graph-to-verify") };
+      await tab(page, "Issues");
+      const issues = { totals: await totals(page, "issues-sev-totals"), queue: await queue("issues-to-verify") };
+      await tab(page, "Gate");
+      const gate = { totals: await totals(page, "gate-sev-totals"), queue: await queue("gate-to-verify") };
+      assert.deepEqual(issues.totals, graph.totals, `Issues totals vs graph under ${f}`);
+      assert.deepEqual(gate.totals, graph.totals, `Gate totals vs graph under ${f}`);
+      assert.deepEqual(issues.queue, graph.queue, `Issues queue vs graph under ${f}`);
+      assert.deepEqual(gate.queue, graph.queue, `Gate queue vs graph under ${f}`);
+      assert.deepEqual(graph.totals, { C: 8, H: 10, M: 3, L: 0 }, `Pantheon totals shifted under ${f}`);
+      if (!baseline) baseline = graph.queue;
+      else assert.deepEqual(graph.queue, baseline, `queue shifted under ${f}`);
+    }
+    assert.equal(baseline?.toVerify, 3);
+    assert.equal(baseline?.unverified, 1);
+  });
+
   test("per-issue severity matches between Issues and Gate", () => {
     assert.ok(seen.gateRows.size > 0, "Gate lists its open queue");
     for (const [code, s] of seen.gateRows) assert.equal(seen.rows.get(code), s, `${code}: Issues ${seen.rows.get(code)} vs Gate ${s}`);
     const ch = [...seen.rows].filter(([, s]) => s === "critical" || s === "high").map(([c]) => c).sort();
     assert.deepEqual([...seen.gateRows.keys()].sort(), ch, "Gate queue = every critical + high rule");
+  });
+
+  test("Issues column shows S01 and scrolls, with Evidence stacked below the list", async () => {
+    await tab(page, "Issues");
+    const col = page.locator('[data-testid="issues-column"]');
+    await col.waitFor({ timeout: 15_000 });
+    const s01 = page.locator('[data-testid="issues-list"] [role="button"]').filter({ hasText: "S01" }).first();
+    assert.equal(await s01.isVisible(), true, "S01 should be visible at the top of Issues");
+    const before = await col.evaluate((el) => el.scrollTop);
+    await col.evaluate((el) => {
+      el.scrollTop = Math.min(el.scrollHeight, 600);
+    });
+    const after = await col.evaluate((el) => el.scrollTop);
+    assert.ok(after > before, `column should scroll (before=${before}, after=${after})`);
+    const ev = page.locator('[data-testid="issues-evidence"]');
+    assert.equal(await ev.count(), 1);
+    const stacked = await page.evaluate(() => {
+      const list = document.querySelector('[data-testid="issues-list"]')?.getBoundingClientRect();
+      const ev = document.querySelector('[data-testid="issues-evidence"]')?.getBoundingClientRect();
+      if (!list || !ev) return { ok: false };
+      return { ok: ev.top >= list.bottom - 1, listBottom: list.bottom, evTop: ev.top };
+    });
+    assert.ok(stacked.ok, `Evidence should sit below the Issues list: ${JSON.stringify(stacked)}`);
   });
 });

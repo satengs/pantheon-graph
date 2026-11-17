@@ -13,7 +13,8 @@ export function VirtualList<T>({
   jumpTo,
 }: {
   items: T[];
-  rowHeight: number;
+  /** Fixed windowed rows, or `"auto"` so each row grows to fit its content (no overlap). */
+  rowHeight: number | "auto";
   overscan?: number;
   className?: string;
   selectedIndex?: number;
@@ -26,6 +27,7 @@ export function VirtualList<T>({
   const ref = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [height, setHeight] = useState(320);
+  const auto = rowHeight === "auto";
 
   useEffect(() => {
     const el = ref.current;
@@ -41,34 +43,57 @@ export function VirtualList<T>({
     if (selectedIndex == null || selectedIndex < 0) return;
     const el = ref.current;
     if (!el) return;
+    if (auto) {
+      const row = el.querySelector<HTMLElement>(`[data-virtual-index="${selectedIndex}"]`);
+      row?.scrollIntoView({ block: "nearest" });
+      return;
+    }
     const top = selectedIndex * rowHeight;
     if (top < el.scrollTop) el.scrollTop = top;
     else if (top + rowHeight > el.scrollTop + el.clientHeight) el.scrollTop = top + rowHeight - el.clientHeight;
-  }, [selectedIndex, rowHeight]);
+  }, [selectedIndex, rowHeight, auto]);
 
   useEffect(() => {
     if (!jumpTo || jumpTo.index < 0) return;
     const el = ref.current;
     if (!el) return;
+    if (auto) {
+      const row = el.querySelector<HTMLElement>(`[data-virtual-index="${jumpTo.index}"]`);
+      row?.scrollIntoView({ block: "start" });
+      setScrollTop(el.scrollTop);
+      return;
+    }
     el.scrollTop = jumpTo.index * rowHeight;
     setScrollTop(el.scrollTop);
-  }, [jumpTo, rowHeight]);
+  }, [jumpTo, rowHeight, auto]);
+
+  if (auto) {
+    return (
+      <div ref={ref} className={className} onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}>
+        {items.map((item, index) => {
+          const wrap = rowWrapper?.(item, index);
+          return (
+            <div key={getKey(item, index)} data-virtual-index={index} className={wrap?.className} style={wrap?.style}>
+              {renderRow(item, index)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   const { start, end } = windowRange(items.length, scrollTop, height, rowHeight, overscan);
   const slice = items.slice(start, end);
 
   return (
-    <div
-      ref={ref}
-      className={className}
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-    >
+    <div ref={ref} className={className} onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}>
       <div style={{ height: items.length * rowHeight, position: "relative" }}>
         {slice.map((item, i) => {
           const index = start + i;
           return (
             <div
               key={getKey(item, index)}
+              data-virtual-index={index}
               className={rowWrapper?.(item, index)?.className}
               style={{
                 position: "absolute",
@@ -76,8 +101,8 @@ export function VirtualList<T>({
                 height: rowHeight,
                 left: 0,
                 right: 0,
+                overflow: "hidden",
                 ...rowWrapper?.(item, index)?.style,
-                overflow: "visible",
               }}
             >
               {renderRow(item, index)}
