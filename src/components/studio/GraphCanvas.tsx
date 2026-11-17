@@ -1271,22 +1271,25 @@ export function GraphCanvas() {
               const badgeW = small ? 6 + badgeText.length * 4.5 : 9 + badgeText.length * 6.3;
               const bx = n.kind === "glossary" ? r * 0.55 : r * 0.62;
               const by = n.kind === "glossary" ? -r * 1.15 : -r * 0.9;
-              // Evidence severity ring on collapsed hubs (Pantheon `sev` is unchanged / not set here).
-              // Scale with zoom so the critical marker stays readable at default Fit.
-              const evCritCount = evr?.items.filter((i) => i.severity === "critical").length ?? 0;
+              // Outlined / dashed critical ring on collapsed hubs with critical evidence.
+              // Distinct from the solid Pantheon ring+pill. Caption is evidenceLabel().full —
+              // never a bare "C1" severity pill. data-sev stays unset (Pantheon only).
               const evCritMarker =
                 !sev &&
                 (n.kind === "product" || n.kind === "glossary") &&
                 (n.shown ?? 0) === 0 &&
-                evCritCount > 0;
-              const evCritBadge = evCritCount ? `C${evCritCount}` : "";
+                evLbl?.worst?.sev === "critical";
+              const evCritLabel = evCritMarker ? evLbl!.full : "";
               const px = Math.max(pxPerUnit, 0.2);
               const evRingExtra = Math.max(4, 5.5 / px);
               const evRingStroke = Math.max(3, 3.2 / px);
               const evHalo = evRingStroke * 1.65;
-              const evBadgeH = Math.max(16, 16 / px);
+              const evDash = `${r2(evRingStroke * 2.4)} ${r2(evRingStroke * 1.6)}`;
               const evBadgeFs = Math.max(10, 10 / px);
-              const evBadgeW = 9 + evCritBadge.length * (evBadgeFs * 0.63);
+              const evLabelH = evBadgeFs * 1.7;
+              const evLabelW = evBadgeFs * (0.7 + evCritLabel.length * 0.62);
+              const evLx = r + evRingExtra + evBadgeFs * 0.35;
+              const evLy = -evLabelH / 2;
               return (
                 <g
                   key={n.id}
@@ -1521,35 +1524,42 @@ export function GraphCanvas() {
                       pointerEvents="none"
                       data-testid="ev-sev-marker"
                       data-ev-sev-marker="critical"
-                      data-ev-sev-badge={evCritBadge}
+                      data-ev-sev-label={evCritLabel}
                     >
-                      <circle r={r + evRingExtra} fill="none" stroke="#0b0c0e" strokeWidth={evHalo} />
+                      <circle
+                        r={r + evRingExtra}
+                        fill="none"
+                        stroke="#0b0c0e"
+                        strokeWidth={evHalo}
+                        strokeDasharray={evDash}
+                      />
                       <circle
                         r={r + evRingExtra}
                         fill="none"
                         stroke={SEVERITY_COLOR.critical}
                         strokeWidth={evRingStroke}
+                        strokeDasharray={evDash}
                       />
                       <rect
-                        x={bx - 2}
-                        y={by - evBadgeH / 2}
-                        width={evBadgeW}
-                        height={evBadgeH}
-                        rx={evBadgeH / 2}
-                        fill={SEVERITY_COLOR.critical}
-                        stroke="var(--color-bg)"
-                        strokeWidth={1.2}
+                        x={evLx}
+                        y={evLy}
+                        width={evLabelW}
+                        height={evLabelH}
+                        rx={1.5}
+                        fill={EV_TAG_FILL}
+                        stroke={SEVERITY_COLOR.critical}
+                        strokeWidth={evBadgeFs / 9}
                       />
                       <text
-                        x={bx - 2 + evBadgeW / 2}
-                        y={by + evBadgeFs * 0.36}
+                        x={evLx + evLabelW / 2}
+                        y={evLy + evBadgeFs * 1.18}
                         textAnchor="middle"
-                        fill="#0b0c0e"
+                        fill={SEVERITY_COLOR.critical}
                         fontSize={evBadgeFs}
-                        fontWeight={700}
-                        fontFamily="IBM Plex Sans, sans-serif"
+                        fontWeight={600}
+                        fontFamily="IBM Plex Mono, monospace"
                       >
-                        {evCritBadge}
+                        {evCritLabel}
                       </text>
                     </g>
                   ) : null}
@@ -1886,6 +1896,20 @@ export function GraphCanvas() {
             </span>
             <span className="text-subtle" data-testid="legend-shared-count">
               Rows shared between brands count once at the parent.
+            </span>
+            <span className="flex flex-wrap items-center gap-1.5" data-testid="legend-ev-critical-ring">
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="shrink-0">
+                <circle
+                  cx="7"
+                  cy="7"
+                  r="5"
+                  fill="none"
+                  stroke={SEVERITY_COLOR.critical}
+                  strokeWidth="1.6"
+                  strokeDasharray="3 2"
+                />
+              </svg>
+              Outlined red = critical evidence finding, not counted in Pantheon C/H/M/L
             </span>
             <span className="flex flex-wrap items-center gap-1.5">
               Evidence rows, including
