@@ -1285,11 +1285,12 @@ export function GraphCanvas() {
               const evRingStroke = Math.max(3, 3.2 / px);
               const evHalo = evRingStroke * 1.65;
               const evDash = `${r2(evRingStroke * 2.4)} ${r2(evRingStroke * 1.6)}`;
-              const evBadgeFs = Math.max(10, 10 / px);
+              // Cap type so the caption stays under the hub at Fit and does not spill into a neighbour.
+              const evBadgeFs = Math.max(8, Math.min(11, 7 / px));
               const evLabelH = evBadgeFs * 1.7;
               const evLabelW = evBadgeFs * (0.7 + evCritLabel.length * 0.62);
-              const evLx = r + evRingExtra + evBadgeFs * 0.35;
-              const evLy = -evLabelH / 2;
+              const evLx = -evLabelW / 2;
+              const evLy = r + Math.max(24, evRingExtra + 6);
               return (
                 <g
                   key={n.id}
