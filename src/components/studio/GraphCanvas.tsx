@@ -1271,6 +1271,22 @@ export function GraphCanvas() {
               const badgeW = small ? 6 + badgeText.length * 4.5 : 9 + badgeText.length * 6.3;
               const bx = n.kind === "glossary" ? r * 0.55 : r * 0.62;
               const by = n.kind === "glossary" ? -r * 1.15 : -r * 0.9;
+              // Evidence severity ring on collapsed hubs (Pantheon `sev` is unchanged / not set here).
+              // Scale with zoom so the critical marker stays readable at default Fit.
+              const evCritCount = evr?.items.filter((i) => i.severity === "critical").length ?? 0;
+              const evCritMarker =
+                !sev &&
+                (n.kind === "product" || n.kind === "glossary") &&
+                (n.shown ?? 0) === 0 &&
+                evCritCount > 0;
+              const evCritBadge = evCritCount ? `C${evCritCount}` : "";
+              const px = Math.max(pxPerUnit, 0.2);
+              const evRingExtra = Math.max(4, 5.5 / px);
+              const evRingStroke = Math.max(3, 3.2 / px);
+              const evHalo = evRingStroke * 1.65;
+              const evBadgeH = Math.max(16, 16 / px);
+              const evBadgeFs = Math.max(10, 10 / px);
+              const evBadgeW = 9 + evCritBadge.length * (evBadgeFs * 0.63);
               return (
                 <g
                   key={n.id}
@@ -1454,7 +1470,11 @@ export function GraphCanvas() {
                           fontSize={7}
                           fontFamily="IBM Plex Sans, sans-serif"
                         >
-                          {n.shown ? `${n.shown} of ${n.count.toLocaleString()} shown` : `${n.count.toLocaleString()} pages`}
+                          {n.shown
+                            ? `${n.shown} of ${n.count.toLocaleString()} shown`
+                            : n.count === 0 && (evr?.count ?? 0) > 0
+                              ? `Off-crawl · ${evr!.count} findings`
+                              : `${n.count.toLocaleString()} pages`}
                         </text>
                       ) : null}
                     </>
@@ -1494,6 +1514,42 @@ export function GraphCanvas() {
                         fontFamily="IBM Plex Sans, sans-serif"
                       >
                         {badgeText}
+                      </text>
+                    </g>
+                  ) : evCritMarker ? (
+                    <g
+                      pointerEvents="none"
+                      data-testid="ev-sev-marker"
+                      data-ev-sev-marker="critical"
+                      data-ev-sev-badge={evCritBadge}
+                    >
+                      <circle r={r + evRingExtra} fill="none" stroke="#0b0c0e" strokeWidth={evHalo} />
+                      <circle
+                        r={r + evRingExtra}
+                        fill="none"
+                        stroke={SEVERITY_COLOR.critical}
+                        strokeWidth={evRingStroke}
+                      />
+                      <rect
+                        x={bx - 2}
+                        y={by - evBadgeH / 2}
+                        width={evBadgeW}
+                        height={evBadgeH}
+                        rx={evBadgeH / 2}
+                        fill={SEVERITY_COLOR.critical}
+                        stroke="var(--color-bg)"
+                        strokeWidth={1.2}
+                      />
+                      <text
+                        x={bx - 2 + evBadgeW / 2}
+                        y={by + evBadgeFs * 0.36}
+                        textAnchor="middle"
+                        fill="#0b0c0e"
+                        fontSize={evBadgeFs}
+                        fontWeight={700}
+                        fontFamily="IBM Plex Sans, sans-serif"
+                      >
+                        {evCritBadge}
                       </text>
                     </g>
                   ) : null}

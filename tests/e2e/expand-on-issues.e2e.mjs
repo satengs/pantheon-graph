@@ -37,7 +37,14 @@ describe("guard: expand on issues only", () => {
       if (h.pages > 0) assert.ok(h.sev, `${h.id} is open but has no open issue`);
       if (!h.sev) {
         assert.equal(h.pages, 0, `${h.id} has no issue but is expanded`);
-        assert.match(h.label ?? "", /^\d[\d,]* pages$/, `${h.id} shows its page count`);
+        // Rule intent unchanged: issue-free hubs stay collapsed and stay labelled.
+        // Hubs with crawl pages still show "N pages". Hubs with no crawl pages but
+        // with evidence show "Off-crawl · N findings" instead of "0 pages".
+        assert.match(
+          h.label ?? "",
+          /^\d[\d,]* pages$|^Off-crawl · \d+ findings$/,
+          `${h.id} shows its page count or off-crawl findings`,
+        );
       }
     }
     assert.ok(cold.some((h) => h.pages > 0), "some issue hubs open on load");

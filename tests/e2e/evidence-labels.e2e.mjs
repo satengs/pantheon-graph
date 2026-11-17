@@ -42,6 +42,22 @@ describe("guard: evidence labels", () => {
     assert.equal(t, "Evidence 165 · 10 critical");
   });
 
+  test("collapsed Apply hub shows a critical evidence marker and an off-crawl findings label", async () => {
+    const r = await page.evaluate(() => {
+      const g = document.querySelector('g[data-node-id="hub:fdr:apply"]');
+      return {
+        evMarker: g?.querySelector("[data-ev-sev-marker]")?.getAttribute("data-ev-sev-marker"),
+        badge: g?.querySelector("[data-ev-sev-marker]")?.getAttribute("data-ev-sev-badge"),
+        shown: g?.querySelector('[data-testid="hub-shown"]')?.textContent,
+        sev: g?.getAttribute("data-sev"),
+      };
+    });
+    assert.equal(r.sev, null, "Apply has no Pantheon issue; data-sev stays unset");
+    assert.equal(r.evMarker, "critical");
+    assert.equal(r.badge, "C1");
+    assert.equal(r.shown, "Off-crawl · 10 findings");
+  });
+
   test("legend shows separate to-verify and unverified chips", async () => {
     const r = await page.evaluate(() => ({
       toVerify: document.querySelector('[data-testid="legend-to-verify-chip"]')?.textContent?.trim(),
