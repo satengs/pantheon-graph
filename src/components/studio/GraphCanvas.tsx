@@ -9,6 +9,8 @@ import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 import { RULES } from "@/data/rules-seed";
 import { familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
+import { evidenceMatchesSource, familyEvidenceQueue, filterEvBySource, showsEvidence, showsPantheon } from "@/lib/graph/evidence-filter";
+import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
 import { SevTotals } from "@/components/studio/SevTotals";
 import {
   buildSeverityIndex,
@@ -290,12 +292,6 @@ const SEV_CHIPS: { id: EvSeverityFilter; label: string }[] = [
 ];
 /** Only Evidence Brief rows can be "unrated" (brief gave no P0 / severity wording). */
 const UNKNOWN_CHIP = { id: "unrated" as EvSeverityFilter, label: "Unrated" };
-const SOURCE_CHIPS: { id: SourceFilter; label: string }[] = [
-  { id: "pantheon", label: "Pantheon" },
-  { id: "evidence", label: "Evidence" },
-  { id: "both", label: "Both" },
-];
-
 function clip(t: string, n: number) {
   const s = t.replace(/\s+/g, " ").trim();
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
@@ -344,10 +340,11 @@ export function GraphCanvas() {
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const parentSlug = useStudio((s) => s.parentSlug);
   const [sevFilter, setSevFilter] = useState<EvSeverityFilter>("all");
-  const [source, setSource] = useState<SourceFilter>("both");
+  const source = useStudio((st) => st.issueSourceFilter);
+  const setSource = useStudio((st) => st.setIssueSourceFilter);
   const [unmappedOpen, setUnmappedOpen] = useState(false);
-  const showPantheon = source !== "evidence";
-  const showEvidence = source !== "pantheon";
+  const showPantheon = showsPantheon(source);
+  const showEvidence = showsEvidence(source);
   /** Pantheon rules never carry "unrated", so that chip matches none of them. */
   const pMatch = (s: Severity) => sevFilter !== "unrated" && severityMatches(s, sevFilter);
   const pRoll = (r: SevRollup | null) => (sevFilter === "unrated" ? null : filterRollup(r, sevFilter));
@@ -493,6 +490,7 @@ export function GraphCanvas() {
 
   const evDoc = useEvidence();
   const evIndex = useMemo(() => buildEvidenceIndex(evDoc, brand), [evDoc, brand]);
+  const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
   const evByNode = useMemo(() => {
     const m = new Map<string, EvRollup | null>();
     for (const n of graph.nodes) {
@@ -501,10 +499,10 @@ export function GraphCanvas() {
       else if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product) r = evIndex.forHub(n.brand, n.product);
       else if (n.kind === "brand" && n.brand) r = evIndex.forBrand(n.brand);
       else if (n.kind === "parent") r = evIndex.forAll();
-      m.set(n.id, r);
+      m.set(n.id, filterEvBySource(r, source));
     }
     return m;
-  }, [graph.nodes, evIndex]);
+  }, [graph.nodes, evIndex, source]);
 
   // Legend examples come from the same roll-ups and the same label function as the canvas tags,
   // so the legend and the tags can't disagree. Nothing until evidence.json has loaded.
@@ -797,6 +795,7 @@ export function GraphCanvas() {
         data-testid="severity-bar"
       >
         <SevTotals totals={familyTotals} label="Open rules" testId="graph-sev-totals" />
+        <ToVerifyNote toVerify={evQueue.toVerify} unverified={evQueue.unverified} testId="graph-to-verify" />
         <span className="pl-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Filter</span>
         {SEV_CHIPS.map((c) => {
           const on = sevFilter === c.id;
@@ -839,29 +838,13 @@ export function GraphCanvas() {
           </button>
         ) : null}
         <span className="ml-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Source</span>
-        <span role="radiogroup" aria-label="Issue source" className="inline-flex gap-1" data-testid="source-bar">
-          {SOURCE_CHIPS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="radio"
-              aria-checked={source === c.id}
-              data-source-chip={c.id}
-              onClick={() => {
-                setSource(c.id);
-                if (c.id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
-              }}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${source === c.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
-            >
-              {c.id === "pantheon" ? (
-                <span className="inline-block size-3 rounded-full border-2 border-current" aria-hidden />
-              ) : c.id === "evidence" ? (
-                <span className="inline-block size-3 rounded-[2px] border-2 border-current" aria-hidden />
-              ) : null}
-              {c.label}
-            </button>
-          ))}
-        </span>
+        <SourceBar
+          value={source}
+          onChange={(id) => {
+            setSource(id);
+            if (id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
+          }}
+        />
         {showEvidence && evDoc ? (
           <button
             type="button"
@@ -871,7 +854,7 @@ export function GraphCanvas() {
             className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${unmappedOpen ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
             title="Evidence rows whose URL is not a node in this graph"
           >
-            Unmapped {evIndex.unmapped.filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)).length}
+            Unmapped {evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length}
           </button>
         ) : null}
         <span className="hidden pl-1 text-[10px] text-subtle xl:inline">
@@ -1715,7 +1698,7 @@ export function GraphCanvas() {
           </div>
           <div className="flex min-h-0 flex-col gap-1.5 overflow-y-auto p-2">
             {evIndex.unmapped
-              .filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))
+              .filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)))
               .slice()
               .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
               .map((i) => (
@@ -1813,6 +1796,12 @@ export function GraphCanvas() {
               </>
             ) : null}
             {pagesLegible ? "" : " · page tags show when zoomed in"}
+            {" "}
+            · Evidence rows, including{" "}
+            <span className="border px-1 font-mono text-[10px]" style={{ borderColor: "#c9d1d9" }}>
+              ? to verify
+            </span>
+            , are not counted in Gate until verified. Unverified (needs Search Console or Cloudflare) is separate and also not counted.
           </span>
         ) : null}
         <span className="flex items-center gap-1.5">Double-click cluster = pages</span>

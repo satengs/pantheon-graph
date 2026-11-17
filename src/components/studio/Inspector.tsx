@@ -25,6 +25,7 @@ import { PageMeta } from "@/components/studio/PageMeta";
 import { EvidenceList } from "@/components/studio/EvidenceCard";
 import { Fold } from "@/components/studio/Fold";
 import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
+import { filterEvBySource } from "@/lib/graph/evidence-filter";
 
 export function Inspector() {
   const explode = useStudio((s) => s.explode);
@@ -42,6 +43,7 @@ export function Inspector() {
   const selectNode = useStudio((s) => s.selectNode);
   const setGraphInspectorOpen = useStudio((s) => s.setGraphInspectorOpen);
   const openIssueDrawer = useStudio((s) => s.openIssueDrawer);
+  const source = useStudio((s) => s.issueSourceFilter);
   const [psiLive, setPsiLive] = useState<number | null>(null);
   const [psiBusy, setPsiBusy] = useState(false);
   const [findings, setFindings] = useState<
@@ -87,6 +89,7 @@ export function Inspector() {
           : node.kind === "parent"
             ? evIndex.forAll()
             : null;
+  const evRollFiltered = filterEvBySource(evRoll, source);
   // The panel follows the selected (highlighted) row only. Hover no longer swaps it, so the
   // row the list marks and the detail shown can't disagree (QA: S01 marked, S24 shown).
   const wantedId = tab === "issues" ? selectedIssueId : null;
@@ -170,10 +173,10 @@ export function Inspector() {
           </Fold>
         )}
         {evDoc ? (
-          <Fold title={`Evidence Brief · ${evRoll?.count ?? 0}`} defaultOpen={!!evRoll}>
+          <Fold title={`Evidence · ${evRollFiltered?.count ?? 0}`} defaultOpen={!!evRollFiltered}>
             <div data-testid="inspector-evidence">
               <EvidenceList
-                roll={evRoll}
+                roll={evRollFiltered}
                 emptyText={`No Evidence Brief rows match this node (brief ${evDoc.newestBrief.date}).`}
               />
             </div>

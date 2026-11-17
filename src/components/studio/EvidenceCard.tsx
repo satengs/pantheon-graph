@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { EvidenceItem, EvRollup } from "@/lib/graph/evidence";
 import { EV_COLOR, EV_LABEL, EV_TAG_FILL, EV_TAG_STROKE } from "@/lib/graph/evidence";
+import { FlagChips, SourceChips, VerificationChip } from "@/components/studio/StatusChips";
 
 /**
  * Evidence tag: neutral outline + hollow diamond, square corners. Never a filled severity pill, so a row
@@ -85,23 +86,66 @@ export function EvidenceCard({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [shot, setShot] = useState<EvidenceItem["screenshots"][number] | null>(null);
-  const label = item.source === "brief" ? `Row ${item.row}` : `NDR vs FDR ${item.id}`;
+  const label =
+    item.source === "brief" ? `Row ${item.row}` : item.source === "scout" ? `Scout ${item.id}` : `NDR vs FDR ${item.id}`;
+  const scope = evidenceScope(item);
+  const verifyNote =
+    item.verification === "to_verify"
+      ? "Not counted in Gate until verified"
+      : item.verification === "unverified"
+        ? item.verificationNote || "unverified: needs Search Console or Cloudflare access"
+        : item.verification === "confirmed" && item.verificationNote
+          ? item.verificationNote
+          : "";
   return (
     <article
       className="min-w-0 rounded-lg bg-surface p-2.5 shadow-[var(--shadow-border)]"
       data-evidence-id={item.id}
       data-evidence-severity={item.severity}
+      data-evidence-verification={item.verification ?? "reported"}
     >
       <button type="button" className="flex w-full items-start gap-2 text-left" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <EvBadge item={item} />
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] uppercase tracking-wide text-subtle">
-            {label} · {item.owner} · {item.status}
+            {label} · {item.status}
             {item.daysOpen != null ? ` · ${item.daysOpen}d open` : ""}
           </span>
           <span className="block text-sm leading-snug text-fg">{item.title}</span>
         </span>
       </button>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1" data-testid="evidence-chips">
+        <SourceChips item={item} />
+        <VerificationChip item={item} />
+        <FlagChips item={item} />
+      </div>
+      <dl className="mt-1.5 grid grid-cols-[3.75rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-[11px]" data-testid="evidence-summary">
+        <dt className="text-subtle">{item.flags?.gap ? "Scope" : "Page"}</dt>
+        <dd className="truncate text-muted" title={scope} data-testid="evidence-scope">
+          {scope}
+        </dd>
+        <dt className="text-subtle">Problem</dt>
+        <dd className="truncate text-fg" title={item.title}>
+          {item.title}
+        </dd>
+        <dt className="text-subtle">Why</dt>
+        <dd className="truncate text-muted" title={item.why || "No reason given in the source row"}>
+          {item.why || "No reason given in the source row"}
+        </dd>
+        <dt className="text-subtle">Fix</dt>
+        <dd className="truncate text-fg" title={item.fix || "No fix given in the source row"}>
+          {item.fix || "No fix given in the source row"}
+        </dd>
+        <dt className="text-subtle">Owner</dt>
+        <dd className="truncate text-muted" title={item.owner || "No owner named"}>
+          {item.owner || "No owner named"}
+        </dd>
+      </dl>
+      {verifyNote ? (
+        <p className="mt-1 text-[11px] text-subtle" data-testid="evidence-gate-note">
+          {verifyNote}
+        </p>
+      ) : null}
       {unmapped ? (
         <div className="mt-1.5 flex flex-col gap-1 pl-1 text-[11px]" data-testid="unmapped-row-detail">
           {item.urls.length ? (
@@ -182,7 +226,11 @@ export function EvidenceCard({
                   ? "page node (and its hub + brand roll-ups)"
                   : "crawl page outside the product hubs → brand roll-up"
                 : item.match.kind === "site-wide"
-                  ? "site-wide → brand node"
+                  ? item.flags?.gap
+                    ? `content gap → ${item.match.nodes.length} brand nodes (counted once in the family total)`
+                    : item.flags?.cluster
+                      ? "cluster issue → brand node (pages stay capped)"
+                      : "site-wide → brand node"
                   : `unmapped — ${item.match.reason ?? "no graph node"}`}
             </dd>
             <dt className="text-subtle">Source</dt>
@@ -242,4 +290,14 @@ export function unmappedHint(item: EvidenceItem): string {
   return sub
     ? "Ignore if the Apply funnel / subdomain stays off the graph · or map to node: add that host to the crawl"
     : "Map to node: add the URL to the crawl / sitemap, or fix its 404 / redirect · or ignore if the page is retired";
+}
+
+/** Page or scope line for an evidence row. Gaps never show a URL. */
+export function evidenceScope(item: Pick<EvidenceItem, "urls" | "flags" | "scope" | "match" | "brand">): string {
+  if (item.flags?.gap) return item.scope || "gap, no page";
+  if (item.scope) return item.scope;
+  const u = item.urls[0];
+  if (u) return u.replace(/^https?:\/\//, "");
+  if (item.match.kind === "site-wide") return `site-wide · ${item.brand}`;
+  return "no page named";
 }

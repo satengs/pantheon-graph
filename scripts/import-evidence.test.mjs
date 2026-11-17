@@ -61,3 +61,12 @@ test("URL host inference keeps Apply slugs on apply.* and drops competitors", ()
     "https://www.freedomdebtrelief.com/scam/",
   ]);
 });
+
+test("manual Scout rows dedupe by id or URL+title and confirmations do not invent severity", () => {
+  const items = [
+    { id: "E83", title: "Impersonation scams use FDR's name; owned page silent", urls: ["https://www.freedomdebtrelief.com/scam/"], sources: ["evidence-brief"], confirmations: [], verification: "reported" },
+  ];
+  assert.ok(m.isDupe(items, { id: "E83", title: "other", urls: [] }));
+  assert.ok(m.isDupe(items, { id: "MS-X", title: "Impersonation scams use FDR's name; owned page silent", urls: ["https://www.freedomdebtrelief.com/scam/"] }));
+  assert.equal(m.isDupe(items, { id: "MS05", title: "FDR /scam/ needs an advance-fee and impersonation block (DFPI hook)", urls: ["https://www.freedomdebtrelief.com/scam/"] }), null);
+});

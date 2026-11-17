@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "asOf": "2026-11-16",
+  "source": "scout",
+  "sourceLabel": "Market Scout 2026-11-16",
+  "note": "Curated hand-off from Market Scout Mon Nov 16. Funnel Fix had not confirmed items 2–4 by this date; items matching Funnel's Nov 12 confirmations are stamped later by the cross-check map, not by this file.",
+  "items": [
+    {
+      "id": "MS01",
+      "title": "dev.Achieve.com value leaking on HELOC-for-cards explainer; dateModified missing",
+      "brand": "achieve",
+      "urls": ["https://www.achieve.com/learn/home-equity-loans/is-it-risky-to-use-a-heloc-to-pay-off-credit-card-debt"],
+      "owner": "Achieve public site",
+      "status": "open",
+      "verification": "to_verify",
+      "why": "Market Scout curl on 16 Nov 2026 (Yerevan) returned 200. The page contains \"dev.Achieve.com\" once, has no dateModified, and cites no NY Fed Q3 figures (HELOC balances up $23B to $481B, the largest increase since 2005). Extends Funnel Fix's 12 Nov dev.Achieve.com finding beyond the /learn comparison pages.",
+      "fix": "Remove the dev.Achieve.com Organization value, add dateModified, and add the NY Fed Q3 HELOC/card hook where it fits.",
+      "links": [
+        "https://www.achieve.com/learn/home-equity-loans/is-it-risky-to-use-a-heloc-to-pay-off-credit-card-debt",
+        "https://www.newyorkfed.org/newsevents/news/research/2026/20261110"
+      ],
+      "severity": "unrated",
+      "severityBasis": "Market Scout 2026-11-16 does not label this row P0, High, Medium or Low",
+      "firstSeen": "2026-11-16",
+      "lastSeen": "2026-11-16",
+      "refs": ["Market Scout 2026-11-16"]
+    },
+    {
+      "id": "MS02",
+      "title": "Sweep of Achieve /learn/ sitemap (694 URLs) for dev.Achieve.com leaks is pending",
+      "brand": "achieve",
+      "urls": [],
+      "owner": "Loans / Public",
+      "status": "open",
+      "verification": "to_verify",
+      "flags": { "cluster": true },
+      "scope": "Achieve /learn/ sitemap · 694 URLs",
+      "why": "Funnel Fix confirmed dev.Achieve.com on comparison and press templates (12 Nov). Market Scout also found it on the HELOC-for-cards explainer. A sweep of the rest of Achieve's /learn/ sitemap (694 URLs) has not been run.",
+      "fix": "Sweep the /learn/ sitemap for dev.Achieve.com and the 85288 telephone value; fix the shared template rather than page by page.",
+      "links": [],
+      "severity": "unrated",
+      "severityBasis": "Market Scout 2026-11-16 does not label this row P0, High, Medium or Low",
+      "firstSeen": "2026-11-16",
+      "lastSeen": "2026-11-16",
+      "match": { "kind": "site-wide", "nodes": ["brand:achieve"] },
+      "refs": ["Market Scout 2026-11-16"]
+    },
+    {
+      "id": "MS03",
+      "title": "Achieve missing from ChatGPT's picks for \"best personal loans\"",
+      "brand": "achieve",
+      "urls": ["https://www.achieve.com/personal-loans"],
+      "owner": "loans",
+      "status": "open",
+      "verification": "to_verify",
+      "flags": { "directional": true },
+      "why": "audits.com lending AI index (US, UK, AU; 3,385 answers): for \"best personal loans\" in the US, SoFi is named in 92% of ChatGPT runs and 100% of Google AI Overviews; LightStream is Gemini's top pick (94%); Upstart is ChatGPT's most frequent first pick. Achieve is not among the 8 brands ChatGPT names (LendingClub is at 8%). ChatGPT cites first-party brand sites 96% of the time, against 35% for AI Overviews. Treat as directional: the index uses one prompt. Achieve's own /personal-loans facts are what ChatGPT would cite.",
+      "fix": "Strengthen first-party /personal-loans facts and comparable owned pages that AI answers can cite.",
+      "links": [
+        "https://www.achieve.com/personal-loans",
+        "https://audits.com/ai-index/lending/"
+      ],
+      "severity": "unrated",
+      "severityBasis": "Market Scout 2026-11-16 marks this directional (one prompt) and does not label P0, High, Medium or Low",
+      "firstSeen": "2026-11-16",
+      "lastSeen": "2026-11-16",
+      "refs": ["Market Scout 2026-11-16"]
+    },
+    {
+      "id": "MS04",
+      "title": "No credit-card-debt statistics page on FDR, Achieve or bills.com",
+      "brand": "fdr",
+      "brands": ["fdr", "achieve", "bills"],
+      "urls": [],
+      "owner": "Public",
+      "status": "open",
+      "verification": "to_verify",
+      "flags": { "gap": true },
+      "scope": "gap, no page",
+      "why": "Market Scout found no credit-card-debt statistics page on FDR, Achieve or bills.com: four guessed paths returned 404, and no stats URL turned up in the FDR or Achieve sitemaps. NY Fed Q3 shows cards at $1.285T and a widening delinquency gap by income — a hook with no owned page to put it on.",
+      "fix": "Publish one credit-card-debt statistics page (or a clearly linked cluster) on at least one of the three brands. This is a content gap, not a missing graph node — do not invent a URL.",
+      "links": [
+        "https://www.newyorkfed.org/newsevents/news/research/2026/20261110",
+        "https://libertystreeteconomics.newyorkfed.org/2026/11/a-look-at-the-wider-divide-in-credit-card-delinquency-by-income/"
+      ],
+      "severity": "unrated",
+      "severityBasis": "Market Scout 2026-11-16 does not label this row P0, High, Medium or Low",
+      "firstSeen": "2026-11-16",
+      "lastSeen": "2026-11-16",
+      "match": { "kind": "site-wide", "nodes": ["brand:fdr", "brand:achieve", "brand:bills"] },
+      "refs": ["Market Scout 2026-11-16"]
+    },
+    {
+      "id": "MS05",
+      "title": "FDR /scam/ needs an advance-fee and impersonation block (DFPI hook)",
+      "brand": "fdr",
+      "urls": ["https://www.freedomdebtrelief.com/scam/"],
+      "owner": "FDR public site",
+      "status": "open",
+      "verification": "to_verify",
+      "why": "FDR's /scam/ page still has no impersonation or advance-fee copy. The DFPI's September actions, published 12 Nov 2026, include E-Capital Inc. (ordered to stop charging upfront fees for debt-relief services it never performed) and Frontier Legal Group (fake lawsuits and wage-garnishment threats). Together with FTC Arizona and the GA AG, that is three states in three weeks. /scam/ is in the crawl as an 'other' page, so it rolls up to the FDR brand node (it is not a drawn product-hub page).",
+      "fix": "Add an advance-fee and impersonation block to /scam/, using the DFPI E-Capital action as a hook. Compliance to word it.",
+      "links": [
+        "https://www.freedomdebtrelief.com/scam/",
+        "https://dfpi.ca.gov/alert/key-enforcement-actions-september-2026/"
+      ],
+      "severity": "unrated",
+      "severityBasis": "Market Scout 2026-11-16 does not label this row P0, High, Medium or Low",
+      "firstSeen": "2026-11-16",
+      "lastSeen": "2026-11-16",
+      "refs": ["Market Scout 2026-11-16"]
+    }
+  ]
+}

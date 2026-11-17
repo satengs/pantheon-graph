@@ -1,5 +1,6 @@
 import { SevPill } from "@/components/studio/SevTotals";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { SourceChips } from "@/components/studio/StatusChips";
 import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -395,6 +396,11 @@ export function IssueRow({
         <p className={`truncate font-mono text-[11px] ${selected ? "" : "text-fg"}`} style={selected ? { color: ink } : undefined}>
           {row.code}
           {categoryLabel ? <span className={selected ? "" : "text-muted"}> · {categoryLabel}</span> : null}
+          {htmlCheck ? null : (
+            <span className="ml-1 align-middle">
+              <SourceChips pantheon />
+            </span>
+          )}
         </p>
         <p className={`mt-0.5 truncate font-mono text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
           <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Page </span>

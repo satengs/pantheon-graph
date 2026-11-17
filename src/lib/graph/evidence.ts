@@ -13,11 +13,14 @@ import { BUILD_SHA } from "@/lib/build-info";
  */
 export type EvSeverity = Severity | "unrated";
 export type EvStatus = "open" | "partly fixed" | "fixed";
+export type EvVerification = "reported" | "confirmed" | "to_verify" | "unverified";
+export type EvSourceName = "evidence-brief" | "scout";
+export type EvConfirmation = "funnel-fix";
 
 export type EvidenceItem = {
   id: string;
   row: number | null;
-  source: "brief" | "ndr-vs-fdr";
+  source: "brief" | "ndr-vs-fdr" | "scout";
   title: string;
   brand: string;
   urls: string[];
@@ -37,6 +40,12 @@ export type EvidenceItem = {
   screenshots: Array<{ file: string; name: string; pack: string; date: string }>;
   match: { kind: "page" | "site-wide" | "unmapped"; nodes: string[]; reason?: string; drawn?: boolean };
   unmatchedUrls?: string[];
+  sources?: EvSourceName[];
+  confirmations?: EvConfirmation[];
+  verification?: EvVerification;
+  verificationNote?: string;
+  flags?: { directional?: boolean; gap?: boolean; cluster?: boolean };
+  scope?: string;
 };
 
 export type EvidenceDoc = {
@@ -58,7 +67,7 @@ export const EV_LABEL: Record<EvSeverity, string> = {
   unrated: "Unrated",
 };
 
-export type SourceFilter = "pantheon" | "evidence" | "both";
+export type SourceFilter = "pantheon" | "evidence" | "both" | "evidence-brief" | "funnel-fix" | "scout";
 /** Severity chips plus "unrated", which only Evidence rows can carry. */
 export type EvSeverityFilter = SeverityFilter | "unrated";
 
@@ -114,7 +123,11 @@ export function buildEvidenceIndex(doc: EvidenceDoc | null, brandFilter: string 
     if (it.match.kind === "page") {
       for (const k of it.match.nodes) byUrl.set(k, [...(byUrl.get(k) ?? []), it]);
     } else if (it.match.kind === "site-wide") {
-      siteWide.set(it.brand, [...(siteWide.get(it.brand) ?? []), it]);
+      const brands = (it.match.nodes ?? [])
+        .filter((n) => n.startsWith("brand:"))
+        .map((n) => n.slice("brand:".length));
+      const list = brands.length ? brands : [it.brand];
+      for (const b of list) siteWide.set(b, [...(siteWide.get(b) ?? []), it]);
     } else unmapped.push(it);
   }
   const keysOf = (pred: (b: string, p: string) => boolean) =>
@@ -153,7 +166,17 @@ let inflight: Promise<EvidenceDoc | null> | null = null;
 export function normalizeEvidenceDoc(raw: unknown): EvidenceDoc | null {
   const d = raw as Partial<EvidenceDoc> | null;
   if (!d || !Array.isArray(d.items) || !d.newestBrief) return null;
-  return { ...(d as EvidenceDoc), items: d.items.map((i) => ({ ...i, severity: normSeverity(i?.severity) })) };
+  return {
+    ...(d as EvidenceDoc),
+    items: d.items.map((i) => ({
+      ...i,
+      severity: normSeverity(i?.severity),
+      sources: i.sources?.length ? i.sources : i.source === "scout" ? ["scout"] : ["evidence-brief"],
+      confirmations: i.confirmations ?? [],
+      verification: i.verification ?? "reported",
+      flags: i.flags ?? {},
+    })),
+  };
 }
 
 function load(): Promise<EvidenceDoc | null> {

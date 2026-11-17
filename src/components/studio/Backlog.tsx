@@ -8,6 +8,10 @@ import { runValidation } from "@/lib/server/validate-run";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { crawlFindings, familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
 import { SevTotals } from "@/components/studio/SevTotals";
+import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
+import { EvidenceCard } from "@/components/studio/EvidenceCard";
+import { evidenceMatchesSource, familyEvidenceQueue, showsEvidence } from "@/lib/graph/evidence-filter";
+import { useEvidence } from "@/lib/graph/evidence";
 import { RULES } from "@/data/rules-seed";
 import { issueFitsFamily, isSeedFamily, urlInFamily } from "@/lib/org/catalog";
 import { EmptyFamilyCrawl } from "@/components/studio/EmptyFamilyCrawl";
@@ -106,6 +110,14 @@ export function Backlog() {
   );
   const familyRules = useFamilyIssues();
   const familyTotals = useMemo(() => severityTotals(familyRules), [familyRules]);
+  const evDoc = useEvidence();
+  const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
+  const source = useStudio((st) => st.issueSourceFilter);
+  const setSource = useStudio((st) => st.setIssueSourceFilter);
+  const evidenceRows = useMemo(
+    () => (evDoc?.items ?? []).filter((i) => showsEvidence(source) && evidenceMatchesSource(i, source)),
+    [evDoc, source],
+  );
 
   const familyFindings = useMemo(
     () =>
@@ -261,6 +273,8 @@ export function Backlog() {
       </section>
 
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-wide text-subtle">Source</span>
+        <SourceBar value={source} onChange={setSource} />
         <Button
           size="sm"
           variant="ghost"
@@ -287,6 +301,7 @@ export function Backlog() {
         </Button>
         <span className="ml-auto inline-flex items-center gap-3">
           <SevTotals totals={familyTotals} label="Open rules" testId="issues-sev-totals" />
+          <ToVerifyNote toVerify={evQueue.toVerify} unverified={evQueue.unverified} testId="issues-to-verify" />
           <span className="vh-whisper">{categories.filter((c) => c.source === "rule").length} rules in view</span>
           {htmlCount ? (
             <button
@@ -389,6 +404,20 @@ export function Backlog() {
           <p className="px-3 py-8 text-center text-sm text-muted">No issues match these filters.</p>
         ) : null}
       </section>
+
+      {showsEvidence(source) ? (
+        <section className="mt-3 flex flex-col gap-1.5" data-testid="issues-evidence">
+          <h2 className="px-1 text-sm text-fg">Evidence</h2>
+          <p className="px-1 text-[11px] text-subtle">
+            Page or scope, problem, why, fix and owner are on every row. These are not counted in Gate until verified.
+          </p>
+          {evidenceRows.length ? (
+            evidenceRows.map((i) => <EvidenceCard key={i.id} item={i} unmapped={i.match.kind === "unmapped"} />)
+          ) : (
+            <p className="px-1 text-xs text-subtle">No evidence rows for this source filter.</p>
+          )}
+        </section>
+      ) : null}
 
       <details className="mt-2 text-sm">
         <summary className="cursor-pointer text-xs text-subtle">Add a check</summary>

@@ -33,9 +33,11 @@ describe("guard: evidence labels", () => {
     for (const t of r.tags) assert.match(t, LABEL);
   });
 
-  test("snapshot: parent reads 'Evidence 84 · 4 critical'", async () => {
+  // Data change pending sign-off: #40 (102→160 brief rows) plus 5 Scout Nov 16 items
+  // yields 135 on-graph rows (30 unmapped) and 5 rated critical. Was 'Evidence 84 · 4 critical' on the 2026-10-19 lock.
+  test("snapshot: parent reads 'Evidence 135 · 5 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 84 · 4 critical");
+    assert.equal(t, "Evidence 135 · 5 critical");
   });
 
   test("no 'undefined' / 'unknown' on Graph", async () => {

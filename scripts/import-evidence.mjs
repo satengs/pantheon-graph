@@ -28,6 +28,7 @@ const SEO = path.join(ROOT, "seo-vs-mkt");
 const NVF = path.join(ROOT, "ndr-vs-fdr");
 const OUT_JSON = path.join(REPO, "public/data/evidence.json");
 const OUT_DIR = path.join(REPO, "public/evidence");
+const MANUAL_DIR = path.join(REPO, "data/evidence-manual");
 const MAX_W = Number(process.env.EVIDENCE_MAX_W ?? 1280);
 const DRY = process.argv.includes("--dry");
 
@@ -445,6 +446,149 @@ function parseDefects() {
   return { items, source: f };
 }
 
+
+/* ───────────────────────── manual Scout rows + Funnel cross-check ───────────────────────── */
+
+/** Normalise a title for dedupe (URL + title, or id). */
+export function normTitle(t) {
+  return `${t ?? ""}`.toLowerCase().replace(/["“”]/g, "").replace(/\s+/g, " ").trim();
+}
+
+export function defaultSources(it) {
+  if (it.source === "scout") return ["scout"];
+  if (it.source === "ndr-vs-fdr") return ["evidence-brief"];
+  return ["evidence-brief"];
+}
+
+function loadManualFiles() {
+  if (!fs.existsSync(MANUAL_DIR)) return [];
+  return fs
+    .readdirSync(MANUAL_DIR)
+    .filter((f) => f.endsWith(".json") && !/confirmations/i.test(f))
+    .sort()
+    .map((f) => ({ file: path.join(MANUAL_DIR, f), doc: JSON.parse(fs.readFileSync(path.join(MANUAL_DIR, f), "utf8")) }));
+}
+
+export function isDupe(items, raw) {
+  const id = raw.id;
+  if (id && items.some((i) => i.id === id)) return { reason: `id ${id}` };
+  const title = normTitle(raw.title);
+  const urls = new Set((raw.urls ?? []).map(urlKey));
+  for (const it of items) {
+    if (title && normTitle(it.title) === title) {
+      const overlap = (it.urls ?? []).some((u) => urls.has(urlKey(u)));
+      if (overlap || urls.size === 0 && (it.urls ?? []).length === 0) return { reason: `title+url ${it.id}` };
+    }
+  }
+  return null;
+}
+
+export function manualToItem(raw, pack) {
+  const source = raw.source ?? pack.source ?? "scout";
+  const brands = raw.brands ?? (raw.brand ? [raw.brand] : ["fdr"]);
+  const item = {
+    id: raw.id,
+    row: raw.row ?? null,
+    source,
+    title: raw.title,
+    brand: raw.brand ?? brands[0],
+    urls: raw.urls ?? [],
+    owner: raw.owner ?? "",
+    status: statusFrom(raw.status ?? "open"),
+    statusText: raw.statusText ?? raw.status ?? "open",
+    firstSeen: raw.firstSeen ?? pack.asOf,
+    lastSeen: raw.lastSeen ?? pack.asOf,
+    daysOpen: raw.daysOpen ?? daysBetween(raw.firstSeen ?? pack.asOf, raw.lastSeen ?? pack.asOf),
+    severity: raw.severity ?? "unrated",
+    severityBasis: raw.severityBasis ?? "manual row gives no P0 label or severity wording",
+    why: raw.why ?? "",
+    fix: raw.fix ?? "",
+    firstReport: raw.firstReport ?? "",
+    links: raw.links ?? [],
+    refs: raw.refs ?? [pack.sourceLabel ?? pack.file],
+    sources: raw.sources ?? defaultSources({ source }),
+    confirmations: raw.confirmations ?? [],
+    verification: raw.verification ?? "to_verify",
+    flags: raw.flags ?? {},
+    scope: raw.scope ?? "",
+    _text: `${raw.title} ${raw.why ?? ""} ${raw.fix ?? ""}`,
+  };
+  if (raw.verificationNote) item.verificationNote = raw.verificationNote;
+  if (raw.match) item.match = raw.match;
+  return item;
+}
+
+/** Fold curated manual packs (e.g. Market Scout Nov 16) into the brief/defect list. Dedupe by id or URL+title. */
+export function mergeManual(items) {
+  const added = [];
+  const skipped = [];
+  for (const { file, doc } of loadManualFiles()) {
+    const pack = { ...doc, file: rel(file) };
+    for (const raw of doc.items ?? []) {
+      const dupe = isDupe(items, raw);
+      if (dupe) {
+        skipped.push({ id: raw.id, reason: dupe.reason, file: pack.file });
+        continue;
+      }
+      const item = manualToItem(raw, pack);
+      items.push(item);
+      added.push(item.id);
+    }
+  }
+  return { added, skipped };
+}
+
+function loadConfirmationMap() {
+  const f = path.join(MANUAL_DIR, "funnel-fix-confirmations-2026-11-12.json");
+  if (!fs.existsSync(f)) return null;
+  return JSON.parse(fs.readFileSync(f, "utf8"));
+}
+
+/**
+ * Stamp Funnel Fix confirmations onto existing rows. Does not add Funnel rows as a source.
+ * WR-FF-11 (Googlebot) is unverified, which is a separate status from "to verify".
+ */
+export function applyConfirmations(items) {
+  const map = loadConfirmationMap();
+  const index = new Map(items.map((i) => [i.id, i]));
+  const stamped = { confirmed: [], unverified: [], missing: [] };
+  if (!map) return stamped;
+  for (const row of map.confirmed ?? []) {
+    for (const id of row.evidenceIds ?? []) {
+      const it = index.get(id);
+      if (!it) {
+        stamped.missing.push(id);
+        continue;
+      }
+      if (!it.confirmations.includes("funnel-fix")) it.confirmations.push("funnel-fix");
+      it.verification = "confirmed";
+      it.verificationNote = `Confirmed by Funnel Fix 2026-11-12 (${row.funnel})`;
+      stamped.confirmed.push(id);
+    }
+  }
+  for (const row of map.unverified ?? []) {
+    for (const id of row.evidenceIds ?? []) {
+      const it = index.get(id);
+      if (!it) {
+        stamped.missing.push(id);
+        continue;
+      }
+      it.verification = "unverified";
+      it.verificationNote = row.verificationNote ?? "unverified: needs Search Console or Cloudflare access";
+      stamped.unverified.push(id);
+    }
+  }
+  return stamped;
+}
+
+export function annotateSources(items) {
+  for (const it of items) {
+    it.sources = it.sources ?? defaultSources(it);
+    it.confirmations = it.confirmations ?? [];
+    if (!it.verification) it.verification = "reported";
+  }
+}
+
 /* ───────────────────────── main ───────────────────────── */
 
 function main() {
@@ -533,6 +677,10 @@ function main() {
       firstReport: firstReport && firstReport !== cleanTxt(scrub(s.point)) ? firstReport : "",
       links: linksFrom(s.point),
       refs: [...new Set(s.statuses.map((x) => `Evidence Brief ${x.date}`))].slice(-3),
+      sources: ["evidence-brief"],
+      confirmations: [],
+      verification: "reported",
+      flags: {},
       _text: allText,
     });
   }
@@ -563,15 +711,25 @@ function main() {
       fix: "",
       links: linksFrom(`${d.row} ${d.proof}`),
       refs: [`NDR vs FDR scoreboard ${asOfD}`, ...(note ? [`Evidence Brief ${note.date}`] : []), d.proof ? `proof: ${d.proof.replace(/`/g, "")}` : ""].filter(Boolean),
+      sources: ["evidence-brief"],
+      confirmations: [],
+      verification: "reported",
+      flags: {},
       _text: `${d.row} ${d.fdr} ${d.proof}`,
     });
   }
 
-  /* match to graph nodes */
+  const manual = mergeManual(items);
+  annotateSources(items);
+  const stamped = applyConfirmations(items);
+
+  /* match to graph nodes (honor a pre-set match from a manual pack, e.g. a multi-brand gap). */
   for (const it of items) {
+    if (it.match && it.match.kind) continue;
     const hits = it.urls.filter((u) => crawlKeys.has(urlKey(u)));
     if (it.urls.length === 0) {
-      it.match = { kind: "site-wide", nodes: [`brand:${it.brand}`] };
+      const nodes = (it.brands ?? [it.brand]).filter(Boolean).map((b) => `brand:${b}`);
+      it.match = { kind: "site-wide", nodes: nodes.length ? nodes : [`brand:${it.brand}`] };
     } else if (hits.length) {
       // Pages in product hubs are drawn as page nodes; "other" pages (/scam/, /facts/ …)
       // are in the crawl but only roll up to their brand node.
@@ -647,6 +805,13 @@ function main() {
     screenshots: used.size,
     severity: Object.fromEntries(["critical", "high", "medium", "low", "unrated"].map((s) => [s, count((i) => i.severity === s)])),
     status: Object.fromEntries(["open", "partly fixed", "fixed"].map((s) => [s, count((i) => i.status === s)])),
+    scout: count((i) => (i.sources ?? []).includes("scout")),
+    toVerify: count((i) => i.verification === "to_verify"),
+    unverified: count((i) => i.verification === "unverified"),
+    funnelConfirmed: count((i) => (i.confirmations ?? []).includes("funnel-fix")),
+    manualAdded: manual.added,
+    manualSkipped: manual.skipped,
+    confirmationMissing: stamped.missing,
   };
   const doc = {
     version: 1,

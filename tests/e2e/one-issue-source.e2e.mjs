@@ -57,6 +57,34 @@ describe("guard: one issue source", () => {
     for (const [code, s] of seen.rows) if (s === "html") assert.ok(!/^S\d+$/.test(code), `${code} is a rule, not an HTML check`);
   });
 
+  test("to-verify counts match on graph, Issues and Gate and stay put under every source filter", async () => {
+    const queue = (id) =>
+      page.evaluate((tid) => {
+        const e = document.querySelector(`[data-testid="${tid}"]`);
+        return e ? { toVerify: +e.dataset.toVerify, unverified: +e.dataset.unverified } : null;
+      }, id);
+    const filters = ["both", "pantheon", "evidence-brief", "funnel-fix", "scout"];
+    let baseline;
+    for (const f of filters) {
+      await page.click(`[data-source-chip="${f}"]`);
+      await tab(page, "Graph");
+      const graph = { totals: await totals(page, "graph-sev-totals"), queue: await queue("graph-to-verify") };
+      await tab(page, "Issues");
+      const issues = { totals: await totals(page, "issues-sev-totals"), queue: await queue("issues-to-verify") };
+      await tab(page, "Gate");
+      const gate = { totals: await totals(page, "gate-sev-totals"), queue: await queue("gate-to-verify") };
+      assert.deepEqual(issues.totals, graph.totals, `Issues totals vs graph under ${f}`);
+      assert.deepEqual(gate.totals, graph.totals, `Gate totals vs graph under ${f}`);
+      assert.deepEqual(issues.queue, graph.queue, `Issues queue vs graph under ${f}`);
+      assert.deepEqual(gate.queue, graph.queue, `Gate queue vs graph under ${f}`);
+      assert.deepEqual(graph.totals, { C: 8, H: 10, M: 3, L: 0 }, `Pantheon totals shifted under ${f}`);
+      if (!baseline) baseline = graph.queue;
+      else assert.deepEqual(graph.queue, baseline, `queue shifted under ${f}`);
+    }
+    assert.equal(baseline?.toVerify, 3);
+    assert.equal(baseline?.unverified, 1);
+  });
+
   test("per-issue severity matches between Issues and Gate", () => {
     assert.ok(seen.gateRows.size > 0, "Gate lists its open queue");
     for (const [code, s] of seen.gateRows) assert.equal(seen.rows.get(code), s, `${code}: Issues ${seen.rows.get(code)} vs Gate ${s}`);
