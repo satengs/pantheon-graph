@@ -7,6 +7,7 @@ import { familyRules } from "./_canvas";
 import { severityTotals } from "@/lib/studio/issue-source";
 import { evidenceQueue, evidenceMatchesSource, filterEvBySource } from "@/lib/graph/evidence-filter";
 import { buildEvidenceIndex, normalizeEvidenceDoc, type EvidenceDoc, type EvidenceItem, type SourceFilter } from "@/lib/graph/evidence";
+import { evidenceLabel } from "@/lib/graph/evidence-label";
 
 const doc = normalizeEvidenceDoc(JSON.parse(readFileSync("public/data/evidence.json", "utf8"))) as EvidenceDoc;
 
@@ -56,4 +57,51 @@ describe("guard: evidence source totals", () => {
     const roll = filterEvBySource({ worst: "unrated", count: doc.items.length, pages: 0, items: doc.items as EvidenceItem[] }, "scout");
     expect(roll?.items.map((i) => i.id).sort()).toEqual(["MS01", "MS02", "MS03", "MS04", "MS05"]);
   });
+
+  test("parent evidence label is Evidence 155 · 9 critical after Funnel severities and remaps", () => {
+    const idx = buildEvidenceIndex(doc);
+    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 155 · 9 critical");
+  });
+
+  test("every unmapped row has a visible reason", () => {
+    const unmapped = doc.items.filter((i) => i.match.kind === "unmapped");
+    expect(unmapped.length).toBe(10);
+    for (const i of unmapped) {
+      expect(i.match.reason && i.match.reason.length > 0, i.id).toBeTruthy();
+    }
+  });
+
+  test("E133 sits on the FDR brand, not Achieve, and is Funnel-confirmed high", () => {
+    const row = doc.items.find((i) => i.id === "E133")!;
+    expect(row.brand).toBe("fdr");
+    expect(row.match.kind).toBe("site-wide");
+    expect(row.match.nodes).toEqual(["brand:fdr"]);
+    expect(row.severity).toBe("high");
+    expect(row.severityBasis).toMatch(/Funnel Fix 2026-11-12 \(WR-FF-03\) impact: high/);
+    const idx = buildEvidenceIndex(doc);
+    expect(idx.forBrand("fdr")?.items.some((i) => i.id === "E133")).toBe(true);
+    expect(idx.forBrand("achieve")?.items.some((i) => i.id === "E133")).toBe(false);
+  });
+
+  test("Funnel-confirmed rows take Funnel impact; to-verify and unverified stay Unrated", () => {
+    const confirmed = doc.items.filter((i) => (i.confirmations ?? []).includes("funnel-fix"));
+    expect(confirmed.length).toBe(20);
+    for (const i of confirmed) {
+      expect(i.verification).toBe("confirmed");
+      expect(i.severity).not.toBe("unrated");
+      expect(i.severityBasis).toMatch(/Funnel Fix 2026-11-12/);
+    }
+    expect(doc.items.filter((i) => i.verification === "to_verify").every((i) => i.severity === "unrated")).toBe(true);
+    const bot = doc.items.find((i) => i.id === "E146")!;
+    expect(bot.verification).toBe("unverified");
+    expect(bot.severity).toBe("unrated");
+  });
+
+  test("UI strings contain no personal names or box paths", () => {
+    const leak = /Satenik|Alea Hunt|\/workspace\//;
+    for (const i of doc.items) {
+      expect(leak.test(JSON.stringify(i)), i.id).toBe(false);
+    }
+  });
+
 });

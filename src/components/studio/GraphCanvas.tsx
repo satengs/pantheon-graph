@@ -10,7 +10,7 @@ import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 import { RULES } from "@/data/rules-seed";
 import { familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
 import { evidenceMatchesSource, familyEvidenceQueue, filterEvBySource, showsEvidence, showsPantheon } from "@/lib/graph/evidence-filter";
-import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
+import { NeutralChip, SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
 import { SevTotals } from "@/components/studio/SevTotals";
 import {
   buildSeverityIndex,
@@ -1783,25 +1783,33 @@ export function GraphCanvas() {
           </span>
         ) : null}
         {showEvidence && evDoc && legendFull ? (
-          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-evidence">
-            <EvTag text={legendFull.full} /> = {legendFull.count} Evidence Brief rows,{" "}
-            {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
+          <span
+            className="flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-1 normal-case tracking-normal"
+            data-testid="legend-evidence"
+          >
+            <span className="inline-flex flex-wrap items-center gap-1.5">
+              <EvTag text={legendFull.full} />
+              <span>
+                = {legendFull.count} Evidence Brief rows,{" "}
+                {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
+              </span>
+            </span>
             {legendCompact ? (
-              <>
-                {" "}
+              <span className="inline-flex flex-wrap items-center gap-1.5">
                 · <EvTag text={legendCompact.compact.join(" / ")} /> on products / pages ={" "}
                 {legendCompact.worst
                   ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
                   : `${legendCompact.count} rows, none rated`}
-              </>
+              </span>
             ) : null}
-            {pagesLegible ? "" : " · page tags show when zoomed in"}
-            {" "}
-            · Evidence rows, including{" "}
-            <span className="border px-1 font-mono text-[10px]" style={{ borderColor: "#c9d1d9" }}>
-              ? to verify
+            {pagesLegible ? null : <span className="shrink-0">· page tags show when zoomed in</span>}
+            <span className="flex basis-full flex-wrap items-center gap-1.5 normal-case tracking-normal">
+              Evidence rows, including
+              <NeutralChip testId="legend-to-verify-chip">to verify</NeutralChip>
+              and
+              <NeutralChip testId="legend-unverified-chip">unverified</NeutralChip>
+              , are not counted in Gate until confirmed.
             </span>
-            , are not counted in Gate until verified. Unverified (needs Search Console or Cloudflare) is separate and also not counted.
           </span>
         ) : null}
         <span className="flex items-center gap-1.5">Double-click cluster = pages</span>

@@ -1,33 +1,166 @@
 {
   "version": 1,
   "asOf": "2026-11-12",
-  "note": "Cross-check only. Ten of Funnel Fix's 11 highlight items were confirmed on 12 Nov 2026. This map stamps matching Evidence Brief (#40) and Scout Nov 16 rows as confirmed and adds a Funnel Fix confirmation chip. It does not import Funnel Fix rows as a new source. WR-FF-11 (Googlebot) stays unverified. Ads Watch AW01–05 was also cross-checked for overlap; it is not an import source and no PSI/CWV placeholders are copied from it.",
+  "note": "Cross-check only. Ten of Funnel Fix's 11 highlight items were confirmed on 12 Nov 2026. This map stamps matching Evidence Brief (#40) and Scout Nov 16 rows as confirmed and adds a Funnel Fix confirmation chip. It does not import Funnel Fix rows as a new source. WR-FF-11 (Googlebot) stays unverified. For confirmed rows, `impact` is taken from /workspace/seo-vs-mkt/pantheon-findings/funnel-fix-highlights-2026-11-17.json and is applied as the row's severity (citing that Funnel Fix basis). Items still marked 'to verify' stay Unrated. WR-FF-11's impact is recorded but is not applied, because that row is unverified. When one evidence row maps to more than one Funnel item, the worse impact is kept. Ads Watch AW01\u201305 was also cross-checked for overlap; it is not an import source and no PSI/CWV placeholders are copied from it.",
   "confirmed": [
-    { "funnel": "WR-FF-01", "title": "Valpak link 301s to test apply host", "evidenceIds": ["E2", "E21", "E152"] },
-    { "funnel": "WR-FF-02", "title": "Ad landings are test builds with noindex and 0 ad claims", "evidenceIds": ["E59", "E98", "E151"] },
-    { "funnel": "WR-FF-03", "title": "start.freedomfinancialnetwork.com /home is FDR acquisition app on test env", "evidenceIds": ["E133"] },
-    { "funnel": "WR-FF-04", "title": "dev.Achieve.com alternateName and 85288 phone in Organization markup", "evidenceIds": ["E101", "E137", "MS01"] },
-    { "funnel": "WR-FF-05", "title": "Meta 5.75% ad lands on rate-less noindex shell", "evidenceIds": ["E135"] },
-    { "funnel": "WR-FF-06", "title": "HELOC speed claim conflicts: 5 days vs 10-12 vs Bankrate ten", "evidenceIds": ["E57", "E136"] },
-    { "funnel": "WR-FF-07", "title": "FDR LendingTree press page now 404", "evidenceIds": ["E138"] },
-    { "funnel": "WR-FF-08", "title": "FDR /scam/ has no impersonation or advance-fee block", "evidenceIds": ["E83", "E89", "MS05"] },
-    { "funnel": "WR-FF-09", "title": "bills.com credit-repair page has no CROA mention", "evidenceIds": ["E144"] },
-    { "funnel": "WR-FF-10", "title": "FDR /login 307s to home; my. returns 522", "evidenceIds": ["E20", "E113", "E152"] }
+    {
+      "funnel": "WR-FF-01",
+      "title": "Valpak link 301s to test apply host",
+      "evidenceIds": [
+        "E2",
+        "E21",
+        "E152"
+      ],
+      "impact": "critical",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-02",
+      "title": "Ad landings are test builds with noindex and 0 ad claims",
+      "evidenceIds": [
+        "E59",
+        "E98",
+        "E151"
+      ],
+      "impact": "high",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-03",
+      "title": "start.freedomfinancialnetwork.com /home is FDR acquisition app on test env",
+      "evidenceIds": [
+        "E133"
+      ],
+      "impact": "high",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-04",
+      "title": "dev.Achieve.com alternateName and 85288 phone in Organization markup",
+      "evidenceIds": [
+        "E101",
+        "E137",
+        "MS01"
+      ],
+      "impact": "high",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-05",
+      "title": "Meta 5.75% ad lands on rate-less noindex shell",
+      "evidenceIds": [
+        "E135"
+      ],
+      "impact": "high",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-06",
+      "title": "HELOC speed claim conflicts: 5 days vs 10-12 vs Bankrate ten",
+      "evidenceIds": [
+        "E57",
+        "E136"
+      ],
+      "impact": "medium",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-07",
+      "title": "FDR LendingTree press page now 404",
+      "evidenceIds": [
+        "E138"
+      ],
+      "impact": "medium",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-08",
+      "title": "FDR /scam/ has no impersonation or advance-fee block",
+      "evidenceIds": [
+        "E83",
+        "E89",
+        "MS05"
+      ],
+      "impact": "medium",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-09",
+      "title": "bills.com credit-repair page has no CROA mention",
+      "evidenceIds": [
+        "E144"
+      ],
+      "impact": "low",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    },
+    {
+      "funnel": "WR-FF-10",
+      "title": "FDR /login 307s to home; my. returns 522",
+      "evidenceIds": [
+        "E20",
+        "E113",
+        "E152"
+      ],
+      "impact": "high",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json"
+    }
   ],
   "unverified": [
     {
       "funnel": "WR-FF-11",
       "title": "Googlebot access behind Cloudflare unverified",
-      "evidenceIds": ["E146"],
+      "evidenceIds": [
+        "E146"
+      ],
       "verification": "unverified",
-      "verificationNote": "unverified: needs Search Console or Cloudflare access"
+      "verificationNote": "unverified: needs Search Console or Cloudflare access",
+      "impact": "medium",
+      "impactSource": "funnel-fix-highlights-2026-11-17.json",
+      "impactApplied": false
     }
   ],
   "adsWatchOverlap": [
-    { "id": "AW01", "overlaps": ["E133"], "note": "FFN Google ads to noindex test host — already on the graph as E133. Not imported; no acceptance/PSI placeholder copied." },
-    { "id": "AW02", "overlaps": ["E59", "E98", "E151"], "note": "Meta claims unsupported on /fb — already on the graph. Not imported." },
-    { "id": "AW03", "overlaps": ["E135", "E57", "E136"], "note": "HELOC 5.75% / 5 days mismatch — already on the graph. Not imported." },
-    { "id": "AW04", "overlaps": ["E2", "E152"], "note": "Valpak /apply 301 — already on the graph as P0 E2. Not imported." },
-    { "id": "AW05", "overlaps": ["E83", "E89", "MS05"], "note": "/scam/ has no impersonation block — already on the graph; Scout MS05 adds the DFPI hook. Not imported." }
+    {
+      "id": "AW01",
+      "overlaps": [
+        "E133"
+      ],
+      "note": "FFN Google ads to noindex test host \u2014 already on the graph as E133. Not imported; no acceptance/PSI placeholder copied."
+    },
+    {
+      "id": "AW02",
+      "overlaps": [
+        "E59",
+        "E98",
+        "E151"
+      ],
+      "note": "Meta claims unsupported on /fb \u2014 already on the graph. Not imported."
+    },
+    {
+      "id": "AW03",
+      "overlaps": [
+        "E135",
+        "E57",
+        "E136"
+      ],
+      "note": "HELOC 5.75% / 5 days mismatch \u2014 already on the graph. Not imported."
+    },
+    {
+      "id": "AW04",
+      "overlaps": [
+        "E2",
+        "E152"
+      ],
+      "note": "Valpak /apply 301 \u2014 already on the graph as P0 E2. Not imported."
+    },
+    {
+      "id": "AW05",
+      "overlaps": [
+        "E83",
+        "E89",
+        "MS05"
+      ],
+      "note": "/scam/ has no impersonation block \u2014 already on the graph; Scout MS05 adds the DFPI hook. Not imported."
+    }
   ]
 }

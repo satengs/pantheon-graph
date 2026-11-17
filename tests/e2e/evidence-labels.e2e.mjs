@@ -33,11 +33,23 @@ describe("guard: evidence labels", () => {
     for (const t of r.tags) assert.match(t, LABEL);
   });
 
-  // Data change pending sign-off: #40 (102→160 brief rows) plus 5 Scout Nov 16 items
-  // yields 135 on-graph rows (30 unmapped) and 5 rated critical. Was 'Evidence 84 · 4 critical' on the 2026-10-19 lock.
-  test("snapshot: parent reads 'Evidence 135 · 5 critical'", async () => {
+  // Data change pending sign-off: #40 (102→160 brief rows) plus 5 Scout Nov 16 items,
+  // Funnel Fix severities on confirmed rows, and 20 own-brand off-crawl URLs rolled up
+  // to brand nodes (10 apply-host rows stay unmapped) yields 155 on-graph rows and
+  // 9 rated critical. Was 'Evidence 84 · 4 critical' on the 2026-10-19 lock, then
+  // 'Evidence 135 · 5 critical' before this remap + Funnel severity pass.
+  test("snapshot: parent reads 'Evidence 155 · 9 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 135 · 5 critical");
+    assert.equal(t, "Evidence 155 · 9 critical");
+  });
+
+  test("legend shows separate to-verify and unverified chips", async () => {
+    const r = await page.evaluate(() => ({
+      toVerify: document.querySelector('[data-testid="legend-to-verify-chip"]')?.textContent?.trim(),
+      unverified: document.querySelector('[data-testid="legend-unverified-chip"]')?.textContent?.trim(),
+    }));
+    assert.equal(r.toVerify, "to verify");
+    assert.equal(r.unverified, "unverified");
   });
 
   test("no 'undefined' / 'unknown' on Graph", async () => {

@@ -159,6 +159,7 @@ export function EvidenceCard({
             <p className="text-subtle">No URL in the brief row</p>
           )}
           <p className="text-subtle" data-testid="unmapped-hint">
+            <span className="text-muted">Why unmapped: </span>
             {unmappedHint(item)}
           </p>
         </div>
@@ -278,6 +279,8 @@ export function EvidenceList({ roll, emptyText }: { roll: EvRollup | null; empty
 
 /** What to do with a row that has no graph node. Text only; mapping happens in the crawl, not here. */
 export function unmappedHint(item: EvidenceItem): string {
+  if (item.match?.reason) return item.match.reason;
+  if (!item.urls.length) return "no URL in brief";
   const hosts = item.urls.map((u) => {
     try {
       return new URL(u).hostname;
@@ -285,11 +288,8 @@ export function unmappedHint(item: EvidenceItem): string {
       return "";
     }
   });
-  if (!hosts.length) return "Map to node: name the page in the brief row · or ignore if it is not page-specific";
   const sub = hosts.some((h) => h && !h.startsWith("www."));
-  return sub
-    ? "Ignore if the Apply funnel / subdomain stays off the graph · or map to node: add that host to the crawl"
-    : "Map to node: add the URL to the crawl / sitemap, or fix its 404 / redirect · or ignore if the page is retired";
+  return sub ? "off-site ad host" : "own URL not in crawl (404, off-sitemap or vanity)";
 }
 
 /** Page or scope line for an evidence row. Gaps never show a URL. */

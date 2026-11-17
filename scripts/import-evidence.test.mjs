@@ -70,3 +70,65 @@ test("manual Scout rows dedupe by id or URL+title and confirmations do not inven
   assert.ok(m.isDupe(items, { id: "MS-X", title: "Impersonation scams use FDR's name; owned page silent", urls: ["https://www.freedomdebtrelief.com/scam/"] }));
   assert.equal(m.isDupe(items, { id: "MS05", title: "FDR /scam/ needs an advance-fee and impersonation block (DFPI hook)", urls: ["https://www.freedomdebtrelief.com/scam/"] }), null);
 });
+
+test("worseSev keeps the higher Funnel impact", () => {
+  assert.equal(m.worseSev("high", "critical"), "critical");
+  assert.equal(m.worseSev("medium", "high"), "high");
+  assert.equal(m.worseSev(null, "low"), "low");
+});
+
+test("applyReplacements strips personal names and box paths", () => {
+  const reps = [
+    { find: "Satenik decision", replace: "owner decision" },
+    { find: "Alea Hunt", replace: "a co-brand publisher" },
+  ];
+  assert.equal(m.applyReplacements("Lane stays unmeasurable (Satenik decision).", reps), "Lane stays unmeasurable (owner decision).");
+  assert.equal(m.applyReplacements("quoted (Alea Hunt)", reps), "quoted (a co-brand publisher)");
+  assert.match(m.applyReplacements("see /workspace/seo-vs-mkt/pack.md"), /^\s*see \(evidence pack\)/);
+});
+
+test("own-brand URLs not in the crawl roll up to the brand; apply hosts stay unmapped with a reason", () => {
+  const crawl = new Map([["freedomdebtrelief.com/scam", "other"]]);
+  const vanity = { id: "E2", brand: "fdr", urls: ["https://www.freedomdebtrelief.com/apply"] };
+  m.matchEvidenceItem(vanity, crawl);
+  assert.equal(vanity.match.kind, "site-wide");
+  assert.deepEqual(vanity.match.nodes, ["brand:fdr"]);
+  assert.match(vanity.match.reason, /rolled up to the brand/);
+
+  const apply = { id: "E98", brand: "fdr", urls: ["https://apply.freedomdebtrelief.com/fb"] };
+  m.matchEvidenceItem(apply, crawl);
+  assert.equal(apply.match.kind, "unmapped");
+  assert.equal(apply.match.reason, "off-site ad host (apply.freedomdebtrelief.com)");
+  assert.ok(apply.match.reason, "unmapped rows must have a visible reason");
+
+  const crawlHit = { id: "E83", brand: "fdr", urls: ["https://www.freedomdebtrelief.com/scam/"] };
+  m.matchEvidenceItem(crawlHit, crawl);
+  assert.equal(crawlHit.match.kind, "page");
+  assert.equal(crawlHit.match.drawn, false);
+});
+
+test("applyOverrides can force a brand and a pre-set match", () => {
+  const items = [
+    {
+      id: "E133",
+      brand: "achieve",
+      urls: ["https://www.achieve.com/"],
+      why: "start.FFN /home is noindex.",
+      match: undefined,
+    },
+  ];
+  const applied = m.applyOverrides(items, {
+    items: {
+      E133: {
+        brand: "fdr",
+        urls: ["https://start.freedomfinancialnetwork.com/home"],
+        match: { kind: "site-wide", nodes: ["brand:fdr"] },
+        whySuffix: "They only run on Achieve's advertiser account.",
+      },
+    },
+  });
+  assert.deepEqual(applied, ["E133"]);
+  assert.equal(items[0].brand, "fdr");
+  assert.deepEqual(items[0].match.nodes, ["brand:fdr"]);
+  assert.match(items[0].why, /advertiser account/);
+});

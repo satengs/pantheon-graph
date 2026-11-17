@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "note": "Importer overrides that survive `npm run import:evidence`. This file is not an import source (no new rows). Use it for brand/match corrections and to keep personal names and box paths out of UI text.",
+  "replacements": [
+    {
+      "find": "(Satenik's sign-in, asked by PM in her 1:1)",
+      "replace": "(needs Search Console or Cloudflare access)"
+    },
+    {
+      "find": "Satenik's sign-in, asked by PM in her 1:1",
+      "replace": "needs Search Console or Cloudflare access"
+    },
+    {
+      "find": "Satenik decision",
+      "replace": "owner decision"
+    },
+    {
+      "find": "Alea Hunt",
+      "replace": "a co-brand publisher"
+    }
+  ],
+  "items": {
+    "E133": {
+      "brand": "fdr",
+      "urls": ["https://start.freedomfinancialnetwork.com/home"],
+      "match": {
+        "kind": "site-wide",
+        "nodes": ["brand:fdr"],
+        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
+      },
+      "whySuffix": "The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account."
+    }
+  }
+}
