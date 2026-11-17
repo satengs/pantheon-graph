@@ -1441,7 +1441,7 @@ export function GraphCanvas() {
                           {n.kind === "page" || label.length <= 16 ? label : `${label.slice(0, 15)}…`}
                         </text>
                       )}
-                      {(n.kind === "product" || n.kind === "glossary") && n.count && (n.shown ?? 0) < n.count ? (
+                      {(n.kind === "product" || n.kind === "glossary") && n.count != null && (n.count === 0 || (n.shown ?? 0) < n.count) ? (
                         <text
                           data-testid="hub-shown"
                           y={r + 21}
