@@ -376,7 +376,7 @@ export function IssueRow({
       }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`flex h-full min-h-0 cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
+      className={`flex cursor-pointer items-start gap-3 border-t border-border/80 px-3 text-left ${
         selected ? "bg-[#c4b8a4] py-3" : "py-2 hover:bg-raised/50"
       }`}
     >
@@ -410,7 +410,7 @@ export function IssueRow({
           <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Section </span>
           {row.section || PAGE_LEVEL}
         </p>
-        <p className={`mt-1 text-pretty ${selected ? "text-base font-medium" : "text-sm text-muted"}`} style={selected ? { color: ink } : undefined}>{row.what}</p>
+        <p className={`mt-1 text-pretty leading-snug [overflow-wrap:anywhere] ${selected ? "text-base font-medium" : "text-sm text-muted"}`} style={selected ? { color: ink } : undefined}>{row.what}</p>
         {selected && row.relatedPath ? (
           <p className="mt-1 truncate text-xs" style={{ color: ink }}>Related · {row.relatedPath}</p>
         ) : null}

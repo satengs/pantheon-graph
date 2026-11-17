@@ -338,17 +338,14 @@ export function Backlog() {
         <VirtualList
           className="min-h-0 flex-1 overflow-auto"
           items={categories}
-          rowHeight={104}
+          rowHeight="auto"
           jumpTo={htmlJump}
           getKey={(c) => c.code}
           selectedIndex={categories.findIndex((c) => c.code === selectedIssueId || RULES.find((r) => r.code === c.code)?.id === selectedIssueId)}
           rowWrapper={(c) => {
             const on = selectedIssueId === c.code || RULES.find((r) => r.code === c.code)?.id === selectedIssueId;
             return {
-              className: "overflow-visible",
-              style: on
-                ? { overflow: "visible", background: "#c4b8a4", color: "#1c1814" }
-                : { overflow: "visible" },
+              style: on ? { background: "#c4b8a4", color: "#1c1814" } : undefined,
             };
           }}
           renderRow={(c) => {

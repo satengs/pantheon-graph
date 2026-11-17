@@ -297,6 +297,14 @@ function clip(t: string, n: number) {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
+/** Brief wording in tooltips is quoted so source text like visit_id=undefined is not read as an app bug. */
+function quoteSource(text: string): string {
+  const t = text.trim();
+  if (!t) return t;
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("“") && t.endsWith("”"))) return t;
+  return `“${t}”`;
+}
+
 /** Brand-pair L2 edge bends above the brand row, clear of the S01/S06 issue rail. */
 function brandArc(a: Pt, b: Pt): { c: Pt; apex: Pt } {
   const mx = (a.x + b.x) / 2;
@@ -1656,7 +1664,7 @@ export function GraphCanvas() {
                   <li key={i.id} className="border-t border-border pt-1">
                     <p className="font-medium">
                       <span style={{ color: EV_COLOR[i.severity] }}>{EV_LABEL[i.severity]}</span> ·{" "}
-                      {i.row != null ? `Row ${i.row}` : i.id} · {i.title}
+                      {i.row != null ? `Row ${i.row}` : i.id} · {quoteSource(i.title)}
                     </p>
                     <p className="text-subtle">
                       {i.owner} · {i.status}
@@ -1665,7 +1673,7 @@ export function GraphCanvas() {
                     {i.fix ? (
                       <p className="text-muted">
                         <span className="text-subtle">Fix </span>
-                        {clip(i.fix, 110)}
+                        {quoteSource(clip(i.fix, 110))}
                       </p>
                     ) : null}
                   </li>
@@ -1683,7 +1691,7 @@ export function GraphCanvas() {
       {unmappedOpen && showEvidence && evDoc ? (
         <div
           data-testid="unmapped-panel"
-          className="absolute right-3 top-3 z-30 flex max-h-[calc(100%-4.5rem)] w-[22rem] flex-col rounded-lg border border-border bg-bg shadow-[var(--shadow-border)]"
+          className="absolute bottom-28 right-3 top-3 z-30 flex w-[22rem] flex-col rounded-lg border border-border bg-bg shadow-[var(--shadow-border)]"
           onPointerDown={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >
@@ -1755,64 +1763,80 @@ export function GraphCanvas() {
           Fit
         </button>
       </div>
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wide text-subtle">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-accent" /> Parent
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-fdr" /> FDR
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-achieve" /> Achieve
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-bills" /> Bills
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-px w-3 bg-danger" /> Conflict
-        </span>
-        {showPantheon ? (
-          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-sev-pill">
-            <span
-              className="inline-flex h-4 items-center rounded-full px-1.5 text-[9px] font-bold text-[#0b0c0e]"
-              style={{ background: SEVERITY_COLOR.critical }}
-            >
-              C2 H1
-            </span>
-            = open Pantheon rules per severity (fill = worst)
+      <div
+        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-9rem)] flex-col gap-1 text-[10px] uppercase tracking-wide text-subtle"
+        data-testid="graph-legend"
+      >
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-accent" /> Parent
           </span>
-        ) : null}
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-fdr" /> FDR
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-achieve" /> Achieve
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-bills" /> Bills
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block h-px w-3 bg-danger" /> Conflict
+          </span>
+          {showPantheon ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 normal-case tracking-normal" data-testid="legend-sev-pill">
+              <span
+                className="inline-flex h-4 items-center rounded-full px-1.5 text-[9px] font-bold text-[#0b0c0e]"
+                style={{ background: SEVERITY_COLOR.critical }}
+              >
+                C2 H1
+              </span>
+              = open Pantheon rules per severity (fill = worst)
+            </span>
+          ) : null}
+          <span className="inline-flex shrink-0 items-center gap-1.5">Double-click cluster = pages</span>
+        </span>
         {showEvidence && evDoc && legendFull ? (
           <span
-            className="flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-1 normal-case tracking-normal"
+            className="flex min-w-0 flex-col gap-1 normal-case tracking-normal"
             data-testid="legend-evidence"
           >
-            <span className="inline-flex flex-wrap items-center gap-1.5">
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <EvTag text={legendFull.full} />
               <span>
                 = {legendFull.count} Evidence Brief rows,{" "}
                 {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
               </span>
+              {legendCompact ? (
+                <>
+                  <span>·</span>
+                  <EvTag text={legendCompact.compact.join(" / ")} />
+                  <span>
+                    on products / pages ={" "}
+                    {legendCompact.worst
+                      ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
+                      : `${legendCompact.count} rows, none rated`}
+                  </span>
+                </>
+              ) : null}
+              {pagesLegible ? null : <span className="shrink-0">· page tags show when zoomed in</span>}
             </span>
-            {legendCompact ? (
-              <span className="inline-flex flex-wrap items-center gap-1.5">
-                · <EvTag text={legendCompact.compact.join(" / ")} /> on products / pages ={" "}
-                {legendCompact.worst
-                  ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
-                  : `${legendCompact.count} rows, none rated`}
-              </span>
-            ) : null}
-            {pagesLegible ? null : <span className="shrink-0">· page tags show when zoomed in</span>}
-            <span className="flex basis-full flex-wrap items-center gap-1.5 normal-case tracking-normal">
+            <span className="text-subtle" data-testid="legend-shared-count">
+              Rows shared between brands count once at the parent.
+            </span>
+            <span className="flex flex-wrap items-center gap-1.5">
               Evidence rows, including
-              <NeutralChip testId="legend-to-verify-chip">to verify</NeutralChip>
+              <NeutralChip tone="to-verify" testId="legend-to-verify-chip">
+                ? to verify
+              </NeutralChip>
               and
-              <NeutralChip testId="legend-unverified-chip">unverified</NeutralChip>
+              <NeutralChip tone="unverified" testId="legend-unverified-chip">
+                unverified
+              </NeutralChip>
               , are not counted in Gate until confirmed.
             </span>
           </span>
         ) : null}
-        <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
       </div>
       </div>
     </div>

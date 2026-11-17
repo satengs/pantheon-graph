@@ -3,7 +3,7 @@ import { EV_TAG_FILL, EV_TAG_STROKE, type EvidenceItem } from "@/lib/graph/evide
 import { itemSources } from "@/lib/graph/evidence-filter";
 
 const chipClass =
-  "inline-flex h-5 max-w-full shrink-0 items-center truncate border px-1.5 text-[10px] font-medium leading-none";
+  "inline-flex h-5 max-w-full shrink-0 items-center whitespace-nowrap border px-1.5 text-[10px] font-medium leading-none";
 const chipStyle = { borderColor: EV_TAG_STROKE, color: EV_TAG_STROKE, background: EV_TAG_FILL } as const;
 
 /** Neutral outline source / status chips. Never pink, never a filled severity pill, never a left stripe. */
@@ -11,13 +11,22 @@ export function NeutralChip({
   children,
   title,
   testId,
+  tone = "default",
 }: {
   children: string;
   title?: string;
   testId?: string;
+  /** to-verify is a dashed pill; unverified is a filled square — same family, different shape and tone. */
+  tone?: "default" | "to-verify" | "unverified";
 }) {
+  const toneClass =
+    tone === "to-verify" ? "rounded-full border-dashed" : tone === "unverified" ? "rounded-sm border-solid" : "";
+  const style =
+    tone === "unverified"
+      ? { borderColor: EV_TAG_STROKE, color: EV_TAG_FILL, background: EV_TAG_STROKE }
+      : { ...chipStyle, ...(tone === "to-verify" ? { borderStyle: "dashed" as const } : {}) };
   return (
-    <span className={chipClass} style={chipStyle} title={title ?? children} data-testid={testId}>
+    <span className={`${chipClass} ${toneClass}`.trim()} style={style} title={title ?? children} data-testid={testId}>
       {children}
     </span>
   );
@@ -51,16 +60,16 @@ export function SourceChips({
 export function VerificationChip({ item }: { item: Pick<EvidenceItem, "verification" | "verificationNote"> }) {
   if (item.verification === "to_verify") {
     return (
-      <NeutralChip title="Not counted in Gate until Funnel Fix confirms" testId="to-verify-chip">
+      <NeutralChip tone="to-verify" title="Not counted in Gate until Funnel Fix confirms" testId="to-verify-chip">
         ? to verify
       </NeutralChip>
     );
   }
   if (item.verification === "unverified") {
-    const label = item.verificationNote || "unverified: needs Search Console or Cloudflare access";
+    const note = item.verificationNote || "unverified: needs Search Console or Cloudflare access";
     return (
-      <NeutralChip title={label} testId="unverified-chip">
-        {label}
+      <NeutralChip tone="unverified" title={note} testId="unverified-chip">
+        unverified
       </NeutralChip>
     );
   }

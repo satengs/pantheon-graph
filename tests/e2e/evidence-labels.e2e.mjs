@@ -48,7 +48,7 @@ describe("guard: evidence labels", () => {
       toVerify: document.querySelector('[data-testid="legend-to-verify-chip"]')?.textContent?.trim(),
       unverified: document.querySelector('[data-testid="legend-unverified-chip"]')?.textContent?.trim(),
     }));
-    assert.equal(r.toVerify, "to verify");
+    assert.equal(r.toVerify, "? to verify");
     assert.equal(r.unverified, "unverified");
   });
 

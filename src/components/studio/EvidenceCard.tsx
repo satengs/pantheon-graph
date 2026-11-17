@@ -119,27 +119,23 @@ export function EvidenceCard({
         <VerificationChip item={item} />
         <FlagChips item={item} />
       </div>
-      <dl className="mt-1.5 grid grid-cols-[3.75rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-[11px]" data-testid="evidence-summary">
+      <dl className="mt-1.5 grid grid-cols-[3.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 text-[11px] leading-snug" data-testid="evidence-summary">
         <dt className="text-subtle">{item.flags?.gap ? "Scope" : "Page"}</dt>
-        <dd className="truncate text-muted" title={scope} data-testid="evidence-scope">
+        <dd className="min-w-0 [overflow-wrap:anywhere] text-muted" data-testid="evidence-scope">
           {scope}
         </dd>
         <dt className="text-subtle">Problem</dt>
-        <dd className="truncate text-fg" title={item.title}>
-          {item.title}
-        </dd>
+        <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-fg">{item.title}</dd>
         <dt className="text-subtle">Why</dt>
-        <dd className="truncate text-muted" title={item.why || "No reason given in the source row"}>
+        <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-muted">
           {item.why || "No reason given in the source row"}
         </dd>
         <dt className="text-subtle">Fix</dt>
-        <dd className="truncate text-fg" title={item.fix || "No fix given in the source row"}>
+        <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-fg">
           {item.fix || "No fix given in the source row"}
         </dd>
         <dt className="text-subtle">Owner</dt>
-        <dd className="truncate text-muted" title={item.owner || "No owner named"}>
-          {item.owner || "No owner named"}
-        </dd>
+        <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-muted">{item.owner || "No owner named"}</dd>
       </dl>
       {verifyNote ? (
         <p className="mt-1 text-[11px] text-subtle" data-testid="evidence-gate-note">
