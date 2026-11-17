@@ -87,15 +87,28 @@ export const parseT = (t) => {
   return m ? { x: +m[1], y: +m[2] } : null;
 };
 
-/** Every DOM string that says "undefined" / "unknown": text, attribute values, SVG text. */
+/** Every DOM string that says "undefined" / "unknown": text, attribute values, SVG text.
+ *  Evidence Brief wording itself can contain those words (e.g. "visit_id=undefined",
+ *  "owner unknown"); quoted source text is skipped, UI labels and chips are not. */
 export const badStrings = (page) =>
   page.evaluate(() => {
     const re = /\b(undefined|unknown)\b/i;
     const out = new Set();
-    for (const m of document.body.innerText.matchAll(/.{0,40}\b(undefined|unknown)\b.{0,30}/gi)) out.add(`text: ${m[0]}`);
-    for (const el of document.querySelectorAll("*"))
+    const isQuote = (el) =>
+      !!el.closest?.("[data-testid='evidence-summary'], [data-testid='unmapped-row-detail'], [data-testid='evidence-list'] article button, [data-testid='issues-evidence'] article button");
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (!re.test(n.textContent ?? "")) continue;
+      if (isQuote(n.parentElement)) continue;
+      out.add(`text: ${(n.textContent ?? "").trim().slice(0, 80)}`);
+    }
+    for (const el of document.querySelectorAll("*")) {
+      if (isQuote(el)) continue;
       for (const a of el.attributes)
-        if (re.test(a.value) && !["class", "style", "d", "href", "src"].includes(a.name)) out.add(`attr ${el.tagName}.${a.name}=${a.value.slice(0, 60)}`);
+        if (re.test(a.value) && !["class", "style", "d", "href", "src", "title"].includes(a.name))
+          out.add(`attr ${el.tagName}.${a.name}=${a.value.slice(0, 60)}`);
+    }
     return [...out];
   });
 

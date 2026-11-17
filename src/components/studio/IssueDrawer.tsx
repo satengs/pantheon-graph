@@ -396,12 +396,12 @@ export function IssueRow({
         <p className={`truncate font-mono text-[11px] ${selected ? "" : "text-fg"}`} style={selected ? { color: ink } : undefined}>
           {row.code}
           {categoryLabel ? <span className={selected ? "" : "text-muted"}> · {categoryLabel}</span> : null}
-          {htmlCheck ? null : (
-            <span className="ml-1 align-middle">
-              <SourceChips pantheon />
-            </span>
-          )}
         </p>
+        {htmlCheck ? null : (
+          <div className="mt-0.5">
+            <SourceChips pantheon />
+          </div>
+        )}
         <p className={`mt-0.5 truncate font-mono text-xs ${selected ? "" : "text-muted"}`} style={selected ? { color: ink } : undefined}>
           <span className={`font-medium uppercase tracking-wide ${selected ? "" : "text-subtle"}`} style={selected ? { color: ink } : undefined}>Page </span>
           {row.pagePath}
