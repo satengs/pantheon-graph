@@ -359,6 +359,8 @@ export function GraphCanvas() {
   const [sevHover, setSevHover] = useState<SevHover | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  const [legendBox, setLegendBox] = useState({ legend: 0, canvas: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<null | {
     kind: "pan" | "node";
@@ -624,7 +626,25 @@ export function GraphCanvas() {
     }
   }
 
-    // Fit from layout positions only. Drag offsets must not retarget the
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const legend = legendRef.current;
+    if (!canvas || !legend) return;
+    const upd = () => {
+      const c = canvas.getBoundingClientRect();
+      const l = legend.getBoundingClientRect();
+      // Include the legend's bottom offset (bottom-3) so Fit clears the full stack.
+      const gap = Math.max(0, c.bottom - l.bottom);
+      setLegendBox({ legend: l.height + gap, canvas: c.height });
+    };
+    upd();
+    const ro = new ResizeObserver(upd);
+    ro.observe(canvas);
+    ro.observe(legend);
+    return () => ro.disconnect();
+  }, [full, ready]);
+
+  // Fit from layout positions only. Drag offsets must not retarget the
   // camera — otherwise a hull drag looks stationary (viewBox follows).
   // Fit (button, graph change) frames base + the drag offsets as they stand at that moment.
   const vb = useMemo(() => {
@@ -645,10 +665,14 @@ export function GraphCanvas() {
       const b = pb ? { x: pb.x + ob.x, y: pb.y + ob.y } : undefined;
       if (a && b) pts.push({ ...brandArc(a, b).apex, y: brandArc(a, b).apex.y - 14 });
     }
-    // Extra bottom space so Fit doesn't sit clusters under the canvas legend.
-    return fitView(pts, full ? 160 : 128, full ? 140 : 110);
+    // Pad by the legend's full height (in SVG units) so lower FDR / Achieve clusters stay clear.
+    const fitted = fitView(pts, full ? 160 : 128, 0);
+    const { legend, canvas } = legendBox;
+    const room = canvas - legend;
+    const bottomExtra = room > 40 && legend > 0 ? (fitted.h / room) * legend : full ? 140 : 110;
+    return fitView(pts, full ? 160 : 128, bottomExtra);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graph.nodes, base, full, fitTick, ready, sevIndex]);
+  }, [graph.nodes, base, full, fitTick, ready, sevIndex, legendBox]);
 
   // Screen px per SVG unit, for zoom-aware Evidence tags (page tags appear once legible).
   const [pxPerUnit, setPxPerUnit] = useState(0.5);
@@ -725,7 +749,7 @@ export function GraphCanvas() {
     }
     pushGraphFocus(n.id);
     if (n.issueId) {
-      openIssueDrawer({ issueId: n.issueId });
+      openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
       setTab("issues");
     } else selectNode(n.id);
   }
@@ -890,7 +914,7 @@ export function GraphCanvas() {
                   onClick={() => {
                     selectNode(n.id);
                     if (n.issueId) {
-                      openIssueDrawer({ issueId: n.issueId });
+                      openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
                       setTab("issues");
                     }
                   }}
@@ -1337,7 +1361,7 @@ export function GraphCanvas() {
                     // Capture only after movement (see applyClusterDrag) so dblclick/contextmenu reach this node.
                     selectNode(n.id);
                     if (n.issueId) {
-                      openIssueDrawer({ issueId: n.issueId });
+                      openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
                       setTab("issues");
                     }
                   }}
@@ -1365,7 +1389,7 @@ export function GraphCanvas() {
                     ev.stopPropagation();
                     selectNode(n.id);
                     if (n.issueId) {
-                      openIssueDrawer({ issueId: n.issueId });
+                      openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
                       setTab("issues");
                     } else {
                       setGraphInspectorOpen(true);
@@ -1564,7 +1588,7 @@ export function GraphCanvas() {
                       </text>
                     </g>
                   ) : null}
-                  {evr && evLbl ? (
+                  {evr && evLbl && !evCritMarker ? (
                     <g pointerEvents="none" data-ev-marker={evr.worst} data-ev-label={evText}>
                       {/* Neutral outline, square corners, hollow diamond: a row count, not a severity pill. */}
                       <rect x={evX} y={evY} width={evW} height={evH} fill={EV_TAG_FILL} stroke={EV_TAG_STROKE} strokeWidth={evFs / 9} />
@@ -1621,7 +1645,7 @@ export function GraphCanvas() {
                       if (ev.button === 0) {
                         selectNode(n.id);
                         if (n.issueId) {
-                          openIssueDrawer({ issueId: n.issueId });
+                          openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
                           setTab("issues");
                         }
                       }
@@ -1632,7 +1656,7 @@ export function GraphCanvas() {
                       ev.stopPropagation();
                       selectNode(n.id);
                       if (n.issueId) {
-                        openIssueDrawer({ issueId: n.issueId });
+                        openIssueDrawer({ issueId: n.issueId, pageUrl: n.url ?? null });
                         setTab("issues");
                       }
                     }}
@@ -1839,6 +1863,7 @@ export function GraphCanvas() {
       </div>
       <div
         className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-9rem)] flex-col gap-1 rounded-md bg-bg/95 px-2.5 py-2 text-[10px] uppercase tracking-wide text-subtle shadow-[var(--shadow-border)]"
+        ref={legendRef}
         data-testid="graph-legend"
       >
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
