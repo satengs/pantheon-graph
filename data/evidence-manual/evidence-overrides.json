@@ -22,13 +22,41 @@
   "items": {
     "E133": {
       "brand": "fdr",
-      "urls": ["https://start.freedomfinancialnetwork.com/home"],
+      "urls": [
+        "https://start.freedomfinancialnetwork.com/home"
+      ],
       "match": {
         "kind": "site-wide",
-        "nodes": ["brand:fdr"],
-        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
+        "nodes": [
+          "brand:fdr"
+        ],
+        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) \u2014 rolled up to the FDR brand"
       },
-      "whySuffix": "The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account."
+      "whySuffix": "The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account.",
+      "severity": "high",
+      "severityBasis": "Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High"
+    },
+    "E146": {
+      "scope": "Shared across FDR, Achieve and Bills; counted once at the parent",
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "brand:fdr",
+          "brand:achieve",
+          "brand:bills"
+        ],
+        "reason": "Shared across FDR, Achieve and Bills; counted once at the parent"
+      }
+    },
+    "E163": {
+      "why": "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.",
+      "fix": "Add App Store and Google Play links, and add inlinks from home or /how-it-works/."
+    },
+    "E170": {
+      "fix": "Owner to decide after verification"
+    },
+    "E70": {
+      "title": "apply.freedomdebtrelief.com/fbcfos is a test landing and is missing the Meta \u201c$280 per month\u201d claim"
     }
   }
 }

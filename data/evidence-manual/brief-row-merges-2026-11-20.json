@@ -19,9 +19,8 @@
         "E134"
       ],
       "verification": "confirmed",
-      "severity": "critical",
-      "severityBasis": "Evidence Brief 2026-11-20 labels the confirmed start.FFN landing P0",
-      "whySuffix": "Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML."
+      "whySuffix": "Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML.",
+      "note": "Funnel Fix's confirmed High stands. The brief P0 is recorded as a note via evidence-overrides.json, not a severity upgrade."
     },
     {
       "fromRow": "156",

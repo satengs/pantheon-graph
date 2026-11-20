@@ -34,11 +34,11 @@ describe("guard: evidence labels", () => {
   });
 
   // Data change pending sign-off: Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep.
-  // Was 'Evidence 165 · 10 critical' on 32c692f (#42). New real value is 167 rows / 14 critical
-  // (MS02, MS01, E137, E133 upgraded; E163 and E170 added).
-  test("snapshot: parent reads 'Evidence 167 · 14 critical'", async () => {
+  // Was 'Evidence 165 · 10 critical' on 32c692f (#42), then 'Evidence 167 · 14 critical'
+  // before E133 was returned to Funnel Fix High (brief P0 kept as a note).
+  test("snapshot: parent reads 'Evidence 167 · 13 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 167 · 14 critical");
+    assert.equal(t, "Evidence 167 · 13 critical");
   });
 
   test("collapsed Apply hub shows a critical evidence marker and an off-crawl findings label", async () => {

@@ -180,16 +180,21 @@ test("later Funnel confirmations upgrade existing rows and never invent a WR-FF 
     },
   ];
   const stamped = m.applyConfirmations(items, maps);
-  // Brief P0 is applied after Funnel stamps so it can upgrade, not get overwritten, and not
-  // keep a pre-Funnel brief P0 over a Funnel-confirmed high on a different item.
-  items.find((i) => i.id === "E133")._pendingSeverity = "critical";
-  items.find((i) => i.id === "E133")._pendingSeverityBasis = "Evidence Brief 2026-11-20 P0";
   m.applyPendingBriefSeverities(items);
+  // Funnel Fix's confirmed High stands. An override records the brief P0 as a note.
+  m.applyOverrides(items, {
+    items: {
+      E133: {
+        severity: "high",
+        severityBasis: "Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High",
+      },
+    },
+  });
   assert.equal(items.find((i) => i.id === "MS02").verification, "confirmed");
   assert.equal(items.find((i) => i.id === "MS02").severity, "critical");
   assert.equal(items.find((i) => i.id === "MS04").severity, "medium");
-  assert.equal(items.find((i) => i.id === "E133").severity, "critical", "brief P0 upgrades a Funnel high");
-  assert.match(items.find((i) => i.id === "E133").severityBasis, /Evidence Brief 2026-11-20/);
+  assert.equal(items.find((i) => i.id === "E133").severity, "high", "Funnel Fix High is not upgraded by the brief P0");
+  assert.match(items.find((i) => i.id === "E133").severityBasis, /Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
   assert.equal(items.find((i) => i.id === "E146").verification, "unverified");
   assert.equal(items.every((i) => !i.id.startsWith("WR-FF")), true);
   assert.ok(stamped.confirmed.includes("MS02"));
@@ -211,3 +216,25 @@ test("markNewRowsToVerify only flips unconfirmed firstSeen=asOf rows; unverified
   assert.equal(items[3].verification, "confirmed");
 });
 
+
+test("overrides can set title, why and fix after import stamps", () => {
+  const items = [
+    { id: "E70", title: "Same P0, new dest + new claim", why: "old", fix: "Apply + Compliance" },
+    { id: "E163", title: "mobile-app", why: "", fix: "", verification: "to_verify", severity: "unrated" },
+    { id: "E170", title: "CNBC", why: "Funnel to curl next week.", fix: "", verification: "to_verify", severity: "unrated" },
+  ];
+  const applied = m.applyOverrides(items, {
+    items: {
+      E70: { title: "apply.freedomdebtrelief.com/fbcfos is a test landing and is missing the Meta “$280 per month” claim" },
+      E163: { why: "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.", fix: "Add App Store and Google Play links, and add inlinks from home or /how-it-works/." },
+      E170: { fix: "Owner to decide after verification" },
+    },
+  });
+  assert.deepEqual(applied.sort(), ["E163", "E170", "E70"]);
+  assert.match(items[0].title, /fbcfos/);
+  assert.equal(items[0].id, "E70");
+  assert.match(items[1].why, /no App Store or Google Play link/);
+  assert.match(items[1].fix, /Add App Store and Google Play links/);
+  assert.equal(items[2].fix, "Owner to decide after verification");
+  assert.equal(items[2].why, "Funnel to curl next week.");
+});

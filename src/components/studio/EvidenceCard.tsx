@@ -227,7 +227,7 @@ export function EvidenceCard({
                     ? `content gap → ${item.match.nodes.length} brand nodes (counted once in the family total)`
                     : item.flags?.cluster
                       ? "cluster issue → brand node (pages stay capped)"
-                      : "site-wide → brand node"
+                      : sharedAcrossBrands(item) ?? "site-wide → brand node"
                   : `unmapped — ${item.match.reason ?? "no graph node"}`}
             </dd>
             <dt className="text-subtle">Source</dt>
@@ -288,12 +288,28 @@ export function unmappedHint(item: EvidenceItem): string {
   return sub ? "off-site ad host" : "own URL not in crawl (404, off-sitemap or vanity)";
 }
 
+const SHORT_BRAND: Record<string, string> = { fdr: "FDR", achieve: "Achieve", bills: "Bills" };
+
+/** Site-wide rows on more than one brand node: show the share and that they count once. */
+export function sharedAcrossBrands(item: Pick<EvidenceItem, "match" | "scope">): string | null {
+  if (item.scope && /shared across/i.test(item.scope)) return item.scope;
+  const brands = (item.match?.nodes ?? [])
+    .filter((n) => n.startsWith("brand:"))
+    .map((n) => SHORT_BRAND[n.slice(6)] ?? n.slice(6));
+  if (brands.length < 2) return item.match?.reason && /shared across/i.test(item.match.reason) ? item.match.reason : null;
+  const list = brands.length === 2 ? `${brands[0]} and ${brands[1]}` : `${brands.slice(0, -1).join(", ")} and ${brands[brands.length - 1]}`;
+  return `Shared across ${list}; counted once at the parent`;
+}
+
 /** Page or scope line for an evidence row. Gaps never show a URL. */
 export function evidenceScope(item: Pick<EvidenceItem, "urls" | "flags" | "scope" | "match" | "brand">): string {
   if (item.flags?.gap) return item.scope || "gap, no page";
+  const shared = sharedAcrossBrands(item);
+  if (shared) return shared;
   if (item.scope) return item.scope;
   const u = item.urls[0];
   if (u) return u.replace(/^https?:\/\//, "");
   if (item.match.kind === "site-wide") return `site-wide · ${item.brand}`;
   return "no page named";
 }
+

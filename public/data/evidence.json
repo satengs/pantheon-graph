@@ -20,8 +20,8 @@
     "unmapped": 0,
     "screenshots": 26,
     "severity": {
-      "critical": 14,
-      "high": 7,
+      "critical": 13,
+      "high": 8,
       "medium": 7,
       "low": 1,
       "unrated": 138
@@ -45,7 +45,11 @@
     "manualSkipped": [],
     "confirmationMissing": [],
     "overridesApplied": [
-      "E133"
+      "E70",
+      "E133",
+      "E146",
+      "E163",
+      "E170"
     ],
     "funnelSeverities": [
       {
@@ -326,12 +330,7 @@
       "E171",
       "E172"
     ],
-    "briefSeverities": [
-      {
-        "id": "E133",
-        "to": "critical"
-      }
-    ],
+    "briefSeverities": [],
     "newToVerify": [
       "E163",
       "E170"
@@ -3452,7 +3451,7 @@
       "id": "E70",
       "row": 70,
       "source": "brief",
-      "title": "Same P0, new dest + new claim",
+      "title": "apply.freedomdebtrelief.com/fbcfos is a test landing and is missing the Meta “$280 per month” claim",
       "brand": "fdr",
       "urls": [
         "https://apply.freedomdebtrelief.com/fbcfos"
@@ -6443,8 +6442,8 @@
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-20",
       "daysOpen": 7,
-      "severity": "critical",
-      "severityBasis": "Evidence Brief 2026-11-20 labels the confirmed start.FFN landing P0",
+      "severity": "high",
+      "severityBasis": "Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High",
       "why": "CR08208089467987165185, CR03493627218628706305, CR07212080985767149569) → start.freedomfinancialnetwork.com/home. Funnel + EB re-curl: 200, noindex, APP_ENV test, production API (fdr-cx-acquisition.prd.fdrgcp.com) and prod Tealium, footer \"Freedom Financial Network, LLC\"; 0 of 5 ad claims in HTML; display paths 404 (display ≠ final URL, so not a defect claim). H-A ONLINE ↔ company link not confirmed on the page. Foresight: Google 15189135 wording (US debt services: §111 non-profit + certified only) vs live FFN creatives → policy wording vs live creatives, Compliance to reconcile, not a breach; Transparency does not show Google's classification or the account's certification, and several cards are credit counseling/consolidation worded (Ads Watch). Paid demand builds 0 equity on freedomdebtrelief.com. Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML. The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account.",
       "fix": "owner named; out of test; support or drop claims; Compliance policy read before any scale",
       "firstReport": "",
@@ -6461,6 +6460,7 @@
       ],
       "verification": "confirmed",
       "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-12 (WR-FF-03)",
       "match": {
         "kind": "site-wide",
         "nodes": [
@@ -6468,7 +6468,6 @@
         ],
         "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
       },
-      "verificationNote": "Confirmed by Funnel Fix 2026-11-12 (WR-FF-03)",
       "screenshots": []
     },
     {
@@ -7092,9 +7091,11 @@
           "brand:fdr",
           "brand:achieve",
           "brand:bills"
-        ]
+        ],
+        "reason": "Shared across FDR, Achieve and Bills; counted once at the parent"
       },
       "verificationNote": "unverified: needs Search Console or Cloudflare access",
+      "scope": "Shared across FDR, Achieve and Bills; counted once at the parent",
       "screenshots": []
     },
     {
@@ -7462,8 +7463,8 @@
       "daysOpen": 0,
       "severity": "unrated",
       "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
-      "why": "",
-      "fix": "",
+      "why": "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.",
+      "fix": "Add App Store and Google Play links, and add inlinks from home or /how-it-works/.",
       "firstReport": "",
       "links": [],
       "refs": [
@@ -7500,7 +7501,7 @@
       "severity": "unrated",
       "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
       "why": "Funnel to curl next week. Speed claim flagged for Compliance review",
-      "fix": "",
+      "fix": "Owner to decide after verification",
       "firstReport": "",
       "links": [],
       "refs": [

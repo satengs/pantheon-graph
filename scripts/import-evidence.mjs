@@ -809,13 +809,21 @@ export function applyOverrides(items, ov = loadOverrides()) {
     if (spec.brand) it.brand = spec.brand;
     if (Array.isArray(spec.urls)) it.urls = spec.urls;
     if (spec.match) it.match = spec.match;
+    if (typeof spec.title === "string") it.title = spec.title;
     if (typeof spec.why === "string") it.why = spec.why;
+    if (typeof spec.fix === "string") it.fix = spec.fix;
     if (spec.whySuffix && !(it.why ?? "").includes(spec.whySuffix)) {
       const base = (it.why ?? "").replace(/\s*$/, "");
       const sep = !base ? "" : /[.!?]$/.test(base) ? " " : ". ";
       it.why = `${base}${sep}${spec.whySuffix}`;
     }
+    if (typeof spec.scope === "string") it.scope = spec.scope;
+    // Funnel-confirmed severity stands unless an override records it explicitly
+    // (e.g. E133 stays High; the brief P0 is kept as severityBasis).
+    if (spec.severity && SEV_RANK[spec.severity]) it.severity = spec.severity;
+    if (typeof spec.severityBasis === "string") it.severityBasis = spec.severityBasis;
     applied.push(it.id);
+
   }
   return applied;
 }
@@ -1120,9 +1128,9 @@ function main() {
   const manual = mergeManual(items);
   annotateSources(items);
   const merges = applyBriefMerges(items);
-  const overridden = applyOverrides(items);
   const stamped = applyConfirmations(items);
   const briefSev = applyPendingBriefSeverities(items);
+  const overridden = applyOverrides(items);
   const newToVerify = markNewRowsToVerify(items, asOf);
   // Unverified rows (Googlebot / Cloudflare) never pick up a brief P0.
   for (const it of items) {
