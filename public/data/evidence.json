@@ -3464,8 +3464,8 @@
       "daysOpen": 39,
       "severity": "critical",
       "severityBasis": "brief labels the row \"Same P0, new dest + new claim.\"",
-      "why": "Extends 59: NEW /fbcfos also test; NEW Meta claim \"$280 per month\" (see 72) also absent from homepage. Browser render still needed Thu",
-      "fix": "Apply + Compliance",
+      "why": "/fbcfos is still a test page (APP_ENV test, noindex). The Meta “$280 per month” claim is not on the FDR homepage.",
+      "fix": "Align the ad creative with the landing page (or the landing page with the creative) after the page leaves test. Owner: Apply + Compliance.",
       "firstReport": "Partnership ad claims absent from landing HTML. → Extends row 59: /fb and /fb?campaign=fb server HTML has 0 BBB / A+ / scam / \"denied\". Message match can't be shown to ad-review or search crawler without a browser render. → Apply + Compliance: align creative to landing (or landing to creative) after test-build exit",
       "links": [],
       "refs": [
