@@ -800,7 +800,7 @@ export function loadOverrides() {
   return JSON.parse(fs.readFileSync(f, "utf8"));
 }
 
-/** Apply brand / URL / match / text overrides by id. Must run before matching. */
+/** Apply brand / URL / match / text overrides by id. Runs before matching so a pre-set match is honored, and again after matching so owner (and other text) is not overwritten by the Apply-hub stamp. */
 export function applyOverrides(items, ov = loadOverrides()) {
   const applied = [];
   for (const it of items) {
@@ -812,6 +812,7 @@ export function applyOverrides(items, ov = loadOverrides()) {
     if (typeof spec.title === "string") it.title = spec.title;
     if (typeof spec.why === "string") it.why = spec.why;
     if (typeof spec.fix === "string") it.fix = spec.fix;
+    if (typeof spec.owner === "string") it.owner = spec.owner;
     if (spec.whySuffix && !(it.why ?? "").includes(spec.whySuffix)) {
       const base = (it.why ?? "").replace(/\s*$/, "");
       const sep = !base ? "" : /[.!?]$/.test(base) ? " " : ". ";
@@ -1141,6 +1142,7 @@ function main() {
 
   /* match to graph nodes (honor a pre-set match from a manual pack or override). */
   for (const it of items) matchEvidenceItem(it, crawlKeys);
+  applyOverrides(items);
 
   /* screenshots: A = filename quoted in the row, B = 10+ digit ad ID in filename & row,
      C = pack line naming the file also names an own URL / ad ID the row has. */

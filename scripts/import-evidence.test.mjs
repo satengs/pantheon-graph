@@ -225,7 +225,11 @@ test("overrides can set title, why and fix after import stamps", () => {
   ];
   const applied = m.applyOverrides(items, {
     items: {
-      E70: { title: "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage" },
+      E70: {
+        title: "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage",
+        fix: "Take the page out of test, match the landing copy to the ad claims, and capture the lead flow in DevTools. Owner: Apply + Compliance.",
+        owner: "Apply + Compliance",
+      },
       E163: { why: "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.", fix: "Add App Store and Google Play links, and add inlinks from home or /how-it-works/." },
       E170: { fix: "Owner to decide after verification" },
     },
@@ -233,8 +237,29 @@ test("overrides can set title, why and fix after import stamps", () => {
   assert.deepEqual(applied.sort(), ["E163", "E170", "E70"]);
   assert.match(items[0].title, /fbcfos/);
   assert.equal(items[0].id, "E70");
+  assert.match(items[0].fix, /Take the page out of test/);
+  assert.equal(items[0].owner, "Apply + Compliance");
+  assert.equal(items[0].why, "old");
   assert.match(items[1].why, /no App Store or Google Play link/);
   assert.match(items[1].fix, /Add App Store and Google Play links/);
   assert.equal(items[2].fix, "Owner to decide after verification");
   assert.equal(items[2].why, "Funnel to curl next week.");
+});
+
+test("owner override survives Apply-hub matching and the row stays on the hub", () => {
+  const crawl = new Map();
+  const item = {
+    id: "E70",
+    brand: "fdr",
+    urls: ["https://apply.freedomdebtrelief.com/fbcfos"],
+    owner: "Apply",
+    match: undefined,
+  };
+  m.matchEvidenceItem(item, crawl);
+  assert.deepEqual(item.match.nodes, ["hub:fdr:apply"]);
+  assert.equal(item.owner, "Apply");
+  m.applyOverrides([item], { items: { E70: { owner: "Apply + Compliance" } } });
+  assert.equal(item.owner, "Apply + Compliance");
+  assert.deepEqual(item.match.nodes, ["hub:fdr:apply"]);
+  assert.equal(item.brand, "fdr");
 });

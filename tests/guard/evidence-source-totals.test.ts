@@ -87,7 +87,7 @@ describe("guard: evidence source totals", () => {
     for (const id of ids) {
       const row = doc.items.find((i) => i.id === id)!;
       expect(row.brand).toBe("fdr");
-      expect(row.owner).toBe("Apply");
+      expect(row.owner).toBe(id === "E70" ? "Apply + Compliance" : "Apply");
       expect(row.match.kind).toBe("site-wide");
       expect(row.match.nodes).toEqual(["hub:fdr:apply"]);
     }
