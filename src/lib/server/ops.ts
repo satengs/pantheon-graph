@@ -87,3 +87,29 @@ export const runPsi = createServerFn({ method: "POST" })
     const score = Math.round((json.lighthouseResult?.categories?.performance?.score ?? 0) * 100);
     return { ok: true as const, performance: score };
   });
+
+
+export const previewFramePolicy = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    if (typeof data !== "string" || !data.startsWith("http")) {
+      throw new Error("url required");
+    }
+    return data;
+  })
+  .handler(async ({ data: url }) => {
+    const { allowsFraming } = await import("@/lib/studio/frame-policy");
+    try {
+      const ctrl = AbortSignal.timeout(8_000);
+      let res = await fetch(url, { method: "HEAD", headers: FETCH_HEADERS, redirect: "follow", signal: ctrl });
+      if (res.status === 405 || res.status === 501 || res.status === 403) {
+        res = await fetch(url, { method: "GET", headers: FETCH_HEADERS, redirect: "follow", signal: AbortSignal.timeout(8_000) });
+        try { res.body?.cancel(); } catch { /* ignore */ }
+      }
+      const xfo = res.headers.get("x-frame-options");
+      const csp = res.headers.get("content-security-policy") ?? res.headers.get("content-security-policy-report-only");
+      return { ok: true as const, allowed: allowsFraming(xfo, csp), status: res.status };
+    } catch {
+      // If we cannot read headers, do not leave a broken frame — treat as blocked.
+      return { ok: false as const, allowed: false, status: 0 };
+    }
+  });

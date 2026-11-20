@@ -272,7 +272,12 @@ export const useStudio = create<StudioState>((set, get) => ({
         issueDrawerOpen: true,
         selectedIssueId: issueId,
         selectedFindingId: findingId,
-        drawerPageUrl: opts?.pageUrl ?? s.drawerPageUrl,
+        drawerPageUrl:
+          opts && "pageUrl" in opts
+            ? opts.pageUrl ?? null
+            : opts?.issueId && opts.issueId !== s.selectedIssueId
+              ? null
+              : s.drawerPageUrl,
         selectedNodeId: issueId ? `issue:${issueId}` : findingId ? null : s.selectedNodeId,
         selectedState: null,
       };

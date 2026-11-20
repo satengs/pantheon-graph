@@ -19,10 +19,13 @@ describe("guard: evidence source totals", () => {
     expect([totals.critical, totals.high, totals.medium, totals.low]).toEqual([8, 10, 3, 0]);
   });
 
-  test("to-verify and unverified are the Scout pending rows plus Googlebot", () => {
+  // Data change pending sign-off (Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep):
+  // MS02/MS04 moved to confirmed; new to-verify rows are E163 and E170; MS03 stays to-verify;
+  // E146 stays the only unverified row. Parent/brand tags below are the new real values.
+  test("to-verify and unverified are the new Nov 20 rows plus MS03 and Googlebot", () => {
     expect(queue.toVerify).toBe(3);
     expect(queue.unverified).toBe(1);
-    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["MS02", "MS03", "MS04"]);
+    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["E163", "E170", "MS03"]);
     expect(doc.items.find((i) => i.verification === "unverified")?.id).toBe("E146");
   });
 
@@ -32,6 +35,9 @@ describe("guard: evidence source totals", () => {
     expect(gap.flags?.gap).toBe(true);
     expect(gap.scope).toBe("gap, no page");
     expect(gap.urls).toEqual([]);
+    expect(gap.verification).toBe("confirmed");
+    expect(gap.severity).toBe("medium");
+    expect(gap.title).toMatch(/no dedicated statistics URL in any sitemap/i);
     expect(idx.forBrand("fdr")?.items.some((i) => i.id === "MS04")).toBe(true);
     expect(idx.forBrand("achieve")?.items.some((i) => i.id === "MS04")).toBe(true);
     expect(idx.forBrand("bills")?.items.some((i) => i.id === "MS04")).toBe(true);
@@ -58,9 +64,13 @@ describe("guard: evidence source totals", () => {
     expect(roll?.items.map((i) => i.id).sort()).toEqual(["MS01", "MS02", "MS03", "MS04", "MS05"]);
   });
 
-  test("parent evidence label is Evidence 165 · 10 critical after Apply remaps", () => {
+  test("parent and brand evidence labels after the Nov 20 brief (data change pending sign-off)", () => {
     const idx = buildEvidenceIndex(doc);
-    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 165 · 10 critical");
+    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 167 · 13 critical");
+    expect(evidenceLabel(idx.forBrand("fdr")?.items)?.full).toBe("Evidence 122 · 8 critical");
+    expect(evidenceLabel(idx.forBrand("achieve")?.items)?.full).toBe("Evidence 44 · 4 critical");
+    expect(evidenceLabel(idx.forBrand("bills")?.items)?.full).toBe("Evidence 8 · 1 critical");
+    expect(evidenceLabel(idx.forHub("fdr", "apply")?.items)?.full).toBe("Evidence 10 · 1 critical");
   });
 
   test("every unmapped row has a visible reason (none expected after Apply remap)", () => {
@@ -77,7 +87,7 @@ describe("guard: evidence source totals", () => {
     for (const id of ids) {
       const row = doc.items.find((i) => i.id === id)!;
       expect(row.brand).toBe("fdr");
-      expect(row.owner).toBe("Apply");
+      expect(row.owner).toBe(id === "E70" ? "Apply + Compliance" : "Apply");
       expect(row.match.kind).toBe("site-wide");
       expect(row.match.nodes).toEqual(["hub:fdr:apply"]);
     }
@@ -87,13 +97,14 @@ describe("guard: evidence source totals", () => {
     expect(hub?.items.some((i) => i.id === "E70" && i.severity === "critical")).toBe(true);
   });
 
-  test("E133 sits on the FDR brand, not Achieve, and is Funnel-confirmed high", () => {
+  test("E133 sits on the FDR brand, not Achieve, and stays Funnel-confirmed High", () => {
     const row = doc.items.find((i) => i.id === "E133")!;
     expect(row.brand).toBe("fdr");
     expect(row.match.kind).toBe("site-wide");
     expect(row.match.nodes).toEqual(["brand:fdr"]);
     expect(row.severity).toBe("high");
-    expect(row.severityBasis).toMatch(/Funnel Fix 2026-11-12 \(WR-FF-03\) impact: high/);
+    expect(row.verification).toBe("confirmed");
+    expect(row.severityBasis).toMatch(/Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
     const idx = buildEvidenceIndex(doc);
     expect(idx.forBrand("fdr")?.items.some((i) => i.id === "E133")).toBe(true);
     expect(idx.forBrand("achieve")?.items.some((i) => i.id === "E133")).toBe(false);
@@ -101,16 +112,24 @@ describe("guard: evidence source totals", () => {
 
   test("Funnel-confirmed rows take Funnel impact; to-verify and unverified stay Unrated", () => {
     const confirmed = doc.items.filter((i) => (i.confirmations ?? []).includes("funnel-fix"));
-    expect(confirmed.length).toBe(20);
+    expect(confirmed.length).toBe(22);
     for (const i of confirmed) {
       expect(i.verification).toBe("confirmed");
       expect(i.severity).not.toBe("unrated");
-      expect(i.severityBasis).toMatch(/Funnel Fix 2026-11-12/);
+      // E133 keeps Funnel High; the brief P0 is a note on severityBasis, not a severity upgrade.
+      if (i.id === "E133") {
+        expect(i.severity).toBe("high");
+        expect(i.severityBasis).toMatch(/Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
+        continue;
+      }
+      expect(i.severityBasis).toMatch(/Funnel Fix 2026-11-1[29]/);
     }
     expect(doc.items.filter((i) => i.verification === "to_verify").every((i) => i.severity === "unrated")).toBe(true);
     const bot = doc.items.find((i) => i.id === "E146")!;
     expect(bot.verification).toBe("unverified");
     expect(bot.severity).toBe("unrated");
+    expect(bot.match.nodes).toEqual(["brand:fdr", "brand:achieve", "brand:bills"]);
+    expect(bot.scope).toMatch(/Shared across FDR, Achieve and Bills; counted once at the parent/);
   });
 
   test("UI strings contain no personal names or box paths", () => {

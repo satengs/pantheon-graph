@@ -149,17 +149,23 @@ export function Inspector() {
           ) : null}
           {node.count != null && node.kind !== "page" ? (
             <p className="text-sm text-muted" data-testid="inspector-page-count">
-              {node.count.toLocaleString()} pages
-              {node.kind === "product" || node.kind === "glossary" ? (
-                <span className="text-subtle">
-                  {" · "}
-                  {node.shown
-                    ? node.shown < node.count
-                      ? `${node.shown} of ${node.count.toLocaleString()} shown on the graph`
-                      : "all shown on the graph"
-                    : "none shown — double-click the hub to show pages"}
-                </span>
-              ) : null}
+              {node.count === 0 && (evRoll?.count ?? 0) > 0
+                ? `Off-crawl · ${evRoll!.count} findings`
+                : (
+                  <>
+                    {node.count.toLocaleString()} pages
+                    {node.kind === "product" || node.kind === "glossary" ? (
+                      <span className="text-subtle">
+                        {" · "}
+                        {node.shown
+                          ? node.shown < node.count
+                            ? `${node.shown} of ${node.count.toLocaleString()} shown on the graph`
+                            : "all shown on the graph"
+                          : "none shown — double-click the hub to show pages"}
+                      </span>
+                    ) : null}
+                  </>
+                )}
             </p>
           ) : null}
         </Fold>
