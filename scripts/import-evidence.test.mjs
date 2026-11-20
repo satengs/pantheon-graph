@@ -225,7 +225,7 @@ test("overrides can set title, why and fix after import stamps", () => {
   ];
   const applied = m.applyOverrides(items, {
     items: {
-      E70: { title: "apply.freedomdebtrelief.com/fbcfos is a test landing and is missing the Meta “$280 per month” claim" },
+      E70: { title: "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage" },
       E163: { why: "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.", fix: "Add App Store and Google Play links, and add inlinks from home or /how-it-works/." },
       E170: { fix: "Owner to decide after verification" },
     },

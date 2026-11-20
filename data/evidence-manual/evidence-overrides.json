@@ -30,7 +30,7 @@
         "nodes": [
           "brand:fdr"
         ],
-        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) \u2014 rolled up to the FDR brand"
+        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
       },
       "whySuffix": "The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account.",
       "severity": "high",
@@ -56,7 +56,7 @@
       "fix": "Owner to decide after verification"
     },
     "E70": {
-      "title": "apply.freedomdebtrelief.com/fbcfos is a test landing and is missing the Meta \u201c$280 per month\u201d claim"
+      "title": "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage"
     }
   }
 }
