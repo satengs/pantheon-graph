@@ -152,7 +152,6 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
               <mark className="ev-mark">{primaryQuote}</mark>
             </p>
           ) : null}
-          <EvidenceShot url={primary} label={primaryQuote || view.page.path} />
           <LivePreview url={live} pageUrl={primary} />
         </section>
       ) : null}
