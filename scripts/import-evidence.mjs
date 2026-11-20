@@ -464,7 +464,7 @@ function loadManualFiles() {
   if (!fs.existsSync(MANUAL_DIR)) return [];
   return fs
     .readdirSync(MANUAL_DIR)
-    .filter((f) => f.endsWith(".json") && !/confirmations|overrides/i.test(f))
+    .filter((f) => f.endsWith(".json") && !/confirmations|overrides|brief-row-merges/i.test(f))
     .sort()
     .map((f) => ({ file: path.join(MANUAL_DIR, f), doc: JSON.parse(fs.readFileSync(path.join(MANUAL_DIR, f), "utf8")) }));
 }
@@ -538,10 +538,178 @@ export function mergeManual(items) {
   return { added, skipped };
 }
 
-function loadConfirmationMap() {
-  const f = path.join(MANUAL_DIR, "funnel-fix-confirmations-2026-11-12.json");
-  if (!fs.existsSync(f)) return null;
-  return JSON.parse(fs.readFileSync(f, "utf8"));
+function loadConfirmationMaps() {
+  if (!fs.existsSync(MANUAL_DIR)) return [];
+  return fs
+    .readdirSync(MANUAL_DIR)
+    .filter((f) => /^funnel-fix-confirmations-.*\.json$/i.test(f))
+    .sort()
+    .map((f) => JSON.parse(fs.readFileSync(path.join(MANUAL_DIR, f), "utf8")));
+}
+
+export function loadBriefMerges() {
+  if (!fs.existsSync(MANUAL_DIR)) return [];
+  return fs
+    .readdirSync(MANUAL_DIR)
+    .filter((f) => /^brief-row-merges-.*\.json$/i.test(f))
+    .sort()
+    .map((f) => JSON.parse(fs.readFileSync(path.join(MANUAL_DIR, f), "utf8")));
+}
+
+function unionUrls(a = [], b = []) {
+  const seen = new Set((a ?? []).map(urlKey));
+  const out = [...(a ?? [])];
+  for (const u of b ?? []) {
+    const k = urlKey(u);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(u);
+  }
+  return out;
+}
+
+function appendRef(it, ref) {
+  it.refs = it.refs ?? [];
+  if (ref && !it.refs.includes(ref)) it.refs.push(ref);
+}
+
+function appendSource(it, src) {
+  it.sources = it.sources ?? [];
+  if (src && !it.sources.includes(src)) it.sources.push(src);
+}
+
+function applyOneMerge(target, src, spec, asOf) {
+  target.lastSeen = [target.lastSeen, src?.lastSeen, asOf].filter(Boolean).sort().at(-1);
+  if (target.firstSeen && target.lastSeen) target.daysOpen = daysBetween(target.firstSeen, target.lastSeen);
+  appendSource(target, "evidence-brief");
+  if (spec.refsOnly) {
+    if (src) {
+      for (const r of src.refs ?? []) appendRef(target, r);
+    }
+    return;
+  }
+  if (src) {
+    target.urls = unionUrls(target.urls, src.urls);
+    for (const r of src.refs ?? []) appendRef(target, r);
+    appendSource(target, "evidence-brief");
+    if (src.status && target.status !== "fixed") target.status = src.status;
+    // Keep the target's own statusText. A later merged row may mention an
+    // unverified side note (row 156 lead-on-load) that must not relabel E59.
+  }
+  if (Array.isArray(spec.addUrls)) target.urls = unionUrls(target.urls, spec.addUrls);
+  if (spec.title) target.title = spec.title;
+  if (spec.why) target.why = spec.why;
+  if (spec.fix) target.fix = spec.fix;
+  if (spec.whySuffix && !(target.why ?? "").includes(spec.whySuffix)) {
+    const base = (target.why ?? "").replace(/\s*$/, "");
+    const sep = !base ? "" : /[.!?]$/.test(base) ? " " : ". ";
+    target.why = `${base}${sep}${spec.whySuffix}`;
+  }
+  if (spec.keepScope) target.scope = spec.keepScope;
+  if (spec.flags) target.flags = { ...(target.flags ?? {}), ...spec.flags };
+  if (spec.match) target.match = spec.match;
+  if (spec.verification) {
+    target.verification = spec.verification;
+    if (spec.verificationNote) target.verificationNote = spec.verificationNote;
+  }
+  if (spec.severity && SEV_RANK[spec.severity]) {
+    target._pendingSeverity = spec.severity;
+    if (spec.severityBasis) target._pendingSeverityBasis = spec.severityBasis;
+  }
+}
+
+/** Apply brief-declared severities after Funnel stamps, upgrading but never downgrading. */
+export function applyPendingBriefSeverities(items) {
+  const applied = [];
+  for (const it of items) {
+    const sev = it._pendingSeverity;
+    const basis = it._pendingSeverityBasis;
+    delete it._pendingSeverity;
+    delete it._pendingSeverityBasis;
+    if (!sev || !SEV_RANK[sev]) continue;
+    if (it.verification === "unverified" || it.verification === "to_verify") continue;
+    const next = worseSev(it.severity, sev);
+    if (next !== it.severity) {
+      it.severity = next;
+      if (basis) it.severityBasis = basis;
+    }
+    applied.push({ id: it.id, to: it.severity });
+  }
+  return applied;
+}
+
+/** Fold brief rows into existing evidence ids (dedupe). Skip context/peer rows. */
+export function applyBriefMerges(items, packs = loadBriefMerges()) {
+  const index = new Map(items.map((i) => [i.id, i]));
+  const removed = new Set();
+  const merged = [];
+  const skipped = [];
+  for (const pack of packs) {
+    const asOf = pack.asOf;
+    const briefRef = asOf ? `Evidence Brief ${asOf}` : "";
+    const skip = new Set((pack.skipRows ?? []).map(String));
+    const mergedRows = new Set();
+    for (const spec of pack.merges ?? []) {
+      const fromId = `E${spec.fromRow}`;
+      const src = index.get(fromId);
+      const into = spec.into ?? [];
+      const also = spec.also ?? [];
+      let ok = false;
+      const applyTo = (id, full) => {
+        const target = index.get(id);
+        if (!target) return false;
+        if (full) applyOneMerge(target, src, spec, asOf);
+        else {
+          target.lastSeen = [target.lastSeen, src?.lastSeen, asOf].filter(Boolean).sort().at(-1);
+          if (target.firstSeen && target.lastSeen) target.daysOpen = daysBetween(target.firstSeen, target.lastSeen);
+          appendSource(target, "evidence-brief");
+        }
+        if (briefRef) appendRef(target, briefRef);
+        return true;
+      };
+      for (const id of into) if (applyTo(id, !spec.refsOnly)) ok = true;
+      for (const id of also) if (applyTo(id, false)) ok = true;
+      if (ok && src) {
+        removed.add(fromId);
+        mergedRows.add(String(spec.fromRow));
+        merged.push({ from: fromId, into: [...into, ...also] });
+      } else if (ok) {
+        mergedRows.add(String(spec.fromRow));
+        merged.push({ from: fromId, into: [...into, ...also] });
+      }
+    }
+    for (const row of skip) {
+      if (mergedRows.has(row)) continue;
+      const id = `E${row}`;
+      if (index.get(id)) {
+        removed.add(id);
+        skipped.push(id);
+      }
+    }
+  }
+  const next = items.filter((i) => !removed.has(i.id));
+  items.length = 0;
+  items.push(...next);
+  return { merged, skipped, removed: [...removed] };
+}
+
+/** New brief rows that were not merged and are not yet confirmed stay "to verify". */
+export function markNewRowsToVerify(items, asOf) {
+  const marked = [];
+  for (const it of items) {
+    if (it.firstSeen !== asOf) continue;
+    if (it.verification === "confirmed" || it.verification === "unverified") continue;
+    it.verification = "to_verify";
+    it.verificationNote = it.verificationNote ?? `To verify — first reported in Evidence Brief ${asOf}`;
+    if (it.verification !== "confirmed") {
+      it.severity = "unrated";
+      it.severityBasis = it.severityBasis && /P0|impact/i.test(it.severityBasis)
+        ? "unrated until Funnel Fix confirms; brief severity is held"
+        : "unrated until confirmed";
+    }
+    marked.push(it.id);
+  }
+  return marked;
 }
 
 export const SEV_RANK = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -559,53 +727,57 @@ export function worseSev(a, b) {
  * funnel-fix-highlights-2026-11-17.json). To-verify and unverified rows stay Unrated.
  * When one row maps to more than one Funnel item, the worse impact is kept.
  */
-export function applyConfirmations(items) {
-  const map = loadConfirmationMap();
+export function applyConfirmations(items, maps = loadConfirmationMaps()) {
   const index = new Map(items.map((i) => [i.id, i]));
   const stamped = { confirmed: [], unverified: [], missing: [], severities: [] };
-  if (!map) return stamped;
-  const acc = new Map(); // id → { sev, codes, prior }
-  for (const row of map.confirmed ?? []) {
-    for (const id of row.evidenceIds ?? []) {
-      const it = index.get(id);
-      if (!it) {
-        stamped.missing.push(id);
-        continue;
+  if (!maps.length) return stamped;
+  const acc = new Map(); // id → { sev, codes, prior, asOf }
+  for (const map of maps) {
+    const asOf = map.asOf ?? "2026-11-12";
+    for (const row of map.confirmed ?? []) {
+      for (const id of row.evidenceIds ?? []) {
+        const it = index.get(id);
+        if (!it) {
+          stamped.missing.push(id);
+          continue;
+        }
+        if (!it.confirmations.includes("funnel-fix")) it.confirmations.push("funnel-fix");
+        it.verification = "confirmed";
+        it.verificationNote = `Confirmed by Funnel Fix ${asOf} (${row.funnel})`;
+        if (!stamped.confirmed.includes(id)) stamped.confirmed.push(id);
+        if (row.impact && SEV_RANK[row.impact] && it.verification !== "to_verify") {
+          const cur = acc.get(id) ?? { sev: null, codes: [], prior: it.severity, asOf };
+          if (!cur.codes.includes(row.funnel)) cur.codes.push(row.funnel);
+          cur.sev = worseSev(cur.sev, row.impact);
+          cur.asOf = asOf;
+          acc.set(id, cur);
+        }
       }
-      if (!it.confirmations.includes("funnel-fix")) it.confirmations.push("funnel-fix");
-      it.verification = "confirmed";
-      it.verificationNote = `Confirmed by Funnel Fix 2026-11-12 (${row.funnel})`;
-      stamped.confirmed.push(id);
-      if (row.impact && SEV_RANK[row.impact] && it.verification !== "to_verify") {
-        const cur = acc.get(id) ?? { sev: null, codes: [], prior: it.severity };
-        if (!cur.codes.includes(row.funnel)) cur.codes.push(row.funnel);
-        cur.sev = worseSev(cur.sev, row.impact);
-        acc.set(id, cur);
+    }
+    for (const row of map.unverified ?? []) {
+      for (const id of row.evidenceIds ?? []) {
+        const it = index.get(id);
+        if (!it) {
+          stamped.missing.push(id);
+          continue;
+        }
+        it.verification = "unverified";
+        it.verificationNote = row.verificationNote ?? "unverified: needs Search Console or Cloudflare access";
+        if (!stamped.unverified.includes(id)) stamped.unverified.push(id);
+        // Funnel may record an impact, but unverified rows stay Unrated.
       }
     }
   }
   for (const [id, cur] of acc) {
     const it = index.get(id);
     if (!it || !cur.sev) continue;
+    const prior = it.severity;
     it.severity = cur.sev;
     it.severityBasis =
       cur.codes.length > 1
-        ? `Funnel Fix 2026-11-12 (${cur.codes.join(", ")}; worst impact: ${cur.sev})`
-        : `Funnel Fix 2026-11-12 (${cur.codes[0]}) impact: ${cur.sev}`;
-    stamped.severities.push({ id, from: cur.prior, to: cur.sev, codes: cur.codes });
-  }
-  for (const row of map.unverified ?? []) {
-    for (const id of row.evidenceIds ?? []) {
-      const it = index.get(id);
-      if (!it) {
-        stamped.missing.push(id);
-        continue;
-      }
-      it.verification = "unverified";
-      it.verificationNote = row.verificationNote ?? "unverified: needs Search Console or Cloudflare access";
-      stamped.unverified.push(id);
-      // Funnel may record an impact, but unverified rows stay Unrated.
-    }
+        ? `Funnel Fix ${cur.asOf} (${cur.codes.join(", ")}; worst impact: ${cur.sev})`
+        : `Funnel Fix ${cur.asOf} (${cur.codes[0]}) impact: ${cur.sev}`;
+    stamped.severities.push({ id, from: prior, to: it.severity, codes: cur.codes });
   }
   return stamped;
 }
@@ -947,8 +1119,15 @@ function main() {
 
   const manual = mergeManual(items);
   annotateSources(items);
+  const merges = applyBriefMerges(items);
   const overridden = applyOverrides(items);
   const stamped = applyConfirmations(items);
+  const briefSev = applyPendingBriefSeverities(items);
+  const newToVerify = markNewRowsToVerify(items, asOf);
+  // Unverified rows (Googlebot / Cloudflare) never pick up a brief P0.
+  for (const it of items) {
+    if (it.verification === "unverified") it.severity = "unrated";
+  }
   sanitizeUiText(items);
   assertCleanUiText(items);
 
@@ -1025,6 +1204,10 @@ function main() {
     confirmationMissing: stamped.missing,
     overridesApplied: overridden,
     funnelSeverities: stamped.severities,
+    mergedRows: merges.merged,
+    skippedRows: merges.skipped,
+    briefSeverities: briefSev,
+    newToVerify,
   };
   const doc = {
     version: 1,

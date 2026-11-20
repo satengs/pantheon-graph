@@ -33,13 +33,12 @@ describe("guard: evidence labels", () => {
     for (const t of r.tags) assert.match(t, LABEL);
   });
 
-  // Data change pending sign-off: Apply-host rows now roll up to the FDR Apply hub,
-  // so all 165 rows are on-graph and all 10 criticals (including E70) count at the parent.
-  // Was 'Evidence 84 · 4 critical' on the 2026-10-19 lock, then 'Evidence 135 · 5 critical',
-  // then 'Evidence 155 · 9 critical' before the Apply remap.
-  test("snapshot: parent reads 'Evidence 165 · 10 critical'", async () => {
+  // Data change pending sign-off: Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep.
+  // Was 'Evidence 165 · 10 critical' on 32c692f (#42). New real value is 167 rows / 14 critical
+  // (MS02, MS01, E137, E133 upgraded; E163 and E170 added).
+  test("snapshot: parent reads 'Evidence 167 · 14 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 165 · 10 critical");
+    assert.equal(t, "Evidence 167 · 14 critical");
   });
 
   test("collapsed Apply hub shows a critical evidence marker and an off-crawl findings label", async () => {
