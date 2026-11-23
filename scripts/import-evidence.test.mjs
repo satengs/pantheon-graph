@@ -134,3 +134,132 @@ test("applyOverrides can force a brand and a pre-set match", () => {
   assert.deepEqual(items[0].match.nodes, ["brand:fdr"]);
   assert.match(items[0].why, /advertiser account/);
 });
+
+test("applyBriefMerges folds a repeat into the existing row and drops the brief id", () => {
+  const items = [
+    { id: "MS02", title: "pending sweep", why: "old", urls: ["https://www.achieve.com/learn/a"], refs: ["Evidence Brief 2026-11-16"], sources: ["scout"], verification: "to_verify", severity: "unrated", firstSeen: "2026-11-16", lastSeen: "2026-11-16", status: "open" },
+    { id: "E158", title: "693 of 710", why: "new sweep", urls: ["https://www.achieve.com/learn/b"], refs: ["Evidence Brief 2026-11-20"], sources: ["evidence-brief"], verification: "reported", severity: "critical", firstSeen: "2026-11-20", lastSeen: "2026-11-20", status: "open" },
+    { id: "E155", title: "peer context", urls: [], refs: ["Evidence Brief 2026-11-20"], sources: ["evidence-brief"], verification: "reported", firstSeen: "2026-11-20", lastSeen: "2026-11-20" },
+  ];
+  const pack = {
+    asOf: "2026-11-20",
+    skipRows: ["155"],
+    merges: [
+      { fromRow: "158", into: ["MS02"], also: [], title: "dev.Achieve.com on 693 of 710 /learn articles (one template)", why: "confirmed sweep" },
+    ],
+  };
+  const out = m.applyBriefMerges(items, [pack]);
+  assert.deepEqual(out.removed.sort(), ["E155", "E158"]);
+  assert.equal(items.map((i) => i.id).join(), "MS02");
+  assert.equal(items[0].title, "dev.Achieve.com on 693 of 710 /learn articles (one template)");
+  assert.equal(items[0].lastSeen, "2026-11-20");
+  assert.ok(items[0].refs.includes("Evidence Brief 2026-11-16"));
+  assert.ok(items[0].refs.includes("Evidence Brief 2026-11-20"));
+  assert.ok(items[0].sources.includes("scout") && items[0].sources.includes("evidence-brief"));
+});
+
+test("later Funnel confirmations upgrade existing rows and never invent a WR-FF id", () => {
+  const items = [
+    { id: "MS02", confirmations: [], verification: "to_verify", severity: "unrated", severityBasis: "pending" },
+    { id: "MS04", confirmations: [], verification: "to_verify", severity: "unrated" },
+    { id: "E133", confirmations: [], verification: "reported", severity: "critical", severityBasis: "Evidence Brief 2026-11-20 P0" },
+    { id: "E146", confirmations: [], verification: "reported", severity: "unrated" },
+  ];
+  const maps = [
+    {
+      asOf: "2026-11-12",
+      confirmed: [{ funnel: "WR-FF-03", evidenceIds: ["E133"], impact: "high" }],
+      unverified: [{ evidenceIds: ["E146"], verificationNote: "needs dashboard access" }],
+    },
+    {
+      asOf: "2026-11-19",
+      confirmed: [
+        { funnel: "learn-template-sweep", evidenceIds: ["MS02"], impact: "critical" },
+        { funnel: "statistics-gap-sweep", evidenceIds: ["MS04"], impact: "medium" },
+      ],
+    },
+  ];
+  const stamped = m.applyConfirmations(items, maps);
+  m.applyPendingBriefSeverities(items);
+  // Funnel Fix's confirmed High stands. An override records the brief P0 as a note.
+  m.applyOverrides(items, {
+    items: {
+      E133: {
+        severity: "high",
+        severityBasis: "Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High",
+      },
+    },
+  });
+  assert.equal(items.find((i) => i.id === "MS02").verification, "confirmed");
+  assert.equal(items.find((i) => i.id === "MS02").severity, "critical");
+  assert.equal(items.find((i) => i.id === "MS04").severity, "medium");
+  assert.equal(items.find((i) => i.id === "E133").severity, "high", "Funnel Fix High is not upgraded by the brief P0");
+  assert.match(items.find((i) => i.id === "E133").severityBasis, /Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
+  assert.equal(items.find((i) => i.id === "E146").verification, "unverified");
+  assert.equal(items.every((i) => !i.id.startsWith("WR-FF")), true);
+  assert.ok(stamped.confirmed.includes("MS02"));
+});
+
+test("markNewRowsToVerify only flips unconfirmed firstSeen=asOf rows; unverified stay put", () => {
+  const items = [
+    { id: "E163", firstSeen: "2026-11-20", verification: "reported", severity: "critical", severityBasis: "P0 in brief" },
+    { id: "E141", firstSeen: "2026-11-13", lastSeen: "2026-11-20", verification: "reported", severity: "unrated" },
+    { id: "E146", firstSeen: "2026-11-13", verification: "unverified", severity: "unrated" },
+    { id: "MS02", firstSeen: "2026-11-16", verification: "confirmed", severity: "critical" },
+  ];
+  const marked = m.markNewRowsToVerify(items, "2026-11-20");
+  assert.deepEqual(marked, ["E163"]);
+  assert.equal(items[0].verification, "to_verify");
+  assert.equal(items[0].severity, "unrated");
+  assert.equal(items[1].verification, "reported");
+  assert.equal(items[2].verification, "unverified");
+  assert.equal(items[3].verification, "confirmed");
+});
+
+
+test("overrides can set title, why and fix after import stamps", () => {
+  const items = [
+    { id: "E70", title: "Same P0, new dest + new claim", why: "old", fix: "Apply + Compliance" },
+    { id: "E163", title: "mobile-app", why: "", fix: "", verification: "to_verify", severity: "unrated" },
+    { id: "E170", title: "CNBC", why: "Funnel to curl next week.", fix: "", verification: "to_verify", severity: "unrated" },
+  ];
+  const applied = m.applyOverrides(items, {
+    items: {
+      E70: {
+        title: "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage",
+        fix: "Take the page out of test, match the landing copy to the ad claims, and capture the lead flow in DevTools. Owner: Apply + Compliance.",
+        owner: "Apply + Compliance",
+      },
+      E163: { why: "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.", fix: "Add App Store and Google Play links, and add inlinks from home or /how-it-works/." },
+      E170: { fix: "Owner to decide after verification" },
+    },
+  });
+  assert.deepEqual(applied.sort(), ["E163", "E170", "E70"]);
+  assert.match(items[0].title, /fbcfos/);
+  assert.equal(items[0].id, "E70");
+  assert.match(items[0].fix, /Take the page out of test/);
+  assert.equal(items[0].owner, "Apply + Compliance");
+  assert.equal(items[0].why, "old");
+  assert.match(items[1].why, /no App Store or Google Play link/);
+  assert.match(items[1].fix, /Add App Store and Google Play links/);
+  assert.equal(items[2].fix, "Owner to decide after verification");
+  assert.equal(items[2].why, "Funnel to curl next week.");
+});
+
+test("owner override survives Apply-hub matching and the row stays on the hub", () => {
+  const crawl = new Map();
+  const item = {
+    id: "E70",
+    brand: "fdr",
+    urls: ["https://apply.freedomdebtrelief.com/fbcfos"],
+    owner: "Apply",
+    match: undefined,
+  };
+  m.matchEvidenceItem(item, crawl);
+  assert.deepEqual(item.match.nodes, ["hub:fdr:apply"]);
+  assert.equal(item.owner, "Apply");
+  m.applyOverrides([item], { items: { E70: { owner: "Apply + Compliance" } } });
+  assert.equal(item.owner, "Apply + Compliance");
+  assert.deepEqual(item.match.nodes, ["hub:fdr:apply"]);
+  assert.equal(item.brand, "fdr");
+});

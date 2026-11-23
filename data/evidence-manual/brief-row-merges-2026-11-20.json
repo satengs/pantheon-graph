@@ -1,0 +1,149 @@
+{
+  "asOf": "2026-11-20",
+  "note": "Evidence Brief 20 Nov 2026 (rows 154\u2013173). Deduplicate the 16 Pantheon issue-list items against existing Nov 13 and MS01\u2013MS05 rows. Context/peer spine rows are skipped. Do not hand-edit evidence.json.",
+  "skipRows": [
+    "155",
+    "164",
+    "168",
+    "169",
+    "171",
+    "172"
+  ],
+  "merges": [
+    {
+      "fromRow": "154",
+      "into": [
+        "E133"
+      ],
+      "also": [
+        "E134"
+      ],
+      "verification": "confirmed",
+      "whySuffix": "Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML.",
+      "note": "Funnel Fix's confirmed High stands. The brief P0 is recorded as a note via evidence-overrides.json, not a severity upgrade."
+    },
+    {
+      "fromRow": "156",
+      "into": [
+        "E59"
+      ],
+      "also": [
+        "E70",
+        "E98",
+        "E151"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: Meta FDR traffic still lands on test + noindex apply hosts (/fb, /fbcfos, /366o1, /espanol), 0 claim support. Lead-on-load stays unverified (no browser capture)."
+    },
+    {
+      "fromRow": "157",
+      "into": [
+        "E135"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: /heloc hero 'as low as 5.75% APR' is back next to disclosure 6.10%\u201315.17%; '5 days' vs '10-12 business days' on the same page."
+    },
+    {
+      "fromRow": "158",
+      "into": [
+        "MS02"
+      ],
+      "also": [
+        "E137",
+        "MS01"
+      ],
+      "title": "dev.Achieve.com on 693 of 710 /learn articles (one template)",
+      "why": "Funnel Fix's 19 Nov 2026 sitemap sweep confirmed Organization JSON-LD alternateName \"dev.Achieve.com\" and telephone \"85288\" on 693 of 710 live /learn articles (one template; 17 clean hub pages; 8 sitemap URLs 301). Money pages /heloc, /home-equity-loan, /personal-loans stay clean in JSON-LD. This is a site-wide Achieve /learn template issue \u2014 do not expand every /learn page.",
+      "fix": "Fix the /learn template values (alternateName and telephone).",
+      "addUrls": [
+        "https://www.achieve.com/learn/"
+      ]
+    },
+    {
+      "fromRow": "159",
+      "into": [
+        "MS01"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: dateModified 2026-08-08 vs updatedAt 2026-11-17; still no NY Fed hook."
+    },
+    {
+      "fromRow": "160",
+      "into": [
+        "MS04"
+      ],
+      "title": "No dedicated statistics URL in any sitemap",
+      "why": "Funnel Fix's 19 Nov 2026 sitemap sweep confirmed there is no dedicated statistics URL in any sitemap (FDR 1,140 URLs, bills 2,162, Achieve 0 \"stat\" URLs). Credit-card-debt pages were not re-read, so a statistics section elsewhere is possible. Topic coverage exists. This is a content gap, not a missing graph node \u2014 do not invent a URL.",
+      "fix": "Create a citable statistics page (or a clearly linked cluster) on at least one of the three brands.",
+      "keepScope": "gap, no page"
+    },
+    {
+      "fromRow": "161",
+      "into": [
+        "E141"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: the estimates disclaimer removed Nov 10 is back as of Nov 17. Needs change control on disclosures."
+    },
+    {
+      "fromRow": "162",
+      "into": [
+        "D8"
+      ],
+      "addUrls": [
+        "https://www.freedomdebtrelief.com/learn/debt-solutions/6-steps-to-finally-get-rid-of-your-debt/",
+        "https://www.freedomdebtrelief.com/learn/debt-solutions/smart-ways-to-pay-off-student-loans/"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20 names the live pair: /learn/debt-solutions/6-steps-to-finally-get-rid-of-your-debt/ and /smart-ways-to-pay-off-student-loans/ \u2014 both 200, self-canonical, both in the sitemap."
+    },
+    {
+      "fromRow": "165",
+      "into": [
+        "E2",
+        "E21",
+        "E152"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: www /apply 301 still tags all /apply traffic utm_source=fdr_dm_valpak, so organic and direct visits are counted as Valpak print; landing is still a test + noindex apply host."
+    },
+    {
+      "fromRow": "166",
+      "into": [
+        "MS05"
+      ],
+      "also": [
+        "E83"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: /scam/ still has 0 impersonation / advance-fee block while affinity look-alikes run (brand-confusion risk, not a violation) and state cases grow."
+    },
+    {
+      "fromRow": "167",
+      "into": [
+        "E146"
+      ],
+      "verification": "unverified",
+      "verificationNote": "unverified: needs Search Console or Cloudflare access",
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "brand:fdr",
+          "brand:achieve",
+          "brand:bills"
+        ]
+      },
+      "whySuffix": "Evidence Brief 2026-11-20: a Nov 18 Cloudflare Community case shows AI-crawler Training=Block can also block Googlebot. FDR and Achieve declare Content-Signal ai-train=no; whether a Cloudflare Training=Block rule sits behind it is unverified and needs dashboard or GSC access."
+    },
+    {
+      "fromRow": "173",
+      "into": [
+        "E20",
+        "E113",
+        "E138"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20: classic P0s still open (my. 522, /login 307 to the homepage, LendingTree press 404).",
+      "refsOnly": true
+    },
+    {
+      "fromRow": "169",
+      "into": [
+        "MS03"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-20 (directional): audits.com still has Achieve missing from the eight brands ChatGPT names for \"best personal loans\" in the US."
+    }
+  ]
+}

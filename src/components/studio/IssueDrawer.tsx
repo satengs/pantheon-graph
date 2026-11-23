@@ -1,5 +1,5 @@
 import { SevPill } from "@/components/studio/SevTotals";
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { SourceChips } from "@/components/studio/StatusChips";
 import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
@@ -23,6 +23,7 @@ import { issueFitsFamily } from "@/lib/org/catalog";
 import { isHiddenUiCode } from "@/lib/studio/query";
 import { useStudio } from "@/store/studio";
 import { sectionHint, textFragmentUrl } from "@/lib/studio/text-fragment";
+import { previewFramePolicy } from "@/lib/server/ops";
 
 export function IssueDrawer() {
   const open = useStudio((s) => s.issueDrawerOpen);
@@ -136,8 +137,9 @@ export function IssueDrawer() {
 function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatIssueDetail>> }) {
   const quotes = view.evidence.quotes;
   const rows = view.evidence.proofRows.filter((row) => row.url && !quotes.some((c) => c.url === row.url));
-  const primary = quotes[0]?.url || view.page.url;
-  const primaryQuote = quotes[0]?.quote || "";
+  // Frame the selected page (drawer / view.page), not a leftover or a quote on a different URL.
+  const primary = view.page.url || quotes[0]?.url || "";
+  const primaryQuote = quotes.find((c) => c.url === primary)?.quote || quotes[0]?.quote || "";
   const live = textFragmentUrl(primary, primaryQuote);
 
   return (
@@ -150,20 +152,7 @@ function IssueDetailBody({ view }: { view: NonNullable<ReturnType<typeof formatI
               <mark className="ev-mark">{primaryQuote}</mark>
             </p>
           ) : null}
-          <EvidenceShot url={primary} label={primaryQuote || view.page.path} />
-          <iframe
-            title="Live page at this passage"
-            src={live}
-            className="mt-2 h-[380px] w-full rounded-md bg-bg shadow-[var(--shadow-border)]"
-          />
-          <a
-            href={live}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-fdr hover:underline"
-          >
-            Open at this passage <ExternalLink className="size-3" />
-          </a>
+          <LivePreview url={live} pageUrl={primary} />
         </section>
       ) : null}
 
@@ -312,6 +301,75 @@ function ProofPairs({ code }: { code?: string }) {
         </section>
       ) : null}
     </div>
+  );
+}
+
+function LivePreview({ url, pageUrl }: { url: string; pageUrl: string }) {
+  const [blocked, setBlocked] = useState(false);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBlocked(false);
+    void previewFramePolicy({ data: pageUrl || url })
+      .then((r) => {
+        if (!cancelled && r && r.allowed === false) setBlocked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setBlocked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [url, pageUrl]);
+
+  if (blocked) {
+    const href = pageUrl || url;
+    return (
+      <div
+        className="mt-2 flex h-[220px] w-full flex-col items-center justify-center gap-2 rounded-md bg-bg px-4 text-center shadow-[var(--shadow-border)]"
+        data-testid="preview-blocked"
+      >
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-mono text-sm text-fdr hover:underline"
+        >
+          Preview blocked by site · open page <ExternalLink className="size-3" />
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <iframe
+        ref={frameRef}
+        title="Live page at this passage"
+        src={url}
+        className="mt-2 h-[380px] w-full rounded-md bg-bg shadow-[var(--shadow-border)]"
+        onError={() => setBlocked(true)}
+        onLoad={() => {
+          const frame = frameRef.current;
+          if (!frame) return;
+          try {
+            const href = frame.contentWindow?.location.href ?? "";
+            if (!href || href === "about:blank") setBlocked(true);
+          } catch {
+            /* cross-origin: framed successfully */
+          }
+        }}
+      />
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-fdr hover:underline"
+      >
+        Open at this passage <ExternalLink className="size-3" />
+      </a>
+    </>
   );
 }
 

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "asOf": "2026-11-19",
+  "note": "Cross-check only. Funnel Fix's 19 Nov 2026 sitemap sweep confirmed two existing items: the Achieve /learn template leak (693 of 710 URLs) and the statistics-page gap (no dedicated statistics URL in any sitemap). This map stamps those rows as confirmed and applies the sweep's severity. It does not import Funnel Fix rows as a new source. Googlebot / Cloudflare (E146) stays unverified.",
+  "confirmed": [
+    {
+      "funnel": "learn-template-sweep",
+      "title": "dev.Achieve.com + telephone 85288 on 693 of 710 /learn articles, one template",
+      "evidenceIds": ["MS02", "E137", "MS01"],
+      "impact": "critical",
+      "impactSource": "Funnel Fix sitemap sweep 2026-11-19"
+    },
+    {
+      "funnel": "statistics-gap-sweep",
+      "title": "No dedicated statistics URL in any sitemap (FDR, Achieve, bills)",
+      "evidenceIds": ["MS04"],
+      "impact": "medium",
+      "impactSource": "Funnel Fix sitemap sweep 2026-11-19 (P2)"
+    }
+  ],
+  "unverified": []
+}
