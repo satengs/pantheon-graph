@@ -3,6 +3,7 @@ import {
   GitBranch,
   LayoutGrid,
   ListChecks,
+  ListTodo,
   MapPin,
   Scale,
   Settings2,
@@ -24,6 +25,7 @@ import { Backlog } from "@/components/studio/Backlog";
 import { Rules } from "@/components/studio/Rules";
 import { ConfigPanel } from "@/components/studio/ConfigPanel";
 import { Gate } from "@/components/studio/Gate";
+import { TasksPanel } from "@/components/studio/TasksPanel";
 import { StatesPanel } from "@/components/studio/StatesPanel";
 import { Companies } from "@/components/studio/Companies";
 import { HSplit } from "@/components/studio/SplitPane";
@@ -44,6 +46,7 @@ const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string
   { id: "validation", label: "Validation", icon: LayoutGrid, hint: "Table of website validation points." },
   { id: "rules", label: "Rules", icon: Scale, hint: "The checks the gate runs." },
   { id: "issues", label: "Issues", icon: ListChecks, hint: "Categories, graph edges, SERP/AI payoff, validate a page." },
+  { id: "tasks", label: "Tasks", icon: ListTodo, hint: "Semantic HTML audit tasks from the live page crawl." },
   { id: "gate", label: "Gate", icon: Shield, hint: "Pass or fail before publish." },
   { id: "config", label: "Config", icon: Settings2, hint: "Where data lives and brand JSON." },
 ];
@@ -51,7 +54,7 @@ const TABS: { id: StudioTab; label: string; icon: typeof GitBranch; hint: string
 const TAB_GROUPS: { label: string; items: typeof TABS }[] = [
   { label: "Family", items: byId("companies") },
   { label: "Map", items: byId("graph", "states") },
-  { label: "Work", items: byId("issues", "validation", "gate", "rules") },
+  { label: "Work", items: byId("issues", "tasks", "validation", "gate", "rules") },
   { label: "Setup", items: byId("config") },
 ];
 
@@ -59,7 +62,7 @@ function byId(...ids: StudioTab[]) {
   return ids.map((id) => TABS.find((t) => t.id === id)!);
 }
 
-const URL_VIEWS = ["graph", "issues", "validation", "rules", "gate", "states", "config", "companies"] as const;
+const URL_VIEWS = ["graph", "issues", "tasks", "validation", "rules", "gate", "states", "config", "companies"] as const;
 
 export function Studio() {
   const tab = useStudio((s) => s.tab);
@@ -142,6 +145,7 @@ export function Studio() {
         u.searchParams.set("view", t);
         if (t === "issues" && id) u.searchParams.set("issue", id);
         else u.searchParams.delete("issue");
+        if (t !== "tasks") u.searchParams.delete("task");
         if (u.href !== window.location.href) window.history.replaceState(window.history.state, "", u.href);
       } catch {
         /* ignore */
@@ -226,6 +230,7 @@ export function Studio() {
       {tab === "states" ? <StatesPanel /> : null}
       {tab === "validation" ? <ValidationTable /> : null}
       {tab === "rules" ? <Rules /> : null}
+      {tab === "tasks" ? <TasksPanel /> : null}
       {tab === "gate" ? <Gate /> : null}
       {tab === "config" ? <ConfigPanel /> : null}
     </section>
