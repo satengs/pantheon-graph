@@ -171,6 +171,7 @@ export function uniqueCategories(tasks: SemanticTask[]): string[] {
 
 export function categoryLabel(cat: string): string {
   if (!cat) return cat;
+  if (cat === "ssr") return "SSR";
   return cat
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))

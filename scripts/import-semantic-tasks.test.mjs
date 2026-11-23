@@ -18,17 +18,27 @@ test("hubDrawn only allows canvas hubs", () => {
   assert.equal(graphNodeId("bills", "heloc"), "hub:bills:heloc");
 });
 
-test("imported snapshot keeps all 31 findings and the advertised totals", () => {
+test("imported snapshot keeps every audit finding and the advertised totals", () => {
   const doc = JSON.parse(fs.readFileSync(path.join(repo, "public/data/semantic-tasks.json"), "utf8"));
   const audit = JSON.parse(fs.readFileSync("/workspace/semantic-html-audit-2026-11-24.json", "utf8"));
-  assert.equal(doc.tasks.length, 31);
+  assert.equal(doc.tasks.length, audit.tasks.length);
   assert.equal(doc.pagesAudited, 156);
   assert.equal(doc.htmlParsed, 151);
   assert.equal(doc.nonHtmlCount, 5);
-  assert.equal(doc.auditedAt, "2026-11-24T03:13:55+04:00");
-  assert.deepEqual(doc.totals.byBrand, { fdr: 12, achieve: 13, bills: 6 });
-  assert.deepEqual(doc.totals.bySeverity, { critical: 4, high: 8, medium: 19, low: 0 });
-  assert.equal(doc.tasks.filter((t) => t.severity === "critical").length, 4);
+  assert.equal(doc.auditedAt, audit.meta.audited_at);
+  assert.match(doc.auditedAtLabel, /^Audited in live Chromium DOM · 156 URLs checked$/);
+  assert.deepEqual(doc.totals.byBrand, {
+    fdr: audit.totals.by_brand.fdr.tasks,
+    achieve: audit.totals.by_brand.achieve.tasks,
+    bills: audit.totals.by_brand.bills.tasks,
+  });
+  assert.deepEqual(doc.totals.bySeverity, {
+    critical: audit.totals.by_severity.critical ?? 0,
+    high: audit.totals.by_severity.high ?? 0,
+    medium: audit.totals.by_severity.medium ?? 0,
+    low: audit.totals.by_severity.low ?? 0,
+  });
+  assert.equal(doc.tasks.filter((t) => t.severity === "critical").length, doc.totals.bySeverity.critical);
   const srcIds = audit.tasks.map((t) => t.id);
   assert.deepEqual(doc.tasks.map((t) => t.id), srcIds);
   for (let i = 0; i < srcIds.length; i++) {
@@ -59,7 +69,7 @@ test("transformAudit is a pure import of the audit plus graph ids", () => {
   const audit = JSON.parse(fs.readFileSync("/workspace/semantic-html-audit-2026-11-24.json", "utf8"));
   const crawl = JSON.parse(fs.readFileSync(path.join(repo, "public/data/crawl.json"), "utf8"));
   const doc = transformAudit(audit, crawl);
-  assert.equal(doc.tasks.length, 31);
+  assert.equal(doc.tasks.length, audit.tasks.length);
   assert.equal(urlKey("https://www.achieve.com/heloc/"), "achieve.com/heloc");
 });
 
@@ -82,4 +92,23 @@ test("classifyService maps URL paths onto canonical service teams", () => {
   assert.equal(taskServiceOwner(["https://www.freedomdebtrelief.com/dashboard/disclosures/"]), "Dashboard");
   assert.equal(taskServiceOwner(["https://www.bills.com/heloc", "https://www.bills.com/loans/x"]), "Loans");
   assert.equal(taskServiceOwner(["https://www.achieve.com/", "https://www.achieve.com/heloc"]), "Public");
+});
+
+test("achieve.com/learn reports 3 visible rendered h1s, not a missing h1", () => {
+  const doc = JSON.parse(fs.readFileSync(path.join(repo, "public/data/semantic-tasks.json"), "utf8"));
+  assert.equal(doc.tasks.some((t) => t.id === "achieve-missing-h1"), false);
+  const multiple = doc.tasks.find((t) => t.id === "achieve-multiple-h1");
+  assert.ok(multiple, "expected achieve-multiple-h1");
+  const learn = "https://www.achieve.com/learn";
+  assert.ok(multiple.affectedUrls.some((u) => u.url.replace(/\/$/, "") === learn));
+  assert.match(multiple.problem, /Financial Education/);
+  assert.match(multiple.problem, /Money & Lifestyle/);
+  assert.match(multiple.problem, /Insights & News/);
+  assert.match(multiple.problem, /injected client-side/);
+  const ex = multiple.examples.find((e) => e.url.replace(/\/$/, "") === learn);
+  assert.ok(ex, "learn should be a representative example");
+  assert.deepEqual(ex.h1Texts ?? ex.h1_texts, ["Financial Education", "Money & Lifestyle", "Insights & News"]);
+  const ssr = doc.tasks.find((t) => t.id === "achieve-ssr-injected-h1");
+  assert.ok(ssr);
+  assert.ok(ssr.affectedUrls.some((u) => u.url.replace(/\/$/, "") === learn));
 });

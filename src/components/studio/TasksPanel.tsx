@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -74,12 +74,16 @@ export function TasksPanel() {
   const [statuses, setStatuses] = useState<Record<string, TaskWorkStatus>>({});
   const [openId, setOpenId] = useState<string | null>(null);
   const [urlLimit, setUrlLimit] = useState(8);
+  const didInitOpen = useRef(false);
 
   useEffect(() => {
     setStatuses(loadTaskStatuses());
     try {
       const id = new URLSearchParams(window.location.search).get("task");
-      if (id) setOpenId(id);
+      if (id) {
+        setOpenId(id);
+        didInitOpen.current = true;
+      }
     } catch {
       /* ignore */
     }
@@ -105,9 +109,20 @@ export function TasksPanel() {
 
   useEffect(() => {
     if (!visible.length) return;
-    if (openId && visible.some((t) => t.id === openId)) return;
-    setOpenId(visible[0]!.id);
-    setUrlLimit(8);
+    if (openId && visible.some((t) => t.id === openId)) {
+      didInitOpen.current = true;
+      return;
+    }
+    // First load (or a deep link): open the first visible card once.
+    if (!didInitOpen.current) {
+      setOpenId(visible[0]!.id);
+      didInitOpen.current = true;
+      setUrlLimit(8);
+      return;
+    }
+    // After the user collapses the open card, stay collapsed. If filters
+    // hide the open task, close it rather than forcing another card open.
+    if (openId && !visible.some((t) => t.id === openId)) setOpenId(null);
   }, [visible, openId]);
 
   function setStatus(id: string, status: TaskWorkStatus) {

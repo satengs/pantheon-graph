@@ -227,6 +227,8 @@ export function transformAudit(audit, crawl) {
       snippet: e.snippet ?? "",
       countOnPage: e.count_on_page ?? null,
       variant: e.variant ?? null,
+      ...(e.h1_texts || e.h1Texts ? { h1Texts: e.h1_texts || e.h1Texts } : {}),
+      ...(e.client_injected || e.clientInjected ? { clientInjected: true } : {}),
     }));
     const variants = (t.variants ?? []).map((v) =>
       typeof v === "string" ? { variant: v } : { variant: v.variant, pages: v.pages ?? null },
@@ -266,7 +268,7 @@ export function transformAudit(audit, crawl) {
 
   return {
     auditedAt: meta.audited_at,
-    auditedAtLabel: "Audited 24 Nov 2026 · 156 URLs checked",
+    auditedAtLabel: `Audited in live Chromium DOM · ${meta.pages_selected ?? totals.pages_selected ?? 0} URLs checked`,
     pagesAudited: meta.pages_selected ?? totals.pages_selected ?? 0,
     htmlParsed: meta.pages_ok ?? totals.pages_ok ?? 0,
     nonHtmlCount: meta.pages_failed ?? totals.pages_failed ?? 0,
@@ -305,7 +307,7 @@ function main() {
   const crawl = JSON.parse(fs.readFileSync(CRAWL, "utf8"));
   const doc = transformAudit(audit, crawl);
   assertCleanText(doc);
-  if (doc.tasks.length !== 31) throw new Error(`expected 31 tasks, got ${doc.tasks.length}`);
+  if (!doc.tasks.length) throw new Error("expected imported tasks, got 0");
   fs.writeFileSync(OUT, JSON.stringify(doc, null, 2) + "\n");
   const { totals } = doc;
   console.log(
