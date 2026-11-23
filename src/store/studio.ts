@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { BrandId } from "@/lib/graph/types";
 import type { GraphOrg } from "@/lib/graph/model";
 import { pickIssueForFamily } from "@/lib/org/catalog";
+import type { SourceFilter } from "@/lib/graph/evidence";
 
 export type StudioTab =
   | "graph"
@@ -94,6 +95,8 @@ type StudioState = {
   /** Hubs auto-opened on load (open rule on the hub or its pages); set by the graph canvas. */
   issueHubs: string[] | undefined;
   setIssueHubs: (ids: string[]) => void;
+  issueSourceFilter: SourceFilter;
+  setIssueSourceFilter: (v: SourceFilter) => void;
   setIncludeParent: (v: boolean) => void;
   setGraphInspectorOpen: (v: boolean) => void;
   setParentSlug: (v: string) => void;
@@ -296,6 +299,8 @@ export const useStudio = create<StudioState>((set, get) => ({
   issueHubs: undefined,
   setIssueHubs: (ids) =>
     set((s) => (s.issueHubs && s.issueHubs.join("|") === ids.join("|") ? s : { issueHubs: ids })),
+  issueSourceFilter: "both",
+  setIssueSourceFilter: (issueSourceFilter) => set({ issueSourceFilter }),
   toggleCluster: (id, showingNow) =>
     set((s) => {
       const expanded = s.graphFocusStack.includes(id);

@@ -14,6 +14,7 @@ export type ProductId =
   | "credit-cards"
   | "student-loans"
   | "insurance"
+  | "apply"
   | "other";
 
 export type CrawlKind = "g" | "a" | "u" | "r" | "p";
@@ -119,6 +120,7 @@ export const PRODUCT_LABEL: Record<ProductId, string> = {
   "credit-cards": "Credit cards",
   "student-loans": "Student loans",
   insurance: "Insurance",
+  apply: "Apply",
   other: "Other",
 };
 

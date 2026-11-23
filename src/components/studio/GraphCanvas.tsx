@@ -9,6 +9,8 @@ import { setIncludeParent as persistIncludeParent } from "@/lib/server/orgs";
 import type { GraphEdge, GraphNode } from "@/lib/graph/types";
 import { RULES } from "@/data/rules-seed";
 import { familyIssues, severityTotals, useFamilyIssues } from "@/lib/studio/issue-source";
+import { evidenceMatchesSource, familyEvidenceQueue, filterEvBySource, showsEvidence, showsPantheon } from "@/lib/graph/evidence-filter";
+import { NeutralChip, SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
 import { SevTotals } from "@/components/studio/SevTotals";
 import {
   buildSeverityIndex,
@@ -264,8 +266,8 @@ function layoutOf(
   return pos;
 }
 
-function fitView(pts: Pt[], pad: number) {
-  if (!pts.length) return { x: -560, y: -340, w: 1120, h: 720 };
+function fitView(pts: Pt[], pad: number, bottomExtra = 0) {
+  if (!pts.length) return { x: -560, y: -340, w: 1120, h: 720 + bottomExtra };
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -277,7 +279,7 @@ function fitView(pts: Pt[], pad: number) {
     maxY = Math.max(maxY, p.y);
   }
   const w = Math.max(640, maxX - minX + pad * 2);
-  const h = Math.max(420, maxY - minY + pad * 2);
+  const h = Math.max(420, maxY - minY + pad * 2) + bottomExtra;
   return { x: r2(minX - pad), y: r2(minY - pad), w: r2(w), h: r2(h) };
 }
 
@@ -290,15 +292,17 @@ const SEV_CHIPS: { id: EvSeverityFilter; label: string }[] = [
 ];
 /** Only Evidence Brief rows can be "unrated" (brief gave no P0 / severity wording). */
 const UNKNOWN_CHIP = { id: "unrated" as EvSeverityFilter, label: "Unrated" };
-const SOURCE_CHIPS: { id: SourceFilter; label: string }[] = [
-  { id: "pantheon", label: "Pantheon" },
-  { id: "evidence", label: "Evidence" },
-  { id: "both", label: "Both" },
-];
-
 function clip(t: string, n: number) {
   const s = t.replace(/\s+/g, " ").trim();
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+}
+
+/** Brief wording in tooltips is quoted so source text like visit_id=undefined is not read as an app bug. */
+function quoteSource(text: string): string {
+  const t = text.trim();
+  if (!t) return t;
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("“") && t.endsWith("”"))) return t;
+  return `“${t}”`;
 }
 
 /** Brand-pair L2 edge bends above the brand row, clear of the S01/S06 issue rail. */
@@ -344,10 +348,11 @@ export function GraphCanvas() {
   const attachedRuleCodes = useStudio((s) => s.attachedRuleCodes);
   const parentSlug = useStudio((s) => s.parentSlug);
   const [sevFilter, setSevFilter] = useState<EvSeverityFilter>("all");
-  const [source, setSource] = useState<SourceFilter>("both");
+  const source = useStudio((st) => st.issueSourceFilter);
+  const setSource = useStudio((st) => st.setIssueSourceFilter);
   const [unmappedOpen, setUnmappedOpen] = useState(false);
-  const showPantheon = source !== "evidence";
-  const showEvidence = source !== "pantheon";
+  const showPantheon = showsPantheon(source);
+  const showEvidence = showsEvidence(source);
   /** Pantheon rules never carry "unrated", so that chip matches none of them. */
   const pMatch = (s: Severity) => sevFilter !== "unrated" && severityMatches(s, sevFilter);
   const pRoll = (r: SevRollup | null) => (sevFilter === "unrated" ? null : filterRollup(r, sevFilter));
@@ -493,6 +498,7 @@ export function GraphCanvas() {
 
   const evDoc = useEvidence();
   const evIndex = useMemo(() => buildEvidenceIndex(evDoc, brand), [evDoc, brand]);
+  const evQueue = useMemo(() => familyEvidenceQueue(evDoc?.items), [evDoc]);
   const evByNode = useMemo(() => {
     const m = new Map<string, EvRollup | null>();
     for (const n of graph.nodes) {
@@ -501,10 +507,10 @@ export function GraphCanvas() {
       else if ((n.kind === "product" || n.kind === "glossary") && n.brand && n.product) r = evIndex.forHub(n.brand, n.product);
       else if (n.kind === "brand" && n.brand) r = evIndex.forBrand(n.brand);
       else if (n.kind === "parent") r = evIndex.forAll();
-      m.set(n.id, r);
+      m.set(n.id, filterEvBySource(r, source));
     }
     return m;
-  }, [graph.nodes, evIndex]);
+  }, [graph.nodes, evIndex, source]);
 
   // Legend examples come from the same roll-ups and the same label function as the canvas tags,
   // so the legend and the tags can't disagree. Nothing until evidence.json has loaded.
@@ -639,7 +645,8 @@ export function GraphCanvas() {
       const b = pb ? { x: pb.x + ob.x, y: pb.y + ob.y } : undefined;
       if (a && b) pts.push({ ...brandArc(a, b).apex, y: brandArc(a, b).apex.y - 14 });
     }
-    return fitView(pts, full ? 160 : 128);
+    // Extra bottom space so Fit doesn't sit clusters under the canvas legend.
+    return fitView(pts, full ? 160 : 128, full ? 140 : 110);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.nodes, base, full, fitTick, ready, sevIndex]);
 
@@ -797,6 +804,7 @@ export function GraphCanvas() {
         data-testid="severity-bar"
       >
         <SevTotals totals={familyTotals} label="Open rules" testId="graph-sev-totals" />
+        <ToVerifyNote toVerify={evQueue.toVerify} unverified={evQueue.unverified} testId="graph-to-verify" />
         <span className="pl-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Filter</span>
         {SEV_CHIPS.map((c) => {
           const on = sevFilter === c.id;
@@ -839,30 +847,14 @@ export function GraphCanvas() {
           </button>
         ) : null}
         <span className="ml-2 pr-1 text-[10px] uppercase tracking-wide text-subtle">Source</span>
-        <span role="radiogroup" aria-label="Issue source" className="inline-flex gap-1" data-testid="source-bar">
-          {SOURCE_CHIPS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="radio"
-              aria-checked={source === c.id}
-              data-source-chip={c.id}
-              onClick={() => {
-                setSource(c.id);
-                if (c.id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
-              }}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${source === c.id ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
-            >
-              {c.id === "pantheon" ? (
-                <span className="inline-block size-3 rounded-full border-2 border-current" aria-hidden />
-              ) : c.id === "evidence" ? (
-                <span className="inline-block size-3 rounded-[2px] border-2 border-current" aria-hidden />
-              ) : null}
-              {c.label}
-            </button>
-          ))}
-        </span>
-        {showEvidence && evDoc ? (
+        <SourceBar
+          value={source}
+          onChange={(id) => {
+            setSource(id);
+            if (id === "pantheon" && sevFilter === "unrated") setSevFilter("all");
+          }}
+        />
+        {showEvidence && evDoc && evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length ? (
           <button
             type="button"
             data-testid="unmapped-toggle"
@@ -871,7 +863,7 @@ export function GraphCanvas() {
             className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] ${unmappedOpen ? "bg-accent text-accent-fg" : "bg-raised text-muted"}`}
             title="Evidence rows whose URL is not a node in this graph"
           >
-            Unmapped {evIndex.unmapped.filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)).length}
+            Unmapped {evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length}
           </button>
         ) : null}
         <span className="hidden pl-1 text-[10px] text-subtle xl:inline">
@@ -1279,6 +1271,26 @@ export function GraphCanvas() {
               const badgeW = small ? 6 + badgeText.length * 4.5 : 9 + badgeText.length * 6.3;
               const bx = n.kind === "glossary" ? r * 0.55 : r * 0.62;
               const by = n.kind === "glossary" ? -r * 1.15 : -r * 0.9;
+              // Outlined / dashed critical ring on collapsed hubs with critical evidence.
+              // Distinct from the solid Pantheon ring+pill. Caption is evidenceLabel().full —
+              // never a bare "C1" severity pill. data-sev stays unset (Pantheon only).
+              const evCritMarker =
+                !sev &&
+                (n.kind === "product" || n.kind === "glossary") &&
+                (n.shown ?? 0) === 0 &&
+                evLbl?.worst?.sev === "critical";
+              const evCritLabel = evCritMarker ? evLbl!.full : "";
+              const px = Math.max(pxPerUnit, 0.2);
+              const evRingExtra = Math.max(4, 5.5 / px);
+              const evRingStroke = Math.max(3, 3.2 / px);
+              const evHalo = evRingStroke * 1.65;
+              const evDash = `${r2(evRingStroke * 2.4)} ${r2(evRingStroke * 1.6)}`;
+              // Cap type so the caption stays under the hub at Fit and does not spill into a neighbour.
+              const evBadgeFs = Math.max(8, Math.min(11, 7 / px));
+              const evLabelH = evBadgeFs * 1.7;
+              const evLabelW = evBadgeFs * (0.7 + evCritLabel.length * 0.62);
+              const evLx = -evLabelW / 2;
+              const evLy = r + Math.max(24, evRingExtra + 6);
               return (
                 <g
                   key={n.id}
@@ -1449,7 +1461,7 @@ export function GraphCanvas() {
                           {n.kind === "page" || label.length <= 16 ? label : `${label.slice(0, 15)}…`}
                         </text>
                       )}
-                      {(n.kind === "product" || n.kind === "glossary") && n.count && (n.shown ?? 0) < n.count ? (
+                      {(n.kind === "product" || n.kind === "glossary") && n.count != null && (n.count === 0 || (n.shown ?? 0) < n.count) ? (
                         <text
                           data-testid="hub-shown"
                           y={r + 21}
@@ -1462,7 +1474,11 @@ export function GraphCanvas() {
                           fontSize={7}
                           fontFamily="IBM Plex Sans, sans-serif"
                         >
-                          {n.shown ? `${n.shown} of ${n.count.toLocaleString()} shown` : `${n.count.toLocaleString()} pages`}
+                          {n.shown
+                            ? `${n.shown} of ${n.count.toLocaleString()} shown`
+                            : n.count === 0 && (evr?.count ?? 0) > 0
+                              ? `Off-crawl · ${evr!.count} findings`
+                              : `${n.count.toLocaleString()} pages`}
                         </text>
                       ) : null}
                     </>
@@ -1502,6 +1518,49 @@ export function GraphCanvas() {
                         fontFamily="IBM Plex Sans, sans-serif"
                       >
                         {badgeText}
+                      </text>
+                    </g>
+                  ) : evCritMarker ? (
+                    <g
+                      pointerEvents="none"
+                      data-testid="ev-sev-marker"
+                      data-ev-sev-marker="critical"
+                      data-ev-sev-label={evCritLabel}
+                    >
+                      <circle
+                        r={r + evRingExtra}
+                        fill="none"
+                        stroke="#0b0c0e"
+                        strokeWidth={evHalo}
+                        strokeDasharray={evDash}
+                      />
+                      <circle
+                        r={r + evRingExtra}
+                        fill="none"
+                        stroke={SEVERITY_COLOR.critical}
+                        strokeWidth={evRingStroke}
+                        strokeDasharray={evDash}
+                      />
+                      <rect
+                        x={evLx}
+                        y={evLy}
+                        width={evLabelW}
+                        height={evLabelH}
+                        rx={1.5}
+                        fill={EV_TAG_FILL}
+                        stroke={SEVERITY_COLOR.critical}
+                        strokeWidth={evBadgeFs / 9}
+                      />
+                      <text
+                        x={evLx + evLabelW / 2}
+                        y={evLy + evBadgeFs * 1.18}
+                        textAnchor="middle"
+                        fill={SEVERITY_COLOR.critical}
+                        fontSize={evBadgeFs}
+                        fontWeight={600}
+                        fontFamily="IBM Plex Mono, monospace"
+                      >
+                        {evCritLabel}
                       </text>
                     </g>
                   ) : null}
@@ -1673,7 +1732,7 @@ export function GraphCanvas() {
                   <li key={i.id} className="border-t border-border pt-1">
                     <p className="font-medium">
                       <span style={{ color: EV_COLOR[i.severity] }}>{EV_LABEL[i.severity]}</span> ·{" "}
-                      {i.row != null ? `Row ${i.row}` : i.id} · {i.title}
+                      {i.row != null ? `Row ${i.row}` : i.id} · {quoteSource(i.title)}
                     </p>
                     <p className="text-subtle">
                       {i.owner} · {i.status}
@@ -1682,7 +1741,7 @@ export function GraphCanvas() {
                     {i.fix ? (
                       <p className="text-muted">
                         <span className="text-subtle">Fix </span>
-                        {clip(i.fix, 110)}
+                        {quoteSource(clip(i.fix, 110))}
                       </p>
                     ) : null}
                   </li>
@@ -1700,7 +1759,7 @@ export function GraphCanvas() {
       {unmappedOpen && showEvidence && evDoc ? (
         <div
           data-testid="unmapped-panel"
-          className="absolute right-3 top-3 z-30 flex max-h-[calc(100%-4.5rem)] w-[22rem] flex-col rounded-lg border border-border bg-bg shadow-[var(--shadow-border)]"
+          className="absolute bottom-28 right-3 top-3 z-30 flex w-[22rem] flex-col rounded-lg border border-border bg-bg shadow-[var(--shadow-border)]"
           onPointerDown={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >
@@ -1714,13 +1773,19 @@ export function GraphCanvas() {
             </button>
           </div>
           <div className="flex min-h-0 flex-col gap-1.5 overflow-y-auto p-2">
-            {evIndex.unmapped
-              .filter((i) => sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))
-              .slice()
-              .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
-              .map((i) => (
-                <EvidenceCard key={i.id} item={i} unmapped />
-              ))}
+            {evIndex.unmapped.filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter))).length ? (
+              evIndex.unmapped
+                .filter((i) => evidenceMatchesSource(i, source) && (sevFilter === "all" || filterEvRollup({ worst: i.severity, count: 1, pages: 0, items: [i] }, sevFilter)))
+                .slice()
+                .sort((a, b) => evRank(a.severity) - evRank(b.severity) || (a.row ?? 999) - (b.row ?? 999))
+                .map((i) => (
+                  <EvidenceCard key={i.id} item={i} unmapped />
+                ))
+            ) : (
+              <p className="px-1 py-3 text-xs text-subtle" data-testid="unmapped-empty">
+                No unmapped rows — every Evidence row sits on a brand or page.
+              </p>
+            )}
           </div>
         </div>
       ) : null}
@@ -1772,50 +1837,94 @@ export function GraphCanvas() {
           Fit
         </button>
       </div>
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wide text-subtle">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-accent" /> Parent
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-fdr" /> FDR
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-achieve" /> Achieve
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-bills" /> Bills
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-px w-3 bg-danger" /> Conflict
-        </span>
-        {showPantheon ? (
-          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-sev-pill">
-            <span
-              className="inline-flex h-4 items-center rounded-full px-1.5 text-[9px] font-bold text-[#0b0c0e]"
-              style={{ background: SEVERITY_COLOR.critical }}
-            >
-              C2 H1
+      <div
+        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-9rem)] flex-col gap-1 rounded-md bg-bg/95 px-2.5 py-2 text-[10px] uppercase tracking-wide text-subtle shadow-[var(--shadow-border)]"
+        data-testid="graph-legend"
+      >
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-accent" /> Parent
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-fdr" /> FDR
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-achieve" /> Achieve
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block size-2 rounded-full bg-bills" /> Bills
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span className="inline-block h-px w-3 bg-danger" /> Conflict
+          </span>
+          {showPantheon ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 normal-case tracking-normal" data-testid="legend-sev-pill">
+              <span
+                className="inline-flex h-4 items-center rounded-full px-1.5 text-[9px] font-bold text-[#0b0c0e]"
+                style={{ background: SEVERITY_COLOR.critical }}
+              >
+                C2 H1
+              </span>
+              = open Pantheon rules per severity (fill = worst)
             </span>
-            = open Pantheon rules per severity (fill = worst)
-          </span>
-        ) : null}
+          ) : null}
+          <span className="inline-flex shrink-0 items-center gap-1.5">Double-click cluster = pages</span>
+        </span>
         {showEvidence && evDoc && legendFull ? (
-          <span className="flex items-center gap-1.5 normal-case tracking-normal" data-testid="legend-evidence">
-            <EvTag text={legendFull.full} /> = {legendFull.count} Evidence Brief rows,{" "}
-            {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
-            {legendCompact ? (
-              <>
-                {" "}
-                · <EvTag text={legendCompact.compact.join(" / ")} /> on products / pages ={" "}
-                {legendCompact.worst
-                  ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
-                  : `${legendCompact.count} rows, none rated`}
-              </>
-            ) : null}
-            {pagesLegible ? "" : " · page tags show when zoomed in"}
+          <span
+            className="flex min-w-0 flex-col gap-1 normal-case tracking-normal"
+            data-testid="legend-evidence"
+          >
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              <EvTag text={legendFull.full} />
+              <span>
+                = {legendFull.count} Evidence Brief rows,{" "}
+                {legendFull.worst ? `worst rated: ${legendFull.worst.n} ${legendFull.worst.sev}` : "none rated"}
+              </span>
+              {legendCompact ? (
+                <>
+                  <span>·</span>
+                  <EvTag text={legendCompact.compact.join(" / ")} />
+                  <span>
+                    on products / pages ={" "}
+                    {legendCompact.worst
+                      ? `${legendCompact.count} rows, ${legendCompact.worst.n} ${legendCompact.worst.sev}`
+                      : `${legendCompact.count} rows, none rated`}
+                  </span>
+                </>
+              ) : null}
+              {pagesLegible ? null : <span className="shrink-0">· page tags show when zoomed in</span>}
+            </span>
+            <span className="text-subtle" data-testid="legend-shared-count">
+              Rows shared between brands count once at the parent.
+            </span>
+            <span className="flex flex-wrap items-center gap-1.5" data-testid="legend-ev-critical-ring">
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="shrink-0">
+                <circle
+                  cx="7"
+                  cy="7"
+                  r="5"
+                  fill="none"
+                  stroke={SEVERITY_COLOR.critical}
+                  strokeWidth="1.6"
+                  strokeDasharray="3 2"
+                />
+              </svg>
+              Outlined red = critical evidence finding, not counted in Pantheon C/H/M/L
+            </span>
+            <span className="flex flex-wrap items-center gap-1.5">
+              Evidence rows, including
+              <NeutralChip tone="to-verify" testId="legend-to-verify-chip">
+                ? to verify
+              </NeutralChip>
+              and
+              <NeutralChip tone="unverified" testId="legend-unverified-chip">
+                unverified
+              </NeutralChip>
+              , are not counted in Gate until confirmed.
+            </span>
           </span>
         ) : null}
-        <span className="flex items-center gap-1.5">Double-click cluster = pages</span>
       </div>
       </div>
     </div>
