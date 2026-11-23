@@ -38,8 +38,12 @@ test("imported snapshot keeps all 31 findings and the advertised totals", () => 
     assert.equal(t.problem, s.problem);
     assert.equal(t.reason, s.reason);
     assert.equal(t.fix, s.fix);
-    assert.equal(t.owner, s.owner);
+    assert.equal(t.sourceOwner, s.owner);
+    assert.ok(["Public", "Loans", "Apply", "Enroll", "Dashboard", "Login"].includes(t.owner), t.id + " " + t.owner);
     assert.equal(t.category, s.category);
+    if (/Accessibility/i.test(s.owner)) assert.ok(t.tags.includes("Accessibility"), t.id);
+    if (/SEO/i.test(s.owner)) assert.ok(t.tags.includes("SEO"), t.id);
+    if (s.owner === "Web Engineering") assert.deepEqual(t.tags, []);
     assert.equal(t.affectedUrls.length, s.affected_urls.length);
     assert.equal(t.examples.length, s.examples.length);
   }
@@ -57,4 +61,25 @@ test("transformAudit is a pure import of the audit plus graph ids", () => {
   const doc = transformAudit(audit, crawl);
   assert.equal(doc.tasks.length, 31);
   assert.equal(urlKey("https://www.achieve.com/heloc/"), "achieve.com/heloc");
+});
+
+import { classifyService, taskServiceOwner, disciplineTags } from "./import-semantic-tasks.mjs";
+
+test("classifyService maps URL paths onto canonical service teams", () => {
+  assert.equal(classifyService("https://apply.freedomdebtrelief.com/fb"), "Apply");
+  assert.equal(classifyService("https://www.freedomdebtrelief.com/apply"), "Apply");
+  assert.equal(classifyService("https://www.freedomdebtrelief.com/enroll/start"), "Enroll");
+  assert.equal(classifyService("https://www.freedomdebtrelief.com/login"), "Login");
+  assert.equal(classifyService("https://www.achieve.com/authors"), "Public");
+  assert.equal(classifyService("https://www.freedomdebtrelief.com/dashboard/disclosures/"), "Dashboard");
+  assert.equal(classifyService("https://www.achieve.com/heloc"), "Loans");
+  assert.equal(classifyService("https://www.bills.com/best/loans/best-personal-loans"), "Loans");
+  assert.equal(classifyService("https://www.bills.com/learn/mortgages/hamp"), "Loans");
+  assert.equal(classifyService("https://www.achieve.com/learn"), "Public");
+  assert.equal(disciplineTags("Web Engineering + Accessibility")[0], "Accessibility");
+  assert.equal(disciplineTags("Web Engineering + SEO")[0], "SEO");
+  assert.deepEqual(disciplineTags("Web Engineering"), []);
+  assert.equal(taskServiceOwner(["https://www.freedomdebtrelief.com/dashboard/disclosures/"]), "Dashboard");
+  assert.equal(taskServiceOwner(["https://www.bills.com/heloc", "https://www.bills.com/loans/x"]), "Loans");
+  assert.equal(taskServiceOwner(["https://www.achieve.com/", "https://www.achieve.com/heloc"]), "Public");
 });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import {
@@ -324,21 +324,36 @@ function TaskRow({
           type="button"
           onClick={onToggle}
           aria-expanded={expanded}
-          className="min-w-0 flex-1 text-left"
+          aria-label={expanded ? `Collapse ${task.title}` : `Expand ${task.title}`}
+          className="flex min-w-0 flex-1 items-start gap-2 text-left"
         >
+          <ChevronRight
+            className={cn(
+              "mt-0.5 size-4 shrink-0 text-subtle transition-transform duration-150",
+              expanded && "rotate-90",
+            )}
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <Pill className={BRAND_PILL[task.brand]}>{BRAND_FILTER_LABEL[task.brand]}</Pill>
             <Pill className={SEV_PILL[task.severity]}>
               {SEV_LETTER[task.severity]} {task.severity}
             </Pill>
             <span className="text-[11px] text-subtle">{categoryLabel(task.category)}</span>
-            <span className="text-[11px] text-subtle">· {task.owner}</span>
+            <span className="text-[11px] text-muted">{task.owner}</span>
+            {(task.tags ?? []).map((tag) => (
+              <span key={tag} className="inline-flex h-5 items-center rounded-sm bg-raised px-1.5 text-[10px] text-subtle">
+                {tag}
+              </span>
+            ))}
             <span className="text-[11px] tabular-nums text-muted">{task.scopeLabel}</span>
           </div>
           <h3 className="mt-1 text-sm text-fg [overflow-wrap:anywhere]">{task.title}</h3>
           <p className={cn("mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]", !expanded && "line-clamp-2")}>
             {task.problem}
           </p>
+          </div>
         </button>
         <label className="flex shrink-0 items-center gap-1.5 text-[11px] text-subtle">
           <span>Status</span>

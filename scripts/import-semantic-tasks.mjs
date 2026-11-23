@@ -2,7 +2,8 @@
 /**
  * Build public/data/semantic-tasks.json from the 24 Nov 2026 semantic HTML audit.
  * Keeps every finding. Maps affected URLs to graph node IDs (hub or brand).
- * Does not invent service owners — audit owners are kept as written.
+ * Service owners are mapped from URLs/hubs onto Public, Loans, Apply, Enroll,
+ * Dashboard, or Login. Accessibility / SEO from the audit are kept as tags.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -63,6 +64,101 @@ export function brandOfHost(url) {
   if (k === "achieve.com" || k.startsWith("achieve.com/")) return "achieve";
   if (k === "bills.com" || k.startsWith("bills.com/")) return "bills";
   return null;
+}
+
+export const SERVICE_OWNERS = ["Public", "Loans", "Apply", "Enroll", "Dashboard", "Login"];
+
+const LOAN_PREFIXES = [
+  "/personal-loans",
+  "/personal-loan",
+  "/heloc",
+  "/home-equity-loan",
+  "/home-equity",
+  "/home-loans",
+  "/home-loan",
+  "/loans",
+  "/best/loans",
+  "/rates/loans",
+  "/rates/home-equity",
+  "/reviews/loans",
+  "/acceleration-loan",
+  "/learn/personal-loans",
+  "/learn/home-equity-loans",
+  "/learn/home-equity",
+  "/learn/heloc",
+  "/learn/loans",
+  "/learn/mortgages",
+  "/mortgages",
+  "/tools/heloc-payment-calculator",
+  "/tools/heloc",
+];
+
+function pathMatches(path, prefix) {
+  const p = String(path ?? "/").toLowerCase().replace(/\/+$/, "") || "/";
+  const pre = prefix.toLowerCase().replace(/\/+$/, "");
+  return p === pre || p.startsWith(`${pre}/`);
+}
+
+function urlPath(url) {
+  try {
+    return new URL(url).pathname || "/";
+  } catch {
+    return String(url ?? "/");
+  }
+}
+
+function urlHost(url) {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/** Classify one URL into a canonical service team. */
+export function classifyService(url) {
+  const host = urlHost(url);
+  const path = urlPath(url);
+  if (/(^|\.)apply\./i.test(host) || pathMatches(path, "/apply")) return "Apply";
+  if (pathMatches(path, "/enroll")) return "Enroll";
+  if (
+    pathMatches(path, "/login") ||
+    pathMatches(path, "/signin") ||
+    pathMatches(path, "/sign-in") ||
+    pathMatches(path, "/sign_in") ||
+    pathMatches(path, "/auth")
+  ) {
+    return "Login";
+  }
+  if (pathMatches(path, "/dashboard") || pathMatches(path, "/portal") || /^my\./i.test(host)) return "Dashboard";
+  if (LOAN_PREFIXES.some((pre) => pathMatches(path, pre))) return "Loans";
+  return "Public";
+}
+
+/** Accessibility / SEO from the audit owner, not used as the primary Service owner. */
+export function disciplineTags(sourceOwner) {
+  const tags = [];
+  const s = String(sourceOwner ?? "");
+  if (/\bAccessibility\b/i.test(s)) tags.push("Accessibility");
+  if (/\bSEO\b/i.test(s)) tags.push("SEO");
+  return tags;
+}
+
+/**
+ * Primary service owner for a task: one service if every URL agrees; Loans only
+ * when the task is scoped to loan pages; Public when public/editorial/shell
+ * pages are in the set; otherwise a majority with a stable SERVICE_OWNERS tie-break.
+ */
+export function taskServiceOwner(urls) {
+  const votes = new Map();
+  for (const url of urls) {
+    const s = classifyService(url);
+    votes.set(s, (votes.get(s) ?? 0) + 1);
+  }
+  const services = [...votes.keys()];
+  if (services.length === 1) return services[0];
+  if (votes.has("Public")) return "Public";
+  return SERVICE_OWNERS.filter((s) => votes.has(s)).sort((a, b) => (votes.get(b) ?? 0) - (votes.get(a) ?? 0) || SERVICE_OWNERS.indexOf(a) - SERVICE_OWNERS.indexOf(b))[0] ?? "Public";
 }
 
 export function buildCrawlIndex(crawl) {
@@ -145,7 +241,9 @@ export function transformAudit(audit, crawl) {
       problem: t.problem,
       reason: t.reason,
       fix: t.fix,
-      owner: t.owner,
+      owner: taskServiceOwner((t.affected_urls ?? []).map((u) => u.url || u.requested_url)),
+      sourceOwner: t.owner,
+      tags: disciplineTags(t.owner),
       rule: t.rule,
       hubs: t.hubs ?? [],
       sections: t.sections ?? [],

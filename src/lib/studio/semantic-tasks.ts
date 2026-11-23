@@ -36,6 +36,8 @@ export type SemanticTask = {
   reason: string;
   fix: string;
   owner: string;
+  sourceOwner?: string;
+  tags: string[];
   rule: string;
   hubs: string[];
   sections: string[];
@@ -132,6 +134,7 @@ export function filterTasks(
       t.reason,
       t.fix,
       t.owner,
+      ...(t.tags ?? []),
       t.rule,
       t.category,
       t.scopeLabel,
@@ -153,8 +156,13 @@ export function sortTasks(tasks: SemanticTask[]): SemanticTask[] {
   });
 }
 
+const SERVICE_OWNER_ORDER = ["Public", "Loans", "Apply", "Enroll", "Dashboard", "Login"];
+
 export function uniqueOwners(tasks: SemanticTask[]): string[] {
-  return [...new Set(tasks.map((t) => t.owner))].sort((a, b) => a.localeCompare(b));
+  const present = new Set(tasks.map((t) => t.owner));
+  const known = SERVICE_OWNER_ORDER.filter((s) => present.has(s));
+  const extra = [...present].filter((s) => !SERVICE_OWNER_ORDER.includes(s)).sort((a, b) => a.localeCompare(b));
+  return [...known, ...extra];
 }
 
 export function uniqueCategories(tasks: SemanticTask[]): string[] {

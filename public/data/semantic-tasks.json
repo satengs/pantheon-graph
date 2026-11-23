@@ -77,7 +77,11 @@
       "problem": "An <a> contains a <button> (or another <a>), or a <button> contains an <a> or another <button>. Observed pattern: a>button:2 (35 pages), a>button:3 (5 pages), a>button:26 (1 pages), a>button:1 (1 pages).",
       "reason": "Nested interactive elements are invalid HTML and create competing click and keyboard targets, so assistive technology may activate the wrong control.",
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "nested-interactive",
       "hubs": [
         "consolidation",
@@ -635,7 +639,11 @@
       "problem": "An <input>, <select>, or <textarea> has no associated <label>, aria-label, or aria-labelledby. Observed pattern: input[type=text]×1 (10 pages), input[type=text]×4 (2 pages), input[type=text]×6, textarea×1 (1 pages), input[type=text]×3 (1 pages).",
       "reason": "Placeholder or adjacent text is not a programmatic name. Unlabelled fields fail WCAG 1.3.1, 2.5.3, and 4.1.2 and block users from completing lead or account forms.",
       "fix": "Associate a visible <label for=\"id\"> with each field, or wrap the control in a <label>. Do not rely on placeholder alone.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "form-control-missing-label",
       "hubs": [
         "consolidation",
@@ -856,7 +864,11 @@
       "problem": "An <a> contains a <button> (or another <a>), or a <button> contains an <a> or another <button>. Observed pattern: a>button:1 (10 pages).",
       "reason": "Nested interactive elements are invalid HTML and create competing click and keyboard targets, so assistive technology may activate the wrong control.",
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Loans",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "nested-interactive",
       "hubs": [
         "hel",
@@ -1028,7 +1040,11 @@
       "problem": "An <a> contains a <button> (or another <a>), or a <button> contains an <a> or another <button>. Observed pattern: a>button:8 (3 pages), a>button:9 (3 pages).",
       "reason": "Nested interactive elements are invalid HTML and create competing click and keyboard targets, so assistive technology may activate the wrong control.",
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "nested-interactive",
       "hubs": [
         "glossary",
@@ -1166,7 +1182,11 @@
       "problem": "A heading jumps more than one level, for example from h1 to h3 or from h2 to h4. Observed pattern: h1->h3 (13 pages), h1->h5 (3 pages), h2->h6 (1 pages), h3->h5 (1 pages).",
       "reason": "Skipped levels break the document outline and make heading navigation unpredictable for assistive technology (WCAG 1.3.1).",
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "skipped-heading-level",
       "hubs": [
         "consolidation",
@@ -1425,7 +1445,11 @@
       "problem": "The document body has no <h1> heading.",
       "reason": "The h1 is the page’s top-of-outline title. Without it, heading navigation and the visual hierarchy start at the wrong level (WCAG 1.3.1, 2.4.6).",
       "fix": "Give each template exactly one <h1> that matches the page title, and keep it visible (not replaced only by an image with no text alternative).",
-      "owner": "Web Engineering + SEO",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + SEO",
+      "tags": [
+        "SEO"
+      ],
       "rule": "missing-h1",
       "hubs": [
         "other"
@@ -1471,7 +1495,11 @@
       "problem": "One or more <img> elements have no alt attribute at all (this is different from decorative images that correctly use alt=\"\").",
       "reason": "Without alt, assistive technology may announce the file name or skip the image with no context. Content images fail WCAG 1.1.1.",
       "fix": "Add a short alt that describes the image’s purpose. Use alt=\"\" only for decorative images, and give nearby text or a figcaption the meaning if the image is redundant.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "img-missing-alt",
       "hubs": [
         "consolidation",
@@ -1696,7 +1724,11 @@
       "problem": "A heading jumps more than one level, for example from h1 to h3 or from h2 to h4. Observed pattern: h2->h5 (2 pages), h2->h4 (1 pages).",
       "reason": "Skipped levels break the document outline and make heading navigation unpredictable for assistive technology (WCAG 1.3.1).",
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Loans",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "skipped-heading-level",
       "hubs": [
         "heloc",
@@ -1788,7 +1820,11 @@
       "problem": "A heading jumps more than one level, for example from h1 to h3 or from h2 to h4. Observed pattern: h2->h4 (17 pages), h1->h3 (8 pages), h1->h3,h2->h4 (5 pages), h1->h5,h3->h5 (1 pages).",
       "reason": "Skipped levels break the document outline and make heading navigation unpredictable for assistive technology (WCAG 1.3.1).",
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "skipped-heading-level",
       "hubs": [
         "consolidation",
@@ -2167,7 +2203,11 @@
       "problem": "Five sitemap URLs return a file download rather than an HTML document: the English privacy policy, the Spanish privacy policy, the Spanish terms of service, the approved provider network page (all PDFs), and the free budget worksheet (an Excel file).",
       "reason": "Visitors, search engines, and assistive technology receive a file instead of a web page, so there are no HTML landmarks, headings, or a usable in-browser reading experience. PDFs and spreadsheets also often fail document accessibility checks.",
       "fix": "Serve an HTML page at each URL, with the PDF or spreadsheet offered as a downloadable attachment if needed. Point the canonical URL at the HTML version.",
-      "owner": "Web Engineering + SEO",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + SEO",
+      "tags": [
+        "SEO"
+      ],
       "rule": "non-html-document",
       "hubs": [
         "other"
@@ -2294,7 +2334,11 @@
       "problem": "More than one <main> element is present in the same document.",
       "reason": "The HTML specification allows only one <main> visible at a time. Multiple mains make landmark navigation ambiguous.",
       "fix": "Keep a single <main> in the layout and change extra mains to <section> or <div>, or hide inactive mains with the hidden attribute.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "multiple-main",
       "hubs": [
         "other"
@@ -2358,7 +2402,11 @@
       "problem": "The document body has no <nav> element.",
       "reason": "Primary and footer menus should be navigation landmarks so users can jump between blocks of links instead of tabbing through the whole page.",
       "fix": "Wrap each major menu in a <nav> and give each one a distinct accessible name (for example aria-label=\"Primary\" and aria-label=\"Footer\").",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Dashboard",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "missing-nav",
       "hubs": [
         "other"
@@ -2409,7 +2457,11 @@
       "problem": "One or more id values appear on multiple elements in the same document. Observed pattern: 5 unique ids duplicated; referenced=0 (27 pages), 6 unique ids duplicated; referenced=0 (11 pages), 7 unique ids duplicated; referenced=0 (5 pages), 8 unique ids duplicated; referenced=0 (2 pages).",
       "reason": "IDs must be unique. Duplicates break label-for associations, fragment links, and aria-labelledby references, so the wrong element may be named or focused.",
       "fix": "Make every id unique, typically by scoping component IDs or generating a suffix. Audit label for, aria-labelledby, and skip links after the change.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "duplicate-id",
       "hubs": [
         "consolidation",
@@ -2955,7 +3007,11 @@
       "problem": "The page has more than one <nav>, and at least one is missing a unique aria-label or aria-labelledby. Observed pattern: 10-navs_10-unlabelled (21 pages), 11-navs_10-unlabelled (14 pages), 12-navs_10-unlabelled (12 pages), 11-navs_11-unlabelled (1 pages).",
       "reason": "When several navigation landmarks are unnamed or share a name, screen-reader users cannot tell the primary menu from footer or utility menus.",
       "fix": "Give every <nav> a unique accessible name, such as aria-label=\"Primary\", aria-label=\"Section\", and aria-label=\"Footer\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "multiple-nav-unlabelled",
       "hubs": [
         "consolidation",
@@ -3489,7 +3545,11 @@
       "problem": "A non-hidden <svg> has no aria-label, aria-labelledby, or <title>, and is not marked decorative.",
       "reason": "Unlabelled SVGs may be announced as “image” or “graphic” with no name. Decorative icons should be hidden from assistive technology; meaningful icons need a name (WCAG 1.1.1).",
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "unlabelled-svg",
       "hubs": [
         "consolidation",
@@ -3720,7 +3780,11 @@
       "problem": "A <div>, <span>, or other non-interactive tag is made clickable with role=\"button\", an onclick handler, or tabindex=\"0\". Observed pattern: ul tabindex=0×1 (6 pages), div tabindex=0×1 (3 pages), div role=button tabindex=0×3 (1 pages), div role=button tabindex=0×1 (1 pages).",
       "reason": "These elements do not provide native keyboard activation or accessible names, so they often fail keyboard use and WCAG 2.1.1 and 4.1.2.",
       "fix": "Replace the element with a native <button> or <a href=\"…\">. If a widget must stay custom, implement a complete ARIA pattern including keyboard support and an accessible name.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "clickable-noninteractive",
       "hubs": [
         "glossary",
@@ -3912,7 +3976,11 @@
       "problem": "An <a> element is missing href, has an empty href, uses href=\"#\", or uses a javascript: URL. Observed pattern: missing-href:1 (1 pages), missing-href:4 (1 pages), empty-or-hash:1 (1 pages).",
       "reason": "Links without a real destination are not reliably exposed as links, break open-in-new-tab, and are often placeholders for buttons (WCAG 2.4.4, 4.1.2).",
       "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "invalid-anchor-href",
       "hubs": [
         "glossary",
@@ -4010,7 +4078,11 @@
       "problem": "A <table> has no <thead> or <th> (or its <th> cells have no scope and no thead). Observed pattern: no-th-or-thead:1 (1 pages), no-th-or-thead:2 (1 pages), no-th-or-thead:3 (1 pages).",
       "reason": "Without header cells, assistive technology cannot announce row or column context, so the table is just a grid of unnamed cells (WCAG 1.3.1).",
       "fix": "Mark header cells with <th> and scope=\"col\" or scope=\"row\", and use <thead> for column headers. If the table is only for layout, replace it with CSS or give it role=\"presentation\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "table-missing-headers",
       "hubs": [
         "other",
@@ -4107,7 +4179,11 @@
       "problem": "One or more heading tags have no accessible name (no text, image alternative, or ARIA label). Observed pattern: h3:1,h6:1 (1 pages), h3:2 (1 pages).",
       "reason": "Empty headings are still announced as a heading with no name, which clutters the outline and fails WCAG 1.3.1 and 2.4.6.",
       "fix": "Put visible text in the heading, or remove the empty heading element if it is only being used as a spacer or hook.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "empty-heading",
       "hubs": [
         "other",
@@ -4181,7 +4257,9 @@
       "problem": "An <li> appears outside a <ul>, <ol>, or <menu>. Observed pattern: parent=div:4 (1 pages).",
       "reason": "An orphaned list item is invalid HTML and is not exposed as part of a list, so the count and grouping are lost.",
       "fix": "Wrap consecutive <li> elements in a <ul> or <ol>, or change the orphaned item to a <div> if it is not part of a list.",
-      "owner": "Web Engineering",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering",
+      "tags": [],
       "rule": "li-outside-list",
       "hubs": [
         "other"
@@ -4232,7 +4310,11 @@
       "problem": "More than one <h1> is present on the page.",
       "reason": "Multiple h1s flatten the outline and make it harder to identify the page’s primary topic, especially when a site-wide h1 is repeated on every URL.",
       "fix": "Keep a single <h1> for the page topic. Demote site-wide or component headings to <h2> or a styled <p>.",
-      "owner": "Web Engineering + SEO",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + SEO",
+      "tags": [
+        "SEO"
+      ],
       "rule": "multiple-h1",
       "hubs": [
         "other"
@@ -4278,7 +4360,11 @@
       "problem": "A <div>, <span>, or other non-interactive tag is made clickable with role=\"button\", an onclick handler, or tabindex=\"0\". Observed pattern: div role=button×1 (48 pages).",
       "reason": "These elements do not provide native keyboard activation or accessible names, so they often fail keyboard use and WCAG 2.1.1 and 4.1.2.",
       "fix": "Replace the element with a native <button> or <a href=\"…\">. If a widget must stay custom, implement a complete ARIA pattern including keyboard support and an accessible name.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "clickable-noninteractive",
       "hubs": [
         "consolidation",
@@ -4800,7 +4886,11 @@
       "problem": "A non-hidden <svg> has no aria-label, aria-labelledby, or <title>, and is not marked decorative.",
       "reason": "Unlabelled SVGs may be announced as “image” or “graphic” with no name. Decorative icons should be hidden from assistive technology; meaningful icons need a name (WCAG 1.1.1).",
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "unlabelled-svg",
       "hubs": [
         "consolidation",
@@ -5050,7 +5140,11 @@
       "problem": "An <a> element is missing href, has an empty href, uses href=\"#\", or uses a javascript: URL. Observed pattern: missing-href:1 (18 pages).",
       "reason": "Links without a real destination are not reliably exposed as links, break open-in-new-tab, and are often placeholders for buttons (WCAG 2.4.4, 4.1.2).",
       "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "invalid-anchor-href",
       "hubs": [
         "consolidation",
@@ -5296,7 +5390,11 @@
       "problem": "One or more id values appear on multiple elements in the same document. Observed pattern: 36 unique ids duplicated; referenced=0 (45 pages), 37 unique ids duplicated; referenced=0 (4 pages), 2 unique ids duplicated; referenced=0 (3 pages), 1 unique ids duplicated; referenced=0 (1 pages).",
       "reason": "IDs must be unique. Duplicates break label-for associations, fragment links, and aria-labelledby references, so the wrong element may be named or focused.",
       "fix": "Make every id unique, typically by scoping component IDs or generating a suffix. Audit label for, aria-labelledby, and skip links after the change.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "duplicate-id",
       "hubs": [
         "consolidation",
@@ -5889,7 +5987,11 @@
       "problem": "The page has more than one <nav>, and at least one is missing a unique aria-label or aria-labelledby. Observed pattern: 2-navs_2-unlabelled (49 pages), 19-navs_17-unlabelled (4 pages), 17-navs_17-unlabelled (1 pages).",
       "reason": "When several navigation landmarks are unnamed or share a name, screen-reader users cannot tell the primary menu from footer or utility menus.",
       "fix": "Give every <nav> a unique accessible name, such as aria-label=\"Primary\", aria-label=\"Section\", and aria-label=\"Footer\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "multiple-nav-unlabelled",
       "hubs": [
         "consolidation",
@@ -6474,7 +6576,11 @@
       "problem": "A non-hidden <svg> has no aria-label, aria-labelledby, or <title>, and is not marked decorative.",
       "reason": "Unlabelled SVGs may be announced as “image” or “graphic” with no name. Decorative icons should be hidden from assistive technology; meaningful icons need a name (WCAG 1.1.1).",
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "unlabelled-svg",
       "hubs": [
         "consolidation",
@@ -7046,7 +7152,11 @@
       "problem": "One or more heading tags have no accessible name (no text, image alternative, or ARIA label). Observed pattern: h4:1 (10 pages), h4:2 (5 pages), h2:1,h4:1 (5 pages), h2:1,h4:2 (2 pages).",
       "reason": "Empty headings are still announced as a heading with no name, which clutters the outline and fails WCAG 1.3.1 and 2.4.6.",
       "fix": "Put visible text in the heading, or remove the empty heading element if it is only being used as a spacer or hook.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "empty-heading",
       "hubs": [
         "consolidation",
@@ -7344,7 +7454,11 @@
       "problem": "A <div>, <span>, or other non-interactive tag is made clickable with role=\"button\", an onclick handler, or tabindex=\"0\". Observed pattern: span role=button tabindex=0×3, ul tabindex=0×1 (5 pages).",
       "reason": "These elements do not provide native keyboard activation or accessible names, so they often fail keyboard use and WCAG 2.1.1 and 4.1.2.",
       "fix": "Replace the element with a native <button> or <a href=\"…\">. If a widget must stay custom, implement a complete ARIA pattern including keyboard support and an accessible name.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "clickable-noninteractive",
       "hubs": [
         "glossary"
@@ -7467,7 +7581,11 @@
       "problem": "An <a> element is missing href, has an empty href, uses href=\"#\", or uses a javascript: URL. Observed pattern: empty-or-hash:1 (4 pages), empty-or-hash:1,missing-href:4 (1 pages).",
       "reason": "Links without a real destination are not reliably exposed as links, break open-in-new-tab, and are often placeholders for buttons (WCAG 2.4.4, 4.1.2).",
       "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
-      "owner": "Web Engineering + Accessibility",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": [
+        "Accessibility"
+      ],
       "rule": "invalid-anchor-href",
       "hubs": [
         "glossary"
@@ -7594,7 +7712,9 @@
       "problem": "A <ul> or <ol> has a direct child that is not an <li> (or a script-supporting element). Observed pattern: ul>div×4 (1 pages).",
       "reason": "Only <li>, <script>, and <template> are allowed as children of lists. Wrapping items in <div> or nesting a bare <ul> breaks list semantics.",
       "fix": "Move wrappers inside the <li>, or restructure so every direct child of the list is an <li>.",
-      "owner": "Web Engineering",
+      "owner": "Dashboard",
+      "sourceOwner": "Web Engineering",
+      "tags": [],
       "rule": "invalid-list-child",
       "hubs": [
         "other"

@@ -260,6 +260,7 @@ export function Studio() {
             ))}
           </select>
         </label>
+        {tab !== "tasks" ? (
         <label className="flex items-center gap-2 text-xs text-muted" title="Sub-company under the selected parent.">
           <span>Brand</span>
           <select
@@ -275,6 +276,8 @@ export function Studio() {
             ))}
           </select>
         </label>
+        ) : null}
+        {tab !== "tasks" ? (
         <label className="flex items-center gap-2 text-xs text-muted" title="Product family on the site.">
           <span>Product</span>
           <select
@@ -296,6 +299,7 @@ export function Studio() {
             )}
           </select>
         </label>
+        ) : null}
         </div>
         <div className="ml-auto g-cluster" role="group" aria-label="Family actions">
           {seedFamily ? (
