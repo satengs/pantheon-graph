@@ -9,6 +9,8 @@
  * The URL list is the `pages` array of a previous audit (brand, k, p, path, requested_url).
  */
 import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const args = process.argv.slice(2);
@@ -31,7 +33,55 @@ const BLOCK_HOSTS =
 
 /** Runs inside the page. Returns findings + raw element counts for the current DOM. */
 function auditDom(mode) {
-  if (mode === "server") document.querySelectorAll("noscript").forEach((n) => n.remove());
+  let streamed = 0;
+  if (mode === "server") {
+    document.querySelectorAll("noscript").forEach((n) => n.remove());
+    // React streaming SSR ships Suspense content inside <div hidden id="S:n"> and swaps it in with
+    // inline $RC/$RS scripts. That markup IS in the server HTML (crawlers parsing HTML see it), so
+    // apply the swaps here instead of treating the hidden segment as missing.
+    const scripts = [...document.querySelectorAll("script:not([src])")].map(
+      (x) => x.textContent || "",
+    );
+    const calls = [];
+    for (const t of scripts)
+      for (const m of t.matchAll(/\$R([CS])\(\s*"([^"]+)"\s*,\s*"([^"]+)"/g))
+        calls.push(m.slice(1));
+    for (const [kind, a, b] of calls) {
+      const seg = document.getElementById(kind === "C" ? b : a);
+      const target = document.getElementById(kind === "C" ? a : b);
+      if (!seg || !target || !seg.parentNode) continue;
+      const frag = document.createDocumentFragment();
+      while (seg.firstChild) frag.appendChild(seg.firstChild);
+      if (kind === "C") {
+        // Remove the fallback between the B:n template and the closing <!--/$--> comment.
+        let n = target.nextSibling;
+        let depth = 0;
+        while (n) {
+          const nx = n.nextSibling;
+          if (n.nodeType === 8) {
+            const d = n.data;
+            if (d === "/$") {
+              if (depth === 0) break;
+              depth--;
+            } else if (d === "$" || d === "$?" || d === "$!") depth++;
+          }
+          n.parentNode.removeChild(n);
+          n = nx;
+        }
+        target.parentNode.insertBefore(frag, target);
+        target.remove();
+      } else {
+        target.replaceWith(frag);
+      }
+      seg.remove();
+      streamed++;
+    }
+    // Any streamed segment without a matching script: still server markup, so unhide it.
+    document.querySelectorAll('div[hidden][id^="S:"]').forEach((d) => {
+      d.removeAttribute("hidden");
+      streamed++;
+    });
+  }
   const findings = [];
   const add = (rule, severity, category, o = {}) =>
     findings.push({
@@ -536,7 +586,11 @@ function auditDom(mode) {
       },
     });
   }
-  return { findings, counts: { ...counts, h1_texts: h1Texts.slice(0, 10) } };
+  return {
+    findings,
+    counts: { ...counts, h1_texts: h1Texts.slice(0, 10) },
+    streamed_segments: streamed,
+  };
 }
 
 async function wireRoutes(context) {
@@ -560,6 +614,179 @@ function kindOf(ct) {
   return ct || "unknown";
 }
 
+// ---------- Response validation (never diff a challenge / error / partial page as "0 tags") ----------
+const LANDMARKS = ["h1", "main", "header", "footer", "nav"];
+const MIN_HTML_BYTES = 500;
+const CHALLENGE_RES = [
+  /just a moment\.\.\./i,
+  /attention required!?\s*\|?\s*cloudflare/i,
+  /<title>\s*attention required/i,
+  /<title>\s*access denied/i,
+  /checking your browser/i,
+  /cf-browser-verification/i,
+  /cf-challenge|challenge-platform\/h\/[a-z]\/orchestrate/i,
+  /_incapsula_resource|incapsula incident id/i,
+  /px-captcha|perimeterx/i,
+  /<title>\s*(request rejected|403 forbidden|404 not found|502 bad gateway|503 service unavailable|504 gateway time-?out)/i,
+];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Strip script/style/template/noscript/comments so tag counts reflect real markup. */
+function stripInert(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|template|noscript)\b[\s\S]*?<\/\1\s*>/gi, "");
+}
+export function rawLandmarkCounts(html) {
+  const s = stripInert(html);
+  const out = {};
+  for (const t of LANDMARKS) out[t] = (s.match(new RegExp(`<${t}[\\s>/]`, "gi")) || []).length;
+  return out;
+}
+/** Validate a raw HTTP response as a genuine 200 HTML document. Returns null if valid, else a reason. */
+export function invalidHtmlReason({ status, contentType, html }) {
+  if (status !== 200) return `status ${status}`;
+  if (!/text\/html|application\/xhtml/i.test(contentType || ""))
+    return `content-type ${contentType || "missing"}`;
+  if (!html || html.length < MIN_HTML_BYTES) return `tiny body (${html ? html.length : 0} bytes)`;
+  if (!/<head[\s>]/i.test(html) || !/<body[\s>]/i.test(html)) return "missing <head>/<body>";
+  if (!/<\/html\s*>/i.test(html)) return "truncated (no </html>)";
+  const probe =
+    html.slice(0, 20000) + " " + (html.match(/<title[^>]*>[\s\S]*?<\/title>/i)?.[0] ?? "");
+  for (const re of CHALLENGE_RES)
+    if (re.test(probe)) return `challenge/interstitial (${re.source.slice(0, 40)})`;
+  return null;
+}
+
+/** Runs in the page: cheap document-shape probe used to validate a rendered pass. */
+function docProbe() {
+  const d = document;
+  const html = d.documentElement ? d.documentElement.outerHTML : "";
+  const counts = {};
+  for (const t of ["h1", "main", "header", "footer", "nav"])
+    counts[t] = d.querySelectorAll(t).length;
+  return {
+    title: d.title || "",
+    bytes: html.length,
+    has_head: !!d.head,
+    has_body: !!d.body,
+    body_text: (d.body?.innerText || d.body?.textContent || "").trim().length,
+    probe: (d.title || "") + " " + (d.body?.textContent || "").slice(0, 4000),
+    counts,
+  };
+}
+function invalidDocReason(probe, rawCounts, rawBytes) {
+  if (!probe.has_head || !probe.has_body) return "rendered DOM missing <head>/<body>";
+  if (probe.bytes < MIN_HTML_BYTES) return `rendered DOM tiny (${probe.bytes} bytes)`;
+  if (probe.body_text < 50) return `rendered body text tiny (${probe.body_text} chars)`;
+  for (const re of [
+    /just a moment/i,
+    /attention required/i,
+    /access denied/i,
+    /checking your browser/i,
+    /cf-browser-verification/i,
+  ])
+    if (re.test(probe.probe) && probe.body_text < 3000)
+      return `rendered challenge/interstitial (${re.source})`;
+  if (rawBytes && probe.bytes < rawBytes * 0.5)
+    return `rendered DOM incomplete (${probe.bytes} of ${rawBytes} raw bytes)`;
+  if (rawCounts)
+    for (const t of LANDMARKS)
+      if (rawCounts[t] > 0 && probe.counts[t] === 0)
+        return `rendered DOM lost <${t}> (raw HTML has ${rawCounts[t]}, DOM has 0)`;
+  return null;
+}
+
+/** Raw initial HTML with retries: Playwright request first, then Node fetch with a browser UA. */
+async function fetchRawHtml(req, url, log) {
+  let last = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(1500 * 2 ** (attempt - 1));
+    const viaFetch = attempt === 2;
+    try {
+      let status, ct, html, finalUrl, bytes;
+      if (!viaFetch) {
+        const r = await req.get(url, { timeout: NAV_TIMEOUT, maxRedirects: 10 });
+        status = r.status();
+        ct = r.headers()["content-type"] || "";
+        finalUrl = r.url();
+        const buf = await r.body();
+        bytes = buf.length;
+        html = /html/i.test(ct) ? buf.toString("utf8") : "";
+      } else {
+        const r = await fetch(url, {
+          redirect: "follow",
+          headers: {
+            "user-agent": UA,
+            accept: "text/html,application/xhtml+xml",
+            "accept-language": "en-US,en;q=0.9",
+          },
+          signal: AbortSignal.timeout(NAV_TIMEOUT),
+        });
+        status = r.status;
+        ct = r.headers.get("content-type") || "";
+        finalUrl = r.url;
+        const buf = Buffer.from(await r.arrayBuffer());
+        bytes = buf.length;
+        html = /html/i.test(ct) ? buf.toString("utf8") : "";
+      }
+      last = { status, ct, html, finalUrl, bytes, via: viaFetch ? "fetch" : "playwright-request" };
+      // Non-HTML documents and hard 4xx are definitive; do not retry.
+      if (!/html/i.test(ct) || (status >= 400 && status < 500 && status !== 403 && status !== 429))
+        return { ...last, reason: null, definitive: true };
+      const reason = invalidHtmlReason({ status, contentType: ct, html });
+      if (!reason) return { ...last, reason: null };
+      last.reason = reason;
+      log.push(`raw#${attempt + 1} ${last.via}: ${reason}`);
+    } catch (e) {
+      last = { ...(last || {}), reason: `${e.name}: ${String(e.message).split("\n")[0]}` };
+      log.push(`raw#${attempt + 1}: ${last.reason}`);
+    }
+  }
+  return last;
+}
+
+/** One rendered pass (server = JS off, client = JS on) with validation + retries. */
+async function renderPass(context, url, mode, raw, log) {
+  let lastReason = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(1500 * 2 ** (attempt - 1));
+    const page = await context.newPage();
+    try {
+      const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT });
+      const status = resp ? resp.status() : null;
+      const ct = resp ? resp.headers()["content-type"] || "" : "";
+      await settle(page, mode === "client");
+      let reason = null;
+      if (status !== 200) reason = `${mode} pass status ${status}`;
+      else if (!/text\/html|application\/xhtml/i.test(ct))
+        reason = `${mode} pass content-type ${ct || "missing"}`;
+      else {
+        const probe = await page.evaluate(docProbe);
+        // Server pass must reflect the validated raw HTML; client pass only needs to be a real page.
+        reason = invalidDocReason(
+          probe,
+          mode === "server" ? raw.counts : null,
+          mode === "server" ? raw.bytes : 0,
+        );
+        if (reason) reason = `${mode} pass ${reason}`;
+      }
+      if (!reason) {
+        const out = await page.evaluate(auditDom, mode);
+        return { ok: true, status, final_url: page.url(), attempts: attempt + 1, ...out };
+      }
+      lastReason = reason;
+      log.push(`${mode}#${attempt + 1}: ${reason}`);
+    } catch (e) {
+      lastReason = `${mode} pass ${e.name}: ${String(e.message).split("\n")[0]}`;
+      log.push(`${mode}#${attempt + 1}: ${lastReason}`);
+    } finally {
+      await page.close().catch(() => {});
+    }
+  }
+  return { ok: false, reason: lastReason };
+}
+
 async function auditOne(server, client, req, row) {
   const url = row.requested_url;
   const t0 = Date.now();
@@ -579,52 +806,62 @@ async function auditOne(server, client, req, row) {
     error: null,
     block: null,
     render: "chromium-dom",
+    validation: { raw: null, server: null, client: null, log: [] },
+    raw_counts: null,
     server_counts: null,
     client_counts: null,
     server_findings: [],
     findings: [],
   };
+  const log = rec.validation.log;
   try {
-    // Initial server response (also used to detect non-HTML documents).
-    const head = await req.get(url, { timeout: NAV_TIMEOUT, maxRedirects: 10 });
-    const ct = head.headers()["content-type"] || "";
-    rec.status = head.status();
-    rec.content_type = ct;
-    rec.final_url = head.url();
-    const body = await head.body();
-    rec.bytes = body.length;
-    if (!/html/i.test(ct)) {
-      rec.error = `non-html content: ${kindOf(ct)} (${ct.split(";")[0]})`;
+    // 1) Raw initial server response, validated as a genuine 200 HTML page.
+    const raw = await fetchRawHtml(req, url, log);
+    rec.status = raw?.status ?? null;
+    rec.content_type = raw?.ct ?? null;
+    rec.final_url = raw?.finalUrl ?? url;
+    rec.bytes = raw?.bytes ?? 0;
+    if (raw?.ct && !/html/i.test(raw.ct)) {
+      rec.error = `non-html content: ${kindOf(raw.ct)} (${raw.ct.split(";")[0]})`;
       return rec;
     }
-    if (rec.status >= 400) {
-      rec.error = `http ${rec.status}`;
+    if (raw?.definitive && raw.status >= 400) {
+      rec.error = `http ${raw.status}`;
       return rec;
     }
-    // Server HTML: same URL, JavaScript disabled, parsed by Chromium as-is.
-    const sp = await server.newPage();
-    try {
-      await sp.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT });
-      await settle(sp, false);
-      const s = await sp.evaluate(auditDom, "server");
-      rec.server_findings = s.findings;
-      rec.server_counts = s.counts;
-    } finally {
-      await sp.close();
+    if (!raw || raw.reason) {
+      rec.error = `server HTML invalid after 3 attempts: ${raw?.reason ?? "no response"}`;
+      rec.block = "server-pass-validation";
+      return rec;
     }
-    // Client DOM: live hydrated page.
-    const cp = await client.newPage();
-    try {
-      const resp = await cp.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT });
-      if (resp) rec.status = resp.status();
-      rec.final_url = cp.url();
-      await settle(cp, true);
-      const c = await cp.evaluate(auditDom, "client");
-      rec.findings = c.findings;
-      rec.client_counts = c.counts;
-    } finally {
-      await cp.close();
+    rec.validation.raw = `ok via ${raw.via} (${raw.bytes} bytes)`;
+    raw.counts = rawLandmarkCounts(raw.html);
+    rec.raw_counts = raw.counts;
+    // 2) Server HTML: JavaScript disabled, parsed by Chromium, cross-checked against the raw HTML.
+    const s = await renderPass(server, url, "server", raw, log);
+    if (!s.ok) {
+      rec.error = `server pass invalid after 3 attempts: ${s.reason}`;
+      rec.block = "server-pass-validation";
+      return rec;
     }
+    rec.validation.server = `ok (attempt ${s.attempts})`;
+    rec.server_findings = s.findings;
+    rec.server_counts = s.counts;
+    rec.server_streamed_segments = s.streamed_segments;
+    // 3) Client DOM: live hydrated page, validated as a real page too.
+    const c = await renderPass(client, url, "client", raw, log);
+    if (!c.ok) {
+      rec.error = `client pass invalid after 3 attempts: ${c.reason}`;
+      rec.block = "client-pass-validation";
+      rec.server_findings = [];
+      rec.server_counts = null;
+      return rec;
+    }
+    rec.validation.client = `ok (attempt ${c.attempts})`;
+    rec.status = c.status;
+    rec.final_url = c.final_url;
+    rec.findings = c.findings;
+    rec.client_counts = c.counts;
     rec.ok = true;
   } catch (e) {
     rec.error = `${e.name}: ${String(e.message).split("\n")[0]}`;
@@ -661,7 +898,8 @@ async function main() {
       if (
         !rec.ok &&
         !String(rec.error).startsWith("non-html") &&
-        !String(rec.error).startsWith("http 4")
+        !String(rec.error).startsWith("http 4") &&
+        !rec.block
       )
         rec = await auditOne(server, client, req, rows[i]);
       results[i] = rec;
@@ -669,7 +907,7 @@ async function main() {
       console.log(
         `[${done}/${rows.length}] ${rec.ok ? "OK" : "FAIL"} ${rec.status} ${rec.requested_url} ${rec.elapsed_ms}ms ` +
           (rec.ok
-            ? `server h1=${rec.server_counts.h1} main=${rec.server_counts.main} · client h1=${rec.client_counts.h1} main=${rec.client_counts.main} · findings s${rec.server_findings.length}/c${rec.findings.length}`
+            ? `raw h1=${rec.raw_counts.h1} main=${rec.raw_counts.main} · server h1=${rec.server_counts.h1} main=${rec.server_counts.main} · client h1=${rec.client_counts.h1} main=${rec.client_counts.main} · findings s${rec.server_findings.length}/c${rec.findings.length}`
             : rec.error),
       );
     }
@@ -684,7 +922,8 @@ async function main() {
   console.log(`wrote ${OUT} · ${results.filter((r) => r.ok).length}/${results.length} rendered`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href)
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });

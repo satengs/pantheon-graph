@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-11-24T03:56:47+04:00",
+  "auditedAt": "2026-11-24T04:14:53+04:00",
   "auditedAtLabel": "Audited in live Chromium DOM · 24 Nov 2026 · 156 URLs checked",
   "method": "playwright-chromium-server-vs-client-dom",
   "pagesAudited": 156,
@@ -55,22 +55,22 @@
     }
   ],
   "totals": {
-    "tasks": 36,
+    "tasks": 32,
     "byBrand": {
       "fdr": 13,
-      "achieve": 17,
+      "achieve": 13,
       "bills": 6
     },
     "bySeverity": {
       "critical": 5,
-      "high": 9,
-      "medium": 22,
+      "high": 8,
+      "medium": 19,
       "low": 0
     },
     "byRenderSource": {
-      "server+client": 17,
+      "server+client": 19,
       "client-only": 2,
-      "diff": 17
+      "diff": 11
     }
   },
   "tasks": [
@@ -86,9 +86,7 @@
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "nested-interactive",
       "hubs": [
         "consolidation",
@@ -102,14 +100,9 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "glossary",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "author", "glossary", "hub/page"],
       "pageCount": 48,
-      "occurrenceCount": 166,
+      "occurrenceCount": 165,
       "scopeLabel": "48 pages · site-wide",
       "graphNodeId": "brand:achieve",
       "renderSource": "diff",
@@ -276,10 +269,10 @@
           "countOnPage": 10,
           "inCrawl": true,
           "graphNodeId": "brand:achieve",
-          "renderSource": "server+client",
-          "serverLabel": "10 nested a/button",
+          "renderSource": "diff",
+          "serverLabel": "11 nested a/button",
           "clientLabel": "10 nested a/button",
-          "ssrDiff": "Server HTML: 10 nested a/button → Client DOM: 10 nested a/button (matches)"
+          "ssrDiff": "Server HTML: 11 nested a/button → Client DOM: 10 nested a/button"
         },
         {
           "url": "https://www.achieve.com/debt-fit-quiz",
@@ -377,26 +370,26 @@
           "requestedUrl": "https://www.achieve.com/heloc",
           "hub": "heloc",
           "section": "hub/page",
-          "countOnPage": 13,
+          "countOnPage": 11,
           "inCrawl": true,
           "graphNodeId": "hub:achieve:heloc",
           "renderSource": "diff",
-          "serverLabel": "11 nested a/button",
-          "clientLabel": "13 nested a/button",
-          "ssrDiff": "Server HTML: 11 nested a/button → Client DOM: 13 nested a/button"
+          "serverLabel": "13 nested a/button",
+          "clientLabel": "11 nested a/button",
+          "ssrDiff": "Server HTML: 13 nested a/button → Client DOM: 11 nested a/button"
         },
         {
           "url": "https://www.achieve.com/home-equity-loan",
           "requestedUrl": "https://www.achieve.com/home-equity-loan",
           "hub": "hel",
           "section": "hub/page",
-          "countOnPage": 12,
+          "countOnPage": 13,
           "inCrawl": true,
           "graphNodeId": "hub:achieve:hel",
-          "renderSource": "diff",
+          "renderSource": "server+client",
           "serverLabel": "13 nested a/button",
-          "clientLabel": "12 nested a/button",
-          "ssrDiff": "Server HTML: 13 nested a/button → Client DOM: 12 nested a/button"
+          "clientLabel": "13 nested a/button",
+          "ssrDiff": "Server HTML: 13 nested a/button → Client DOM: 13 nested a/button (matches)"
         },
         {
           "url": "https://www.achieve.com/info-facts-about-achieve",
@@ -768,24 +761,12 @@
           "hub": "heloc",
           "section": "hub/page",
           "selector": "div#mobile-header-bar > div.items-center.flex:nth-of-type(2) > a.MuiTypography-root.MuiTypography-bodyMd",
-          "snippet": "a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … Check for rate | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\"> … Check My Rate",
-          "countOnPage": 13,
-          "variant": "a>button:13",
-          "renderSource": "diff",
-          "serverLabel": "11 nested a/button",
-          "clientLabel": "13 nested a/button"
-        },
-        {
-          "url": "https://www.achieve.com/home-equity-loan",
-          "hub": "hel",
-          "section": "hub/page",
-          "selector": "div#mobile-header-bar > div.items-center.flex:nth-of-type(2) > a.MuiTypography-root.MuiTypography-bodyMd",
           "snippet": "a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … See if you qualify | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … Get started",
-          "countOnPage": 12,
-          "variant": "a>button:12",
+          "countOnPage": 11,
+          "variant": "a>button:11",
           "renderSource": "diff",
           "serverLabel": "13 nested a/button",
-          "clientLabel": "12 nested a/button"
+          "clientLabel": "11 nested a/button"
         },
         {
           "url": "https://www.achieve.com/debt-consolidation",
@@ -795,9 +776,21 @@
           "snippet": "a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\"> … Check for rate | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … Customize your plan",
           "countOnPage": 10,
           "variant": "a>button:10",
-          "renderSource": "server+client",
-          "serverLabel": "10 nested a/button",
+          "renderSource": "diff",
+          "serverLabel": "11 nested a/button",
           "clientLabel": "10 nested a/button"
+        },
+        {
+          "url": "https://www.achieve.com/home-equity-loan",
+          "hub": "hel",
+          "section": "hub/page",
+          "selector": "div#mobile-header-bar > div.items-center.flex:nth-of-type(2) > a.MuiTypography-root.MuiTypography-bodyMd",
+          "snippet": "a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a class=\"MuiTypography-root MuiTypography-bodyMd MuiLink-ro\" href=\"/get-started\" data-tes… … Get Started | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … Check for rate | a>button <a component=\"a\" underline=\"hover\" target=\"\" href=\"/get-started\"> … Check for rate",
+          "countOnPage": 13,
+          "variant": "a>button:13",
+          "renderSource": "server+client",
+          "serverLabel": "13 nested a/button",
+          "clientLabel": "13 nested a/button"
         },
         {
           "url": "https://www.achieve.com/info-facts-about-achieve",
@@ -838,11 +831,11 @@
           "pages": 1
         },
         {
-          "variant": "a>button:13",
+          "variant": "a>button:11",
           "pages": 1
         },
         {
-          "variant": "a>button:12",
+          "variant": "a>button:13",
           "pages": 1
         },
         {
@@ -871,21 +864,10 @@
       "fix": "Associate a visible <label for=\"id\"> with each field, or wrap the control in a <label>. Do not rely on placeholder alone.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "form-control-missing-label",
-      "hubs": [
-        "consolidation",
-        "hel",
-        "heloc",
-        "other",
-        "personal-loan"
-      ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "hubs": ["consolidation", "hel", "heloc", "other", "personal-loan"],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 14,
       "occurrenceCount": 28,
       "scopeLabel": "14 pages",
@@ -1175,20 +1157,10 @@
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
       "owner": "Loans",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "nested-interactive",
-      "hubs": [
-        "hel",
-        "heloc",
-        "personal-loan"
-      ],
-      "sections": [
-        "article/learn",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "hubs": ["hel", "heloc", "personal-loan"],
+      "sections": ["article/learn", "hub/page", "regional/reviews"],
       "pageCount": 10,
       "occurrenceCount": 11,
       "scopeLabel": "10 pages",
@@ -1422,9 +1394,7 @@
       "fix": "Add a visible text label, or an aria-label that names the action (for example “Open menu” or “Close”). Decorative SVGs inside the button should be aria-hidden=\"true\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "empty-button-name",
       "hubs": [
         "consolidation",
@@ -1437,12 +1407,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "sections": ["article/learn", "author", "hub/page", "regional/reviews"],
       "pageCount": 49,
       "occurrenceCount": 49,
       "scopeLabel": "49 pages",
@@ -2174,18 +2139,10 @@
       "fix": "Keep a single interactive element. If both a link and a button are needed, make them siblings, not ancestors of each other.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "nested-interactive",
-      "hubs": [
-        "glossary",
-        "other"
-      ],
-      "sections": [
-        "glossary",
-        "hub/page"
-      ],
+      "hubs": ["glossary", "other"],
+      "sections": ["glossary", "hub/page"],
       "pageCount": 6,
       "occurrenceCount": 51,
       "scopeLabel": "6 pages",
@@ -2363,9 +2320,7 @@
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "skipped-heading-level",
       "hubs": [
         "consolidation",
@@ -2376,10 +2331,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 19,
       "occurrenceCount": 21,
       "scopeLabel": "19 pages",
@@ -2733,52 +2685,32 @@
       "category": "headings",
       "severity": "high",
       "title": "<h1> is missing from the server HTML and only injected client-side",
-      "problem": "The initial server HTML has no <h1>; it only appears in the DOM after JavaScript hydrates the page. achieve.com/authors: Server HTML: 0 <h1> → Client DOM: 1 <h1> (Achieve Authors); the <h1> is rendered client-side. achieve.com/learn: Server HTML: 0 <h1> → Client DOM: 3 <h1> (Financial Education, Money & Lifestyle, Insights & News); the <h1> is rendered client-side. Observed pattern: server 0 → client 1 (1 pages), server 0 → client 3 (1 pages).",
+      "problem": "The initial server HTML has no <h1>; it only appears in the DOM after JavaScript hydrates the page. achieve.com/learn: Server HTML: 0 <h1> → Client DOM: 3 <h1> (Financial Education, Money & Lifestyle, Insights & News); the <h1> is rendered client-side. Observed pattern: server 0 → client 3 (1 pages).",
       "reason": "Crawlers, link previews, reader modes, and users on slow or failed JavaScript see the server HTML. Without <h1> there, the page outline or landmark is missing until hydration finishes, and a late-injected <h1> can also shift layout.",
       "fix": "Render the <h1> on the server (SSR/SSG) in the initial HTML, using the same markup the client renders, so hydration does not add or replace it.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
+      "tags": ["SEO"],
       "rule": "ssr-missing-h1",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "article/learn",
-        "author"
-      ],
-      "pageCount": 2,
-      "occurrenceCount": 2,
-      "scopeLabel": "2 pages",
+      "hubs": ["other"],
+      "sections": ["article/learn"],
+      "pageCount": 1,
+      "occurrenceCount": 1,
+      "scopeLabel": "1 page",
       "graphNodeId": "brand:achieve",
       "renderSource": "diff",
       "renderCounts": {
         "serverClient": 0,
         "clientOnly": 0,
-        "diff": 2
+        "diff": 1
       },
-      "ssrDiff": "Server vs client differ on 2 of 2 pages",
+      "ssrDiff": "Server HTML: 0 <h1> → Client DOM: 3 <h1>",
       "renderDiff": {
         "url": "https://www.achieve.com/learn",
         "server": "0 <h1>",
         "client": "3 <h1>"
       },
       "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "requestedUrl": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "diff",
-          "serverLabel": "0 <h1>",
-          "clientLabel": "1 <h1>",
-          "ssrDiff": "Server HTML: 0 <h1> → Client DOM: 1 <h1>"
-        },
         {
           "url": "https://www.achieve.com/learn",
           "requestedUrl": "https://www.achieve.com/learn",
@@ -2802,114 +2734,16 @@
           "snippet": "Server HTML: 0 <h1> → Client DOM: 3 <h1> (Financial Education | Money & Lifestyle | Insights & News). The <h1> is rendered client-side only.",
           "countOnPage": 1,
           "variant": "server 0 → client 3",
-          "h1Texts": [
-            "Financial Education",
-            "Money & Lifestyle",
-            "Insights & News"
-          ],
+          "h1Texts": ["Financial Education", "Money & Lifestyle", "Insights & News"],
           "clientInjected": true,
           "renderSource": "diff",
           "serverLabel": "0 <h1>",
           "clientLabel": "3 <h1>"
-        },
-        {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "body",
-          "snippet": "Server HTML: 0 <h1> → Client DOM: 1 <h1> (Achieve Authors). The <h1> is rendered client-side only.",
-          "countOnPage": 1,
-          "variant": "server 0 → client 1",
-          "h1Texts": [
-            "Achieve Authors"
-          ],
-          "clientInjected": true,
-          "renderSource": "diff",
-          "serverLabel": "0 <h1>",
-          "clientLabel": "1 <h1>"
         }
       ],
       "variants": [
-        {
-          "variant": "server 0 → client 1",
-          "pages": 1
-        },
         {
           "variant": "server 0 → client 3",
-          "pages": 1
-        }
-      ]
-    },
-    {
-      "id": "achieve-ssr-missing-main",
-      "brand": "achieve",
-      "brandLabel": "Achieve",
-      "category": "landmarks",
-      "severity": "high",
-      "title": "<main> is missing from the server HTML and only injected client-side",
-      "problem": "The initial server HTML has no <main>; it only appears in the DOM after JavaScript hydrates the page. Observed pattern: server 0 → client 1 (1 pages).",
-      "reason": "Crawlers, link previews, reader modes, and users on slow or failed JavaScript see the server HTML. Without <main> there, the page outline or landmark is missing until hydration finishes, and a late-injected <main> can also shift layout.",
-      "fix": "Render the <main> on the server (SSR/SSG) in the initial HTML, using the same markup the client renders, so hydration does not add or replace it.",
-      "owner": "Public",
-      "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
-      "rule": "ssr-missing-main",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "author"
-      ],
-      "pageCount": 1,
-      "occurrenceCount": 1,
-      "scopeLabel": "1 page",
-      "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
-      "renderCounts": {
-        "serverClient": 0,
-        "clientOnly": 0,
-        "diff": 1
-      },
-      "ssrDiff": "Server HTML: 0 <main> → Client DOM: 1 <main>",
-      "renderDiff": {
-        "url": "https://www.achieve.com/authors",
-        "server": "0 <main>",
-        "client": "1 <main>"
-      },
-      "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "requestedUrl": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "diff",
-          "serverLabel": "0 <main>",
-          "clientLabel": "1 <main>",
-          "ssrDiff": "Server HTML: 0 <main> → Client DOM: 1 <main>"
-        }
-      ],
-      "examples": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "body",
-          "snippet": "Server HTML: 0 <main> → Client DOM: 1 <main>. The <main> is rendered client-side only.",
-          "countOnPage": 1,
-          "variant": "server 0 → client 1",
-          "renderSource": "diff",
-          "serverLabel": "0 <main>",
-          "clientLabel": "1 <main>"
-        }
-      ],
-      "variants": [
-        {
-          "variant": "server 0 → client 1",
           "pages": 1
         }
       ]
@@ -2926,9 +2760,7 @@
       "fix": "Add a short alt that describes the image’s purpose. Use alt=\"\" only for decorative images, and give nearby text or a figcaption the meaning if the image is redundant.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "img-missing-alt",
       "hubs": [
         "consolidation",
@@ -2940,10 +2772,7 @@
         "settlement",
         "student-loans"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 16,
       "occurrenceCount": 16,
       "scopeLabel": "16 pages",
@@ -3242,17 +3071,10 @@
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
       "owner": "Loans",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "skipped-heading-level",
-      "hubs": [
-        "heloc",
-        "other"
-      ],
-      "sections": [
-        "article/learn"
-      ],
+      "hubs": ["heloc", "other"],
+      "sections": ["article/learn"],
       "pageCount": 3,
       "occurrenceCount": 3,
       "scopeLabel": "3 pages",
@@ -3367,9 +3189,7 @@
       "fix": "Use heading levels in order (h1, then h2, then h3). Style appearance with CSS instead of picking a level for its font size.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "skipped-heading-level",
       "hubs": [
         "consolidation",
@@ -3382,11 +3202,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "sections": ["article/learn", "hub/page", "regional/reviews"],
       "pageCount": 31,
       "occurrenceCount": 40,
       "scopeLabel": "31 pages",
@@ -3897,16 +3713,10 @@
       "fix": "Serve an HTML page at each URL, with the PDF or spreadsheet offered as a downloadable attachment if needed. Point the canonical URL at the HTML version.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
+      "tags": ["SEO"],
       "rule": "non-html-document",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 5,
       "occurrenceCount": 5,
       "scopeLabel": "5 pages",
@@ -4071,16 +3881,10 @@
       "fix": "Keep a single <main> in the layout and change extra mains to <section> or <div>, or hide inactive mains with the hidden attribute.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "multiple-main",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 2,
       "occurrenceCount": 4,
       "scopeLabel": "2 pages",
@@ -4166,16 +3970,10 @@
       "fix": "Wrap each major menu in a <nav> and give each one a distinct accessible name (for example aria-label=\"Primary\" and aria-label=\"Footer\").",
       "owner": "Dashboard",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "missing-nav",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 1,
       "occurrenceCount": 1,
       "scopeLabel": "1 page",
@@ -4231,9 +4029,7 @@
       "fix": "Make every id unique, typically by scoping component IDs or generating a suffix. Audit label for, aria-labelledby, and skip links after the change.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "duplicate-id",
       "hubs": [
         "consolidation",
@@ -4247,12 +4043,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "glossary",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "author", "glossary", "hub/page"],
       "pageCount": 48,
       "occurrenceCount": 763,
       "scopeLabel": "48 pages · site-wide",
@@ -5000,9 +4791,7 @@
       "fix": "Give every <nav> a unique accessible name, such as aria-label=\"Primary\", aria-label=\"Section\", and aria-label=\"Footer\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "multiple-nav-unlabelled",
       "hubs": [
         "consolidation",
@@ -5016,28 +4805,19 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "glossary",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "author", "glossary", "hub/page"],
       "pageCount": 48,
       "occurrenceCount": 288,
       "scopeLabel": "48 pages · site-wide",
       "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
+      "renderSource": "server+client",
       "renderCounts": {
-        "serverClient": 47,
-        "clientOnly": 1,
+        "serverClient": 48,
+        "clientOnly": 0,
         "diff": 0
       },
-      "ssrDiff": "Client-only on 1, matches on 47 of 48 pages",
-      "renderDiff": {
-        "url": "https://www.achieve.com/authors",
-        "server": "0 unnamed <nav>",
-        "client": "6 unnamed <nav>"
-      },
+      "ssrDiff": "Matches server & client on all 48 pages",
+      "renderDiff": null,
       "affectedUrls": [
         {
           "url": "https://www.achieve.com/",
@@ -5177,10 +4957,10 @@
           "countOnPage": 6,
           "inCrawl": true,
           "graphNodeId": "brand:achieve",
-          "renderSource": "client-only",
-          "serverLabel": "0 unnamed <nav>",
+          "renderSource": "server+client",
+          "serverLabel": "6 unnamed <nav>",
           "clientLabel": "6 unnamed <nav>",
-          "ssrDiff": "Server HTML: 0 unnamed <nav> → Client DOM: 6 unnamed <nav>"
+          "ssrDiff": "Server HTML: 6 unnamed <nav> → Client DOM: 6 unnamed <nav> (matches)"
         },
         {
           "url": "https://www.achieve.com/debt-consolidation",
@@ -5666,18 +5446,6 @@
       ],
       "examples": [
         {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "div#mobile-header-bar-container > nav.bg-white.border-t-neutral-75",
-          "snippet": "<nav> (no aria-label) <nav class=\"bg-white max-lg:group-data-[mobile-nav-open=true]:\"> … Find LoansToggle Find LoansPersonal LoansPersonali | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Find LoansPersonal LoansHELOCsAcceleration LoanHom | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Manage DebtDebt ConsolidationAchieve GOOD AppDebt  | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Be SavvyDollars & SenseArticlesAchieve MoLO AppDTI",
-          "countOnPage": 6,
-          "variant": "7-navs_6-unlabelled",
-          "renderSource": "client-only",
-          "serverLabel": "0 unnamed <nav>",
-          "clientLabel": "6 unnamed <nav>"
-        },
-        {
           "url": "https://www.achieve.com/learn",
           "hub": "other",
           "section": "article/learn",
@@ -5724,6 +5492,18 @@
           "renderSource": "server+client",
           "serverLabel": "6 unnamed <nav>",
           "clientLabel": "6 unnamed <nav>"
+        },
+        {
+          "url": "https://www.achieve.com/about/partners",
+          "hub": "other",
+          "section": "hub/page",
+          "selector": "div#mobile-header-bar-container > nav.bg-white.border-t-neutral-75",
+          "snippet": "<nav> (no aria-label) <nav class=\"bg-white max-lg:group-data-[mobile-nav-open=true]:\"> … Find LoansToggle Find LoansPersonal LoansPersonali | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Find LoansPersonal LoansHELOCsAcceleration LoanHom | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Manage DebtDebt ConsolidationAchieve GOOD AppDebt  | <nav> (no aria-label) <nav class=\"[&_h4]:text-[19B1E2] break-inside-avoid py-1 mb-3 \" data-t… … Be SavvyDollars & SenseArticlesAchieve MoLO AppDTI",
+          "countOnPage": 6,
+          "variant": "6-navs_6-unlabelled",
+          "renderSource": "server+client",
+          "serverLabel": "6 unnamed <nav>",
+          "clientLabel": "6 unnamed <nav>"
         }
       ],
       "variants": [
@@ -5753,23 +5533,12 @@
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "unlabelled-svg",
-      "hubs": [
-        "consolidation",
-        "hel",
-        "heloc",
-        "other",
-        "personal-loan"
-      ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "hubs": ["consolidation", "hel", "heloc", "other", "personal-loan"],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 17,
-      "occurrenceCount": 63,
+      "occurrenceCount": 65,
       "scopeLabel": "17 pages",
       "graphNodeId": "brand:achieve",
       "renderSource": "diff",
@@ -5781,8 +5550,8 @@
       "ssrDiff": "Server vs client differ on 2, matches on 15 of 17 pages",
       "renderDiff": {
         "url": "https://www.achieve.com/heloc",
-        "server": "7 unlabelled SVG",
-        "client": "10 unlabelled SVG"
+        "server": "10 unlabelled SVG",
+        "client": "7 unlabelled SVG"
       },
       "affectedUrls": [
         {
@@ -5816,26 +5585,26 @@
           "requestedUrl": "https://www.achieve.com/heloc",
           "hub": "heloc",
           "section": "hub/page",
-          "countOnPage": 10,
+          "countOnPage": 7,
           "inCrawl": true,
           "graphNodeId": "hub:achieve:heloc",
           "renderSource": "diff",
-          "serverLabel": "7 unlabelled SVG",
-          "clientLabel": "10 unlabelled SVG",
-          "ssrDiff": "Server HTML: 7 unlabelled SVG → Client DOM: 10 unlabelled SVG"
+          "serverLabel": "10 unlabelled SVG",
+          "clientLabel": "7 unlabelled SVG",
+          "ssrDiff": "Server HTML: 10 unlabelled SVG → Client DOM: 7 unlabelled SVG"
         },
         {
           "url": "https://www.achieve.com/home-equity-loan",
           "requestedUrl": "https://www.achieve.com/home-equity-loan",
           "hub": "hel",
           "section": "hub/page",
-          "countOnPage": 6,
+          "countOnPage": 9,
           "inCrawl": true,
           "graphNodeId": "hub:achieve:hel",
-          "renderSource": "diff",
+          "renderSource": "server+client",
           "serverLabel": "9 unlabelled SVG",
-          "clientLabel": "6 unlabelled SVG",
-          "ssrDiff": "Server HTML: 9 unlabelled SVG → Client DOM: 6 unlabelled SVG"
+          "clientLabel": "9 unlabelled SVG",
+          "ssrDiff": "Server HTML: 9 unlabelled SVG → Client DOM: 9 unlabelled SVG (matches)"
         },
         {
           "url": "https://www.achieve.com/info-facts-about-achieve",
@@ -5972,13 +5741,13 @@
           "requestedUrl": "https://www.achieve.com/personal-loans",
           "hub": "personal-loan",
           "section": "hub/page",
-          "countOnPage": 1,
+          "countOnPage": 3,
           "inCrawl": true,
           "graphNodeId": "hub:achieve:personal-loan",
-          "renderSource": "server+client",
+          "renderSource": "diff",
           "serverLabel": "1 unlabelled SVG",
-          "clientLabel": "1 unlabelled SVG",
-          "ssrDiff": "Server HTML: 1 unlabelled SVG → Client DOM: 1 unlabelled SVG (matches)"
+          "clientLabel": "3 unlabelled SVG",
+          "ssrDiff": "Server HTML: 1 unlabelled SVG → Client DOM: 3 unlabelled SVG"
         },
         {
           "url": "https://www.achieve.com/tools/debt-income-ratio-calculator",
@@ -6012,25 +5781,13 @@
           "url": "https://www.achieve.com/heloc",
           "hub": "heloc",
           "section": "hub/page",
-          "selector": "div.relative:nth-of-type(1) > section.relative > div.w-full.mx-auto > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center:nth-of-type(1) > svg.shrink-0",
-          "snippet": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"n…",
-          "countOnPage": 10,
+          "selector": "div.border-solid.border-2:nth-of-type(1) > div.flex.flex-col:nth-of-type(1) > div.flex.flex-col:nth-of-type(4) > div.MuiFormControl-root.Ascend-select-root:nth-of-type(2) > div.MuiInputBase-root.MuiInputBase-colorPrimary > svg.MuiSelect-icon.MuiSelect-iconStandard",
+          "snippet": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n…",
+          "countOnPage": 7,
           "variant": "",
           "renderSource": "diff",
-          "serverLabel": "7 unlabelled SVG",
-          "clientLabel": "10 unlabelled SVG"
-        },
-        {
-          "url": "https://www.achieve.com/home-equity-loan",
-          "hub": "hel",
-          "section": "hub/page",
-          "selector": "div.MuiGrid-root.MuiGrid-direction-xs-row:nth-of-type(1) > div.dYWVHq_cards-list-item.MuiBox-root > div.dYWVHq_cards-list-item-icons.MuiBox-root:nth-of-type(2) > div.MuiBox-root.mui-0:nth-of-type(1) > div.W0jxqG_icon-list-item.W0jxqG_icon-item > svg.W0jxqG_icon-item-svg",
-          "snippet": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n…",
-          "countOnPage": 6,
-          "variant": "",
-          "renderSource": "diff",
-          "serverLabel": "9 unlabelled SVG",
-          "clientLabel": "6 unlabelled SVG"
+          "serverLabel": "10 unlabelled SVG",
+          "clientLabel": "7 unlabelled SVG"
         },
         {
           "url": "https://www.achieve.com/debt-consolidation",
@@ -6057,6 +5814,18 @@
           "clientLabel": "9 unlabelled SVG"
         },
         {
+          "url": "https://www.achieve.com/home-equity-loan",
+          "hub": "hel",
+          "section": "hub/page",
+          "selector": "div.relative:nth-of-type(1) > section.relative > div.w-full.mx-auto > div.flex.flex-col:nth-of-type(2) > div.flex.items-center:nth-of-type(1) > svg.shrink-0",
+          "snippet": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n… | <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"n…",
+          "countOnPage": 9,
+          "variant": "",
+          "renderSource": "server+client",
+          "serverLabel": "9 unlabelled SVG",
+          "clientLabel": "9 unlabelled SVG"
+        },
+        {
           "url": "https://www.achieve.com/tools/debt-income-ratio-calculator",
           "hub": "other",
           "section": "hub/page",
@@ -6072,141 +5841,6 @@
       "variants": []
     },
     {
-      "id": "achieve-invalid-anchor-href",
-      "brand": "achieve",
-      "brandLabel": "Achieve",
-      "category": "interactive",
-      "severity": "medium",
-      "title": "A link has no usable href",
-      "problem": "An <a> element is missing href, has an empty href, uses href=\"#\", or uses a javascript: URL. Observed pattern: missing:1 (1 pages), missing:4 (1 pages), empty:1 (1 pages).",
-      "reason": "Links without a real destination are not reliably exposed as links, break open-in-new-tab, and are often placeholders for buttons (WCAG 2.4.4, 4.1.2).",
-      "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
-      "owner": "Public",
-      "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
-      "rule": "invalid-anchor-href",
-      "hubs": [
-        "glossary",
-        "heloc",
-        "other"
-      ],
-      "sections": [
-        "glossary",
-        "hub/page"
-      ],
-      "pageCount": 3,
-      "occurrenceCount": 6,
-      "scopeLabel": "3 pages",
-      "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
-      "renderCounts": {
-        "serverClient": 2,
-        "clientOnly": 0,
-        "diff": 1
-      },
-      "ssrDiff": "Server vs client differ on 1, matches on 2 of 3 pages",
-      "renderDiff": {
-        "url": "https://www.achieve.com/heloc",
-        "server": "1 links without href",
-        "client": "0 links without href"
-      },
-      "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/about/press",
-          "requestedUrl": "https://www.achieve.com/about/press",
-          "hub": "other",
-          "section": "hub/page",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "server+client",
-          "serverLabel": "1 links without href",
-          "clientLabel": "1 links without href",
-          "ssrDiff": "Server HTML: 1 links without href → Client DOM: 1 links without href (matches)"
-        },
-        {
-          "url": "https://www.achieve.com/glossary",
-          "requestedUrl": "https://www.achieve.com/glossary",
-          "hub": "glossary",
-          "section": "glossary",
-          "countOnPage": 4,
-          "inCrawl": true,
-          "graphNodeId": "hub:achieve:glossary",
-          "renderSource": "server+client",
-          "serverLabel": "4 links without href",
-          "clientLabel": "4 links without href",
-          "ssrDiff": "Server HTML: 4 links without href → Client DOM: 4 links without href (matches)"
-        },
-        {
-          "url": "https://www.achieve.com/heloc",
-          "requestedUrl": "https://www.achieve.com/heloc",
-          "hub": "heloc",
-          "section": "hub/page",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "hub:achieve:heloc",
-          "renderSource": "diff",
-          "serverLabel": "1 links without href",
-          "clientLabel": "0 links without href",
-          "ssrDiff": "Server HTML: 1 links without href → Client DOM: 0 links without href"
-        }
-      ],
-      "examples": [
-        {
-          "url": "https://www.achieve.com/heloc",
-          "hub": "heloc",
-          "section": "hub/page",
-          "selector": "div.flex.flex-col > div.group.relative > div.shadow-none.relative:nth-of-type(1) > div.flex.flex-wrap > div.w-full:nth-of-type(2) > a",
-          "snippet": "<a component=\"span\" underline=\"hover\" target=\"\" href=\"\"> … See if you qualify",
-          "countOnPage": 1,
-          "variant": "empty:1",
-          "renderSource": "diff",
-          "serverLabel": "1 links without href",
-          "clientLabel": "0 links without href"
-        },
-        {
-          "url": "https://www.achieve.com/glossary",
-          "hub": "glossary",
-          "section": "glossary",
-          "selector": "div.w-full.mx-auto > div.flex:nth-of-type(2) > div.mt-6:nth-of-type(1) > ul.MuiList-root.MuiList-padding > li.MuiButtonBase-root.MuiMenuItem-root:nth-of-type(11) > a.MuiTypography-root.MuiTypography-bodySm",
-          "snippet": "<a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … K | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … Q | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … X | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … Y",
-          "countOnPage": 4,
-          "variant": "missing:4",
-          "renderSource": "server+client",
-          "serverLabel": "4 links without href",
-          "clientLabel": "4 links without href"
-        },
-        {
-          "url": "https://www.achieve.com/about/press",
-          "hub": "other",
-          "section": "hub/page",
-          "selector": "div.MuiGrid-root.MuiGrid-direction-xs-row > div.MuiGrid-root.MuiGrid-direction-xs-row > div.MuiGrid-root.MuiGrid-direction-xs-row:nth-of-type(1) > div.MuiGrid-root.MuiGrid-direction-xs-row:nth-of-type(2) > span.MuiTypography-root.MuiTypography-bodyMd:nth-of-type(1) > a.MuiTypography-root.MuiTypography-text",
-          "snippet": "<a class=\"MuiTypography-root MuiTypography-text MuiLink-root\"> … Clear filters",
-          "countOnPage": 1,
-          "variant": "missing:1",
-          "renderSource": "server+client",
-          "serverLabel": "1 links without href",
-          "clientLabel": "1 links without href"
-        }
-      ],
-      "variants": [
-        {
-          "variant": "missing:1",
-          "pages": 1
-        },
-        {
-          "variant": "missing:4",
-          "pages": 1
-        },
-        {
-          "variant": "empty:1",
-          "pages": 1
-        }
-      ]
-    },
-    {
       "id": "achieve-table-missing-headers",
       "brand": "achieve",
       "brandLabel": "Achieve",
@@ -6218,18 +5852,10 @@
       "fix": "Mark header cells with <th> and scope=\"col\" or scope=\"row\", and use <thead> for column headers. If the table is only for layout, replace it with CSS or give it role=\"presentation\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "table-missing-headers",
-      "hubs": [
-        "other",
-        "personal-loan"
-      ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "hubs": ["other", "personal-loan"],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 3,
       "occurrenceCount": 6,
       "scopeLabel": "3 pages",
@@ -6348,17 +5974,10 @@
       "fix": "Put visible text in the heading, or remove the empty heading element if it is only being used as a spacer or hook.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "empty-heading",
-      "hubs": [
-        "other",
-        "student-loans"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other", "student-loans"],
+      "sections": ["hub/page"],
       "pageCount": 2,
       "occurrenceCount": 4,
       "scopeLabel": "2 pages",
@@ -6437,6 +6056,99 @@
       ]
     },
     {
+      "id": "achieve-invalid-anchor-href",
+      "brand": "achieve",
+      "brandLabel": "Achieve",
+      "category": "interactive",
+      "severity": "medium",
+      "title": "A link has no usable href",
+      "problem": "An <a> element is missing href, has an empty href, uses href=\"#\", or uses a javascript: URL. Observed pattern: missing:1 (1 pages), missing:4 (1 pages).",
+      "reason": "Links without a real destination are not reliably exposed as links, break open-in-new-tab, and are often placeholders for buttons (WCAG 2.4.4, 4.1.2).",
+      "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
+      "owner": "Public",
+      "sourceOwner": "Web Engineering + Accessibility",
+      "tags": ["Accessibility"],
+      "rule": "invalid-anchor-href",
+      "hubs": ["glossary", "other"],
+      "sections": ["glossary", "hub/page"],
+      "pageCount": 2,
+      "occurrenceCount": 5,
+      "scopeLabel": "2 pages",
+      "graphNodeId": "hub:achieve:glossary",
+      "renderSource": "server+client",
+      "renderCounts": {
+        "serverClient": 2,
+        "clientOnly": 0,
+        "diff": 0
+      },
+      "ssrDiff": "Matches server & client on all 2 pages",
+      "renderDiff": null,
+      "affectedUrls": [
+        {
+          "url": "https://www.achieve.com/about/press",
+          "requestedUrl": "https://www.achieve.com/about/press",
+          "hub": "other",
+          "section": "hub/page",
+          "countOnPage": 1,
+          "inCrawl": true,
+          "graphNodeId": "brand:achieve",
+          "renderSource": "server+client",
+          "serverLabel": "1 links without href",
+          "clientLabel": "1 links without href",
+          "ssrDiff": "Server HTML: 1 links without href → Client DOM: 1 links without href (matches)"
+        },
+        {
+          "url": "https://www.achieve.com/glossary",
+          "requestedUrl": "https://www.achieve.com/glossary",
+          "hub": "glossary",
+          "section": "glossary",
+          "countOnPage": 4,
+          "inCrawl": true,
+          "graphNodeId": "hub:achieve:glossary",
+          "renderSource": "server+client",
+          "serverLabel": "4 links without href",
+          "clientLabel": "4 links without href",
+          "ssrDiff": "Server HTML: 4 links without href → Client DOM: 4 links without href (matches)"
+        }
+      ],
+      "examples": [
+        {
+          "url": "https://www.achieve.com/glossary",
+          "hub": "glossary",
+          "section": "glossary",
+          "selector": "div.w-full.mx-auto > div.flex:nth-of-type(2) > div.mt-6:nth-of-type(1) > ul.MuiList-root.MuiList-padding > li.MuiButtonBase-root.MuiMenuItem-root:nth-of-type(11) > a.MuiTypography-root.MuiTypography-bodySm",
+          "snippet": "<a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … K | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … Q | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … X | <a class=\"MuiTypography-root MuiTypography-bodySm MuiLink-ro\" disabled=\"\" aria-current=\"fa… … Y",
+          "countOnPage": 4,
+          "variant": "missing:4",
+          "renderSource": "server+client",
+          "serverLabel": "4 links without href",
+          "clientLabel": "4 links without href"
+        },
+        {
+          "url": "https://www.achieve.com/about/press",
+          "hub": "other",
+          "section": "hub/page",
+          "selector": "div.MuiGrid-root.MuiGrid-direction-xs-row > div.MuiGrid-root.MuiGrid-direction-xs-row > div.MuiGrid-root.MuiGrid-direction-xs-row:nth-of-type(1) > div.MuiGrid-root.MuiGrid-direction-xs-row:nth-of-type(2) > span.MuiTypography-root.MuiTypography-bodyMd:nth-of-type(1) > a.MuiTypography-root.MuiTypography-text",
+          "snippet": "<a class=\"MuiTypography-root MuiTypography-text MuiLink-root\"> … Clear filters",
+          "countOnPage": 1,
+          "variant": "missing:1",
+          "renderSource": "server+client",
+          "serverLabel": "1 links without href",
+          "clientLabel": "1 links without href"
+        }
+      ],
+      "variants": [
+        {
+          "variant": "missing:1",
+          "pages": 1
+        },
+        {
+          "variant": "missing:4",
+          "pages": 1
+        }
+      ]
+    },
+    {
       "id": "achieve-multiple-h1",
       "brand": "achieve",
       "brandLabel": "Achieve",
@@ -6448,17 +6160,10 @@
       "fix": "Keep a single <h1> for the page topic. Demote site-wide or component headings to <h2> or a styled <p>.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
+      "tags": ["SEO"],
       "rule": "multiple-h1",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 2,
       "occurrenceCount": 5,
       "scopeLabel": "2 pages",
@@ -6512,11 +6217,7 @@
           "snippet": "h1: Financial Education [data-testid=\"main-list-articles-category-title\"] | h1: Money & Lifestyle [data-testid=\"main-list-articles-category-title\"] | h1: Insights & News [data-testid=\"main-list-articles-category-title\"]",
           "countOnPage": 3,
           "variant": "3 visible h1",
-          "h1Texts": [
-            "Financial Education",
-            "Money & Lifestyle",
-            "Insights & News"
-          ],
+          "h1Texts": ["Financial Education", "Money & Lifestyle", "Insights & News"],
           "clientInjected": true,
           "renderSource": "client-only",
           "serverLabel": "0 <h1>",
@@ -6562,16 +6263,10 @@
       "fix": "Replace the element with a native <button> or <a href=\"…\">. If a widget must stay custom, implement a complete ARIA pattern including keyboard support and an accessible name.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "clickable-noninteractive",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 1,
       "occurrenceCount": 3,
       "scopeLabel": "1 page",
@@ -6634,12 +6329,8 @@
       "sourceOwner": "Web Engineering",
       "tags": [],
       "rule": "li-outside-list",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 1,
       "occurrenceCount": 5,
       "scopeLabel": "1 page",
@@ -6693,228 +6384,6 @@
       ]
     },
     {
-      "id": "achieve-ssr-missing-footer",
-      "brand": "achieve",
-      "brandLabel": "Achieve",
-      "category": "landmarks",
-      "severity": "medium",
-      "title": "<footer> is missing from the server HTML and only injected client-side",
-      "problem": "The initial server HTML has no <footer>; it only appears in the DOM after JavaScript hydrates the page.",
-      "reason": "Crawlers, link previews, reader modes, and users on slow or failed JavaScript see the server HTML. Without <footer> there, the page outline or landmark is missing until hydration finishes, and a late-injected <footer> can also shift layout.",
-      "fix": "Render the <footer> on the server (SSR/SSG) in the initial HTML, using the same markup the client renders, so hydration does not add or replace it.",
-      "owner": "Public",
-      "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
-      "rule": "ssr-missing-footer",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "author"
-      ],
-      "pageCount": 1,
-      "occurrenceCount": 1,
-      "scopeLabel": "1 page",
-      "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
-      "renderCounts": {
-        "serverClient": 0,
-        "clientOnly": 0,
-        "diff": 1
-      },
-      "ssrDiff": "Server HTML: 0 <footer> → Client DOM: 1 <footer>",
-      "renderDiff": {
-        "url": "https://www.achieve.com/authors",
-        "server": "0 <footer>",
-        "client": "1 <footer>"
-      },
-      "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "requestedUrl": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "diff",
-          "serverLabel": "0 <footer>",
-          "clientLabel": "1 <footer>",
-          "ssrDiff": "Server HTML: 0 <footer> → Client DOM: 1 <footer>"
-        }
-      ],
-      "examples": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "body",
-          "snippet": "Server HTML: 0 <footer> → Client DOM: 1 <footer>. The <footer> is rendered client-side only.",
-          "countOnPage": 1,
-          "variant": "server 0 → client 1",
-          "renderSource": "diff",
-          "serverLabel": "0 <footer>",
-          "clientLabel": "1 <footer>"
-        }
-      ],
-      "variants": [
-        {
-          "variant": "server 0 → client 1",
-          "pages": 1
-        }
-      ]
-    },
-    {
-      "id": "achieve-ssr-missing-header",
-      "brand": "achieve",
-      "brandLabel": "Achieve",
-      "category": "landmarks",
-      "severity": "medium",
-      "title": "<header> is missing from the server HTML and only injected client-side",
-      "problem": "The initial server HTML has no <header>; it only appears in the DOM after JavaScript hydrates the page.",
-      "reason": "Crawlers, link previews, reader modes, and users on slow or failed JavaScript see the server HTML. Without <header> there, the page outline or landmark is missing until hydration finishes, and a late-injected <header> can also shift layout.",
-      "fix": "Render the <header> on the server (SSR/SSG) in the initial HTML, using the same markup the client renders, so hydration does not add or replace it.",
-      "owner": "Public",
-      "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
-      "rule": "ssr-missing-header",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "author"
-      ],
-      "pageCount": 1,
-      "occurrenceCount": 1,
-      "scopeLabel": "1 page",
-      "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
-      "renderCounts": {
-        "serverClient": 0,
-        "clientOnly": 0,
-        "diff": 1
-      },
-      "ssrDiff": "Server HTML: 0 <header> → Client DOM: 1 <header>",
-      "renderDiff": {
-        "url": "https://www.achieve.com/authors",
-        "server": "0 <header>",
-        "client": "1 <header>"
-      },
-      "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "requestedUrl": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "diff",
-          "serverLabel": "0 <header>",
-          "clientLabel": "1 <header>",
-          "ssrDiff": "Server HTML: 0 <header> → Client DOM: 1 <header>"
-        }
-      ],
-      "examples": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "body",
-          "snippet": "Server HTML: 0 <header> → Client DOM: 1 <header>. The <header> is rendered client-side only.",
-          "countOnPage": 1,
-          "variant": "server 0 → client 1",
-          "renderSource": "diff",
-          "serverLabel": "0 <header>",
-          "clientLabel": "1 <header>"
-        }
-      ],
-      "variants": [
-        {
-          "variant": "server 0 → client 1",
-          "pages": 1
-        }
-      ]
-    },
-    {
-      "id": "achieve-ssr-missing-nav",
-      "brand": "achieve",
-      "brandLabel": "Achieve",
-      "category": "landmarks",
-      "severity": "medium",
-      "title": "<nav> is missing from the server HTML and only injected client-side",
-      "problem": "The initial server HTML has no <nav>; it only appears in the DOM after JavaScript hydrates the page.",
-      "reason": "Crawlers, link previews, reader modes, and users on slow or failed JavaScript see the server HTML. Without <nav> there, the page outline or landmark is missing until hydration finishes, and a late-injected <nav> can also shift layout.",
-      "fix": "Render the <nav> on the server (SSR/SSG) in the initial HTML, using the same markup the client renders, so hydration does not add or replace it.",
-      "owner": "Public",
-      "sourceOwner": "Web Engineering + SEO",
-      "tags": [
-        "SEO"
-      ],
-      "rule": "ssr-missing-nav",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "author"
-      ],
-      "pageCount": 1,
-      "occurrenceCount": 1,
-      "scopeLabel": "1 page",
-      "graphNodeId": "brand:achieve",
-      "renderSource": "diff",
-      "renderCounts": {
-        "serverClient": 0,
-        "clientOnly": 0,
-        "diff": 1
-      },
-      "ssrDiff": "Server HTML: 0 <nav> → Client DOM: 7 <nav>",
-      "renderDiff": {
-        "url": "https://www.achieve.com/authors",
-        "server": "0 <nav>",
-        "client": "7 <nav>"
-      },
-      "affectedUrls": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "requestedUrl": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "countOnPage": 1,
-          "inCrawl": true,
-          "graphNodeId": "brand:achieve",
-          "renderSource": "diff",
-          "serverLabel": "0 <nav>",
-          "clientLabel": "7 <nav>",
-          "ssrDiff": "Server HTML: 0 <nav> → Client DOM: 7 <nav>"
-        }
-      ],
-      "examples": [
-        {
-          "url": "https://www.achieve.com/authors",
-          "hub": "other",
-          "section": "author",
-          "selector": "body",
-          "snippet": "Server HTML: 0 <nav> → Client DOM: 7 <nav>. The <nav> is rendered client-side only.",
-          "countOnPage": 1,
-          "variant": "server 0 → client 7",
-          "renderSource": "diff",
-          "serverLabel": "0 <nav>",
-          "clientLabel": "7 <nav>"
-        }
-      ],
-      "variants": [
-        {
-          "variant": "server 0 → client 7",
-          "pages": 1
-        }
-      ]
-    },
-    {
       "id": "bills-invalid-anchor-href",
       "brand": "bills",
       "brandLabel": "Bills.com",
@@ -6926,9 +6395,7 @@
       "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "invalid-anchor-href",
       "hubs": [
         "consolidation",
@@ -6941,10 +6408,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 25,
       "occurrenceCount": 30,
       "scopeLabel": "25 pages",
@@ -7373,9 +6837,7 @@
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "unlabelled-svg",
       "hubs": [
         "consolidation",
@@ -7386,10 +6848,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page"
-      ],
+      "sections": ["article/learn", "hub/page"],
       "pageCount": 20,
       "occurrenceCount": 123,
       "scopeLabel": "20 pages",
@@ -7744,16 +7203,10 @@
       "fix": "Make every id unique, typically by scoping component IDs or generating a suffix. Audit label for, aria-labelledby, and skip links after the change.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "duplicate-id",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "article/learn"
-      ],
+      "hubs": ["other"],
+      "sections": ["article/learn"],
       "pageCount": 1,
       "occurrenceCount": 2,
       "scopeLabel": "1 page",
@@ -7818,9 +7271,7 @@
       "fix": "Make every id unique, typically by scoping component IDs or generating a suffix. Audit label for, aria-labelledby, and skip links after the change.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "duplicate-id",
       "hubs": [
         "consolidation",
@@ -7834,13 +7285,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "glossary",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "sections": ["article/learn", "author", "glossary", "hub/page", "regional/reviews"],
       "pageCount": 54,
       "occurrenceCount": 3564,
       "scopeLabel": "54 pages",
@@ -8654,9 +8099,7 @@
       "fix": "For decorative icons, add aria-hidden=\"true\". For meaningful icons, add a short aria-label or a <title> and role=\"img\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "unlabelled-svg",
       "hubs": [
         "consolidation",
@@ -8670,13 +8113,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "author",
-        "glossary",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "sections": ["article/learn", "author", "glossary", "hub/page", "regional/reviews"],
       "pageCount": 54,
       "occurrenceCount": 1228,
       "scopeLabel": "54 pages",
@@ -9473,9 +8910,7 @@
       "fix": "Put visible text in the heading, or remove the empty heading element if it is only being used as a spacer or hook.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "empty-heading",
       "hubs": [
         "consolidation",
@@ -9488,11 +8923,7 @@
         "student-loans",
         "wellness"
       ],
-      "sections": [
-        "article/learn",
-        "hub/page",
-        "regional/reviews"
-      ],
+      "sections": ["article/learn", "hub/page", "regional/reviews"],
       "pageCount": 22,
       "occurrenceCount": 36,
       "scopeLabel": "22 pages",
@@ -9886,16 +9317,10 @@
       "fix": "Replace the element with a native <button> or <a href=\"…\">. If a widget must stay custom, implement a complete ARIA pattern including keyboard support and an accessible name.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "clickable-noninteractive",
-      "hubs": [
-        "glossary"
-      ],
-      "sections": [
-        "glossary"
-      ],
+      "hubs": ["glossary"],
+      "sections": ["glossary"],
       "pageCount": 5,
       "occurrenceCount": 5,
       "scopeLabel": "5 pages",
@@ -10056,16 +9481,10 @@
       "fix": "Give every <nav> a unique accessible name, such as aria-label=\"Primary\", aria-label=\"Section\", and aria-label=\"Footer\".",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "multiple-nav-unlabelled",
-      "hubs": [
-        "glossary"
-      ],
-      "sections": [
-        "glossary"
-      ],
+      "hubs": ["glossary"],
+      "sections": ["glossary"],
       "pageCount": 5,
       "occurrenceCount": 30,
       "scopeLabel": "5 pages",
@@ -10230,16 +9649,10 @@
       "fix": "If the control navigates, give it a real URL. If it only triggers a script, use a <button type=\"button\"> instead of an anchor.",
       "owner": "Public",
       "sourceOwner": "Web Engineering + Accessibility",
-      "tags": [
-        "Accessibility"
-      ],
+      "tags": ["Accessibility"],
       "rule": "invalid-anchor-href",
-      "hubs": [
-        "glossary"
-      ],
-      "sections": [
-        "glossary"
-      ],
+      "hubs": ["glossary"],
+      "sections": ["glossary"],
       "pageCount": 1,
       "occurrenceCount": 4,
       "scopeLabel": "1 page",
@@ -10302,12 +9715,8 @@
       "sourceOwner": "Web Engineering",
       "tags": [],
       "rule": "invalid-list-child",
-      "hubs": [
-        "other"
-      ],
-      "sections": [
-        "hub/page"
-      ],
+      "hubs": ["other"],
+      "sections": ["hub/page"],
       "pageCount": 1,
       "occurrenceCount": 4,
       "scopeLabel": "1 page",
