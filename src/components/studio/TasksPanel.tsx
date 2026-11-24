@@ -52,11 +52,68 @@ const SEV_LETTER: Record<TaskSeverity, string> = {
   low: "L",
 };
 
-const RENDER_PILL: Record<TaskRenderSource, string> = {
-  "server+client": "bg-raised text-subtle",
-  "client-only": "bg-[#4ab8e0]/15 text-[#7ccbe8]",
-  diff: "bg-[#6b8cff]/15 text-[#9fb3ff]",
-};
+/** High-contrast Server / Client chips shown on every card header, collapsed or open. */
+const MARK_BASE =
+  "inline-flex h-6 shrink-0 items-center gap-1 rounded-md border px-2 font-mono text-[11px] font-semibold";
+const MARK_OK = "border-[#3fbf7f]/60 bg-[#3fbf7f]/15 text-[#7ee0ae]";
+const MARK_NONE = "border-border bg-bg text-muted";
+const MARK_CLIENT = "border-[#22c3e6]/70 bg-[#22c3e6]/15 text-[#7fdcf0]";
+const MARK_DIFF = "border-[#f5a524]/80 bg-[#f5a524]/20 text-[#ffc65c]";
+
+function RenderMarks({ task, render }: { task: SemanticTask; render: TaskRenderSource }) {
+  const diff = task.renderDiff;
+  return (
+    <div
+      className="mt-1.5 flex flex-wrap items-center gap-1.5"
+      data-testid="task-render-marks"
+      data-render-source={render}
+    >
+      <span className="sr-only" data-testid="task-render-source">
+        {RENDER_SOURCE_LABEL[render]}
+      </span>
+      {render === "server+client" ? (
+        <>
+          <span className={cn(MARK_BASE, MARK_OK)} data-testid="task-mark-server">
+            Server ✓
+          </span>
+          <span className={cn(MARK_BASE, MARK_OK)} data-testid="task-mark-client">
+            Client ✓
+          </span>
+          <span className="text-[11px] text-subtle">same in server HTML and client DOM</span>
+        </>
+      ) : render === "client-only" ? (
+        <>
+          <span className={cn(MARK_BASE, MARK_NONE)} data-testid="task-mark-server">
+            Server: none
+          </span>
+          <span className={cn(MARK_BASE, MARK_CLIENT)} data-testid="task-mark-client">
+            Client only
+          </span>
+        </>
+      ) : (
+        <span className={cn(MARK_BASE, MARK_DIFF)} data-testid="task-mark-diff">
+          Server ≠ Client
+        </span>
+      )}
+      {diff && render !== "server+client" ? (
+        <span
+          className="min-w-0 font-mono text-[11px] leading-snug text-fg [overflow-wrap:anywhere]"
+          data-testid="task-render-diff-line"
+        >
+          Server: {diff.server} → Client: {diff.client}
+          <span className="ml-1.5 font-sans text-subtle">{shortUrl(diff.url)}</span>
+        </span>
+      ) : render !== "server+client" && task.ssrDiff ? (
+        <span
+          className="min-w-0 text-[11px] leading-snug text-fg [overflow-wrap:anywhere]"
+          data-testid="task-render-diff-line"
+        >
+          {task.ssrDiff}
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 function Pill({ className, children }: { className: string; children: ReactNode }) {
   return (
@@ -436,10 +493,8 @@ function TaskRow({
                 </span>
               ))}
               <span className="text-[11px] tabular-nums text-muted">{task.scopeLabel}</span>
-              <Pill className={RENDER_PILL[render]}>
-                <span data-testid="task-render-source">{RENDER_SOURCE_LABEL[render]}</span>
-              </Pill>
             </div>
+            <RenderMarks task={task} render={render} />
             <h3 className="mt-1 text-sm text-fg [overflow-wrap:anywhere]">{task.title}</h3>
             <p
               className={cn(
@@ -449,17 +504,6 @@ function TaskRow({
             >
               {task.problem}
             </p>
-            {task.renderDiff && render !== "server+client" ? (
-              <p
-                className="mt-1 font-mono text-[11px] leading-snug text-fg [overflow-wrap:anywhere]"
-                data-testid="task-render-diff-line"
-              >
-                Server HTML: {task.renderDiff.server} → Client DOM: {task.renderDiff.client}
-                <span className="ml-1.5 font-sans text-subtle">
-                  {shortUrl(task.renderDiff.url)}
-                </span>
-              </p>
-            ) : null}
           </div>
         </button>
         <label className="flex shrink-0 items-center gap-1.5 text-[11px] text-subtle">

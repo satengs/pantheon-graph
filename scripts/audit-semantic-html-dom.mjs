@@ -553,6 +553,201 @@ function auditDom(mode) {
       },
     );
   }
+  // ---------- SEO outline: headings that dilute the page's primary topic / secondary keywords ----------
+  // These use every heading in the DOM (not only visible ones): crawlers read hidden mega-menus,
+  // drawers and modals from the HTML even when CSS hides them.
+  const hText = (h) => (h.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+  const HEADINGS = "h1,h2,h3,h4,h5,h6";
+  const CHROME_SEL = 'header,nav,[role="banner"],[role="navigation"]';
+  const FOOT_SEL = 'footer,[role="contentinfo"]';
+  const inMain = (el) => !!el.closest('main,[role="main"]');
+  const allHeadings = all(HEADINGS).filter((h) => hText(h));
+  const levelSummary = (hs) => {
+    const by = {};
+    hs.forEach((h) => (by[h.tagName.toLowerCase()] = (by[h.tagName.toLowerCase()] ?? 0) + 1));
+    return Object.entries(by)
+      .sort()
+      .map(([k, v]) => `${k}:${v}`)
+      .join(",");
+  };
+  const sampleHeads = (hs, n = 8) =>
+    hs.slice(0, n).map((h) => `<${h.tagName.toLowerCase()}> ${hText(h)}`);
+  // Header/nav headings: menu items, drawers, mega-menu columns. A <header> inside <main>/<article>
+  // is a content header, not site chrome, so it is excluded.
+  const chromeHeads = allHeadings.filter(
+    (h) =>
+      h.closest(CHROME_SEL) &&
+      !h.closest("main header, article header, [role='main'] header") &&
+      h.tagName !== "H1",
+  );
+  if (chromeHeads.length)
+    add(
+      "heading-in-header-nav",
+      chromeHeads.some((h) => /^H[23]$/.test(h.tagName)) ? "medium" : "low",
+      "seo-outline",
+      {
+        variant: levelSummary(chromeHeads),
+        selector: cssPath(chromeHeads[0]),
+        snippet: sampleHeads(chromeHeads).join(" | "),
+        count: chromeHeads.length,
+        extra: {
+          texts: sampleHeads(chromeHeads, 12),
+          visible: chromeHeads.filter((h) => !hidden(h)).length,
+        },
+      },
+    );
+  const footHeads = allHeadings.filter(
+    (h) =>
+      h.closest(FOOT_SEL) && !h.closest("main footer, article footer") && !h.closest(CHROME_SEL),
+  );
+  if (footHeads.length)
+    add(
+      "heading-in-footer",
+      footHeads.some((h) => /^H[23]$/.test(h.tagName)) ? "medium" : "low",
+      "seo-outline",
+      {
+        variant: levelSummary(footHeads),
+        selector: cssPath(footHeads[0]),
+        snippet: sampleHeads(footHeads).join(" | "),
+        count: footHeads.length,
+        extra: {
+          texts: sampleHeads(footHeads, 12),
+          visible: footHeads.filter((h) => !hidden(h)).length,
+        },
+      },
+    );
+  // Same-level <h2> on secondary modules competing with the page's primary <h2>s.
+  const SECONDARY_TEXT =
+    /\b(related|more (articles|stories|posts|resources|from)|recommended|you (may|might) also|popular|trending|latest (articles|posts|news)|keep reading|read next|further reading|newsletter|subscribe|cookie|similar)\b/i;
+  const SECONDARY_HOOK =
+    /(related|recommend|more-?articles|read-?next|popular|trending|carousel|newsletter|subscribe|cookie|consent|modal|dialog|drawer|sidebar)/i;
+  const hookOf = (h) => {
+    let cur = h.parentElement;
+    for (let d = 0; cur && d < 6 && cur !== document.body; d++, cur = cur.parentElement) {
+      const sig = `${cur.id} ${typeof cur.className === "string" ? cur.className : ""} ${cur.getAttribute("data-testid") || ""} ${cur.getAttribute("aria-label") || ""}`;
+      const m = sig.match(SECONDARY_HOOK);
+      if (m) return m[1].toLowerCase();
+    }
+    return null;
+  };
+  const secondaryReason = (h) => {
+    if (h.closest('aside,[role="complementary"]')) return "aside";
+    if (h.closest('dialog,[role="dialog"],[aria-modal="true"]')) return "dialog";
+    if (h.closest("a[href]")) return "card-link";
+    if (SECONDARY_TEXT.test(hText(h))) return "related-text";
+    const hook = hookOf(h);
+    if (hook) return `module:${hook}`;
+    return null;
+  };
+  const h2s = allHeadings.filter(
+    (h) => h.tagName === "H2" && !h.closest(CHROME_SEL) && !h.closest(FOOT_SEL),
+  );
+  const secondaryH2 = [];
+  const primaryH2 = [];
+  for (const h of h2s) {
+    const why = secondaryReason(h);
+    if (why) secondaryH2.push({ h, why });
+    else primaryH2.push(h);
+  }
+  if (secondaryH2.length && primaryH2.length) {
+    const by = {};
+    secondaryH2.forEach(({ why }) => (by[why.split(":")[0]] = (by[why.split(":")[0]] ?? 0) + 1));
+    add("secondary-h2-competing", secondaryH2.length >= 3 ? "medium" : "low", "seo-outline", {
+      variant: Object.entries(by)
+        .sort()
+        .map(([k, v]) => `${k}:${v}`)
+        .join(","),
+      selector: cssPath(secondaryH2[0].h),
+      snippet:
+        `${secondaryH2.length} secondary <h2> vs ${primaryH2.length} primary <h2>. Secondary: ` +
+        secondaryH2
+          .slice(0, 6)
+          .map(({ h, why }) => `"${hText(h)}" (${why})`)
+          .join(" | "),
+      count: secondaryH2.length,
+      extra: {
+        texts: secondaryH2.slice(0, 12).map(({ h, why }) => `${hText(h)} (${why})`),
+        primary_h2: primaryH2.slice(0, 8).map(hText),
+        primary_count: primaryH2.length,
+      },
+    });
+  }
+  // Generic anchor text with no descriptive accessible name.
+  const GENERIC =
+    /^(learn more|read more|click here|here|more|view more|see more|view all|see all|get started|start now|continue|details|more info|find out more|discover more|go|apply now|this link|link)$/i;
+  const genericLinks = [];
+  for (const a of all("a[href]")) {
+    const visible = (a.textContent ?? "").replace(/[\s›»→>|]+/g, " ").trim();
+    if (!visible || !GENERIC.test(visible)) continue;
+    const named =
+      (a.getAttribute("aria-label") || "").trim() ||
+      byIdText(a.getAttribute("aria-labelledby")) ||
+      (a.getAttribute("title") || "").trim();
+    if (named && !GENERIC.test(named.replace(/[\s›»→>|]+/g, " ").trim())) continue;
+    genericLinks.push({ a, t: visible });
+  }
+  if (genericLinks.length) {
+    const by = {};
+    genericLinks.forEach(({ t }) => (by[t.toLowerCase()] = (by[t.toLowerCase()] ?? 0) + 1));
+    add("generic-link-text", genericLinks.length >= 5 ? "medium" : "low", "seo-links", {
+      variant: Object.entries(by)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([k, v]) => `${k}:${v}`)
+        .join(","),
+      selector: cssPath(genericLinks[0].a),
+      snippet: genericLinks
+        .slice(0, 6)
+        .map(({ a, t }) => `"${t}" → ${(a.getAttribute("href") || "").slice(0, 70)}`)
+        .join(" | "),
+      count: genericLinks.length,
+      extra: { texts: Object.keys(by).slice(0, 10) },
+    });
+  }
+  // Editorial pages without <article>; related modules not isolated in <aside>.
+  const ldTypes = [...document.querySelectorAll('script[type="application/ld+json"]')]
+    .map((x) => x.textContent || "")
+    .join(" ");
+  const ogType = (
+    document.querySelector('meta[property="og:type"]')?.getAttribute("content") || ""
+  ).toLowerCase();
+  const published = !!document.querySelector(
+    'meta[property="article:published_time"],meta[property="article:modified_time"],time[datetime]',
+  );
+  const editorial =
+    location.pathname.replace(/\/+$/, "") !== "" &&
+    ((ogType === "article" && published) ||
+      /"@type"\s*:\s*"(Article|BlogPosting|NewsArticle|TechArticle|HowTo)"/.test(ldTypes) ||
+      /\/(learn|blog|articles?|guides?|news|resources)\/[^/]+\/[^/]+/.test(location.pathname));
+  const articles = all('article,[role="article"]');
+  if (editorial && articles.length === 0)
+    add("missing-article", "medium", "seo-outline", {
+      variant:
+        ogType === "article" && published
+          ? "og:type=article"
+          : /"@type"/.test(ldTypes)
+            ? "json-ld"
+            : "editorial-path",
+      selector: "main",
+      snippet: `Editorial page (${ogType === "article" && published ? "og:type article + published time" : "article schema / path"}) with no <article> element wrapping the story`,
+    });
+  const relatedNotAside = secondaryH2.filter(
+    ({ why }) =>
+      why === "related-text" ||
+      /^module:(related|recommend|more-?articles|read-?next|popular|trending)/.test(why),
+  );
+  if (relatedNotAside.length)
+    add("secondary-module-not-aside", "low", "seo-outline", {
+      variant: `${relatedNotAside.length}-module`,
+      selector: cssPath(relatedNotAside[0].h),
+      snippet: relatedNotAside
+        .slice(0, 5)
+        .map(({ h }) => `"${hText(h)}"`)
+        .join(" | "),
+      count: relatedNotAside.length,
+      extra: { texts: relatedNotAside.slice(0, 10).map(({ h }) => hText(h)) },
+    });
+
   const idMap = new Map();
   for (const el of all("[id]")) {
     const id = el.id.trim();
