@@ -23,13 +23,16 @@ export function taskRenderSource(t: { renderSource?: string | null }): TaskRende
 
 export type TaskUrl = {
   url: string;
-  requestedUrl: string;
+  /** Present only when the sitemap URL redirected to `url`. */
+  requestedUrl?: string;
   hub: string | null;
   section: string | null;
   countOnPage: number | null;
   inCrawl: boolean;
   graphNodeId: string | null;
   renderSource?: TaskRenderSource;
+  /** "server" = found by the full-site server-HTML sweep only (client DOM not rendered for this URL). */
+  tier?: "server" | "chromium";
   serverLabel?: string | null;
   clientLabel?: string | null;
   ssrDiff?: string | null;
@@ -75,13 +78,22 @@ export type SemanticTask = {
   ssrDiff?: string | null;
   renderDiff?: { url: string; server: string; client: string } | null;
   affectedUrls: TaskUrl[];
+  /** Real number of affected URLs; affectedUrls may be capped for payload size. */
+  affectedUrlsTotal?: number;
   examples: TaskExample[];
   variants: Array<{ variant: string; pages?: number | null }>;
+};
+
+export type CoverageCount = { checked: number; total: number };
+export type AuditCoverage = {
+  server: { checked: number; total: number; byBrand: Record<TaskBrand, CoverageCount> };
+  chromium: { checked: number; total: number; byBrand: Record<TaskBrand, CoverageCount> };
 };
 
 export type SemanticTasksDoc = {
   auditedAt: string;
   auditedAtLabel: string;
+  coverage?: AuditCoverage | null;
   pagesAudited: number;
   htmlParsed: number;
   nonHtmlCount: number;

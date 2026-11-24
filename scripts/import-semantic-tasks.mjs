@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
- * Build public/data/semantic-tasks.json from the 24 Nov 2026 semantic HTML audit
- * (scripts/audit-semantic-html-dom.mjs: live Chromium, server HTML vs client DOM on every check).
+ * Build public/data/semantic-tasks.json from the 24 Nov 2026 deep semantic HTML audit
+ * (scripts/audit-semantic-html-dom.mjs: full-site server-HTML sweep + live Chromium
+ * server HTML vs client DOM on every check). Written compact; affected URL rows are capped
+ * upstream (affectedUrlsTotal keeps the real count).
  * Keeps every finding. Maps affected URLs to graph node IDs (hub or brand).
  * Service owners are mapped from URLs/hubs onto Public, Loans, Apply, Enroll,
  * Dashboard, or Login. Accessibility / SEO from the audit are kept as tags.
@@ -12,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
-const DEFAULT_AUDIT = "/workspace/grood-ssr-audit/semantic-html-audit-ssr-2026-11-24.json";
+const DEFAULT_AUDIT = "/workspace/grood-ssr-audit/deep/semantic-html-audit-deep-2026-11-24.json";
 const CRAWL = path.join(repo, "public/data/crawl.json");
 const OUT = path.join(repo, "public/data/semantic-tasks.json");
 
@@ -237,7 +239,30 @@ export function auditedLabel(meta, totals = {}) {
   const n = meta.pages_selected ?? totals.pages_selected ?? 0;
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(meta.audited_at ?? ""));
   const date = m ? ` · ${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : "";
-  return `Audited in live Chromium DOM${date} · ${n} URLs checked`;
+  const cov = meta.coverage;
+  const fmt = (x) => Number(x).toLocaleString("en-US");
+  const split = cov
+    ? ` (${fmt(cov.server.checked)} full-site server + ${fmt(cov.chromium.checked)} live Chromium DOM)`
+    : "";
+  return `Audited in live Chromium DOM${date} · ${fmt(n)} URLs checked${split}`;
+}
+
+const COV_BRANDS = ["fdr", "achieve", "bills"];
+/** Deep-audit coverage for the Tasks header: Server HTML X / Y · Live Chromium DOM Z, by brand. */
+export function coverageOf(meta) {
+  const cov = meta.coverage;
+  if (!cov) return null;
+  const tier = (t) => ({
+    checked: t.checked ?? 0,
+    total: t.total ?? 0,
+    byBrand: Object.fromEntries(
+      COV_BRANDS.map((b) => [
+        b,
+        { checked: t.by_brand?.[b]?.checked ?? 0, total: t.by_brand?.[b]?.total ?? 0 },
+      ]),
+    ),
+  });
+  return { server: tier(cov.server), chromium: tier(cov.chromium) };
 }
 
 export function transformAudit(audit, crawl) {
@@ -254,18 +279,27 @@ export function transformAudit(audit, crawl) {
       const page = index.get(urlKey(url)) || index.get(urlKey(u.requested_url));
       const product = page?.p ?? u.hub ?? null;
       const b = page?.b ?? brand ?? brandOfHost(url);
+      const renderSource = renderSourceOf(u.render_source);
+      const tier = u.render_source === "server-sweep" ? "server" : "chromium";
+      // Compact rows: server/client labels only where the UI shows them (diffs and server-sweep rows).
+      const showDiff = tier === "server" || renderSource !== "server+client";
       return {
         url,
-        requestedUrl: u.requested_url ?? url,
+        ...(u.requested_url && u.requested_url !== url ? { requestedUrl: u.requested_url } : {}),
         hub: u.hub ?? page?.p ?? null,
         section: u.section_label ?? u.section ?? null,
         countOnPage: u.count_on_page ?? null,
         inCrawl: Boolean(page),
         graphNodeId: graphNodeId(b, product),
-        renderSource: renderSourceOf(u.render_source),
-        serverLabel: u.server_label ?? null,
-        clientLabel: u.client_label ?? null,
-        ssrDiff: u.ssr_diff ?? null,
+        renderSource,
+        tier,
+        ...(showDiff
+          ? {
+              serverLabel: u.server_label ?? null,
+              clientLabel: u.client_label ?? null,
+              ssrDiff: u.ssr_diff ?? null,
+            }
+          : {}),
       };
     });
     const examples = (t.examples ?? []).map((e) => ({
@@ -279,6 +313,7 @@ export function transformAudit(audit, crawl) {
       ...(e.h1_texts || e.h1Texts ? { h1Texts: e.h1_texts || e.h1Texts } : {}),
       ...(e.client_injected || e.clientInjected ? { clientInjected: true } : {}),
       renderSource: renderSourceOf(e.render_source),
+      ...(e.render_source === "server-sweep" ? { tier: "server" } : {}),
       serverLabel: e.server_label ?? null,
       clientLabel: e.client_label ?? null,
     }));
@@ -316,6 +351,7 @@ export function transformAudit(audit, crawl) {
         ? { url: t.render_diff.url, server: t.render_diff.server, client: t.render_diff.client }
         : null,
       affectedUrls,
+      affectedUrlsTotal: t.affected_urls_total ?? affectedUrls.length,
       examples,
       variants,
     };
@@ -331,6 +367,7 @@ export function transformAudit(audit, crawl) {
   return {
     auditedAt: meta.audited_at,
     auditedAtLabel: auditedLabel(meta, totals),
+    coverage: coverageOf(meta),
     method: meta.method ?? null,
     pagesAudited: meta.pages_selected ?? totals.pages_selected ?? 0,
     htmlParsed: meta.pages_ok ?? totals.pages_ok ?? 0,
@@ -382,7 +419,7 @@ function main() {
   );
   if (learn.some((t) => t.rule === "missing-h1"))
     throw new Error("achieve.com/learn must not be flagged missing-h1");
-  fs.writeFileSync(OUT, JSON.stringify(doc, null, 2) + "\n");
+  fs.writeFileSync(OUT, JSON.stringify(doc) + "\n");
   const { totals } = doc;
   console.log(
     `wrote ${path.relative(repo, OUT)} · ${totals.tasks} tasks · FDR ${totals.byBrand.fdr} Achieve ${totals.byBrand.achieve} Bills ${totals.byBrand.bills} · C${totals.bySeverity.critical} H${totals.bySeverity.high} M${totals.bySeverity.medium} L${totals.bySeverity.low}`,

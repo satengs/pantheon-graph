@@ -14,7 +14,7 @@ import {
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const AUDIT =
   process.env.SEMANTIC_AUDIT ||
-  "/workspace/grood-ssr-audit/semantic-html-audit-ssr-2026-11-24.json";
+  "/workspace/grood-ssr-audit/deep/semantic-html-audit-deep-2026-11-24.json";
 const hasAudit = fs.existsSync(AUDIT);
 
 test("hubDrawn only allows canvas hubs", () => {
@@ -37,14 +37,29 @@ test(
     );
     const audit = JSON.parse(fs.readFileSync(AUDIT, "utf8"));
     assert.equal(doc.tasks.length, audit.tasks.length);
-    assert.equal(doc.pagesAudited, 156);
-    assert.equal(doc.htmlParsed, 151);
-    assert.equal(doc.nonHtmlCount, 5);
+    assert.equal(doc.pagesAudited, audit.meta.pages_selected);
+    assert.equal(doc.htmlParsed, audit.meta.pages_ok);
+    assert.equal(doc.nonHtmlCount, audit.meta.pages_failed);
     assert.equal(doc.auditedAt, audit.meta.audited_at);
-    assert.match(
+    const cov = audit.meta.coverage;
+    assert.ok(cov.server.total >= 4000, "deep audit covers the full crawl in server HTML");
+    assert.ok(cov.chromium.checked >= 600, "deep audit renders 600+ URLs in Chromium");
+    for (const b of ["fdr", "achieve", "bills"])
+      assert.ok(cov.chromium.by_brand[b].checked >= 200, `${b} has 200+ Chromium URLs`);
+    assert.equal(
       doc.auditedAtLabel,
-      /^Audited in live Chromium DOM · 24 Nov 2026 · 156 URLs checked$/,
+      `Audited in live Chromium DOM · 24 Nov 2026 · ${doc.pagesAudited.toLocaleString("en-US")} URLs checked (${cov.server.checked.toLocaleString("en-US")} full-site server + ${cov.chromium.checked.toLocaleString("en-US")} live Chromium DOM)`,
     );
+    assert.equal(doc.coverage.server.checked, cov.server.checked);
+    assert.equal(
+      doc.coverage.chromium.byBrand.achieve.checked,
+      cov.chromium.by_brand.achieve.checked,
+    );
+    for (const t of doc.tasks) {
+      assert.ok(t.reason && t.reason.length > 40, `${t.id} has a Why it matters`);
+      assert.ok((t.affectedUrlsTotal ?? 0) >= t.affectedUrls.length, t.id);
+      assert.equal(t.affectedUrlsTotal, t.pageCount, t.id);
+    }
     assert.deepEqual(doc.totals.byBrand, {
       fdr: audit.totals.by_brand.fdr.tasks,
       achieve: audit.totals.by_brand.achieve.tasks,
@@ -178,4 +193,53 @@ test("every task carries a render source and a server-vs-client summary", () => 
   }
   const by = doc.totals.byRenderSource;
   assert.equal(by["server+client"] + by["client-only"] + by.diff, doc.tasks.length);
+});
+
+import { auditedLabel, coverageOf } from "./import-semantic-tasks.mjs";
+
+test("auditedLabel and coverageOf report both audit tiers", () => {
+  const meta = {
+    audited_at: "2026-11-24T05:09:00+04:00",
+    pages_selected: 4464,
+    coverage: {
+      server: {
+        checked: 4390,
+        total: 4464,
+        by_brand: {
+          fdr: { checked: 1120, total: 1188 },
+          achieve: { checked: 1131, total: 1131 },
+          bills: { checked: 2139, total: 2145 },
+        },
+      },
+      chromium: {
+        checked: 923,
+        total: 936,
+        by_brand: {
+          fdr: { checked: 287, total: 300 },
+          achieve: { checked: 301, total: 301 },
+          bills: { checked: 335, total: 335 },
+        },
+      },
+    },
+  };
+  assert.equal(
+    auditedLabel(meta),
+    "Audited in live Chromium DOM · 24 Nov 2026 · 4,464 URLs checked (4,390 full-site server + 923 live Chromium DOM)",
+  );
+  const c = coverageOf(meta);
+  assert.deepEqual(c.server.byBrand.bills, { checked: 2139, total: 2145 });
+  assert.equal(c.chromium.checked, 923);
+  assert.equal(coverageOf({}), null);
+  assert.equal(
+    auditedLabel({ audited_at: "2026-11-24T03:00:00+04:00", pages_selected: 156 }),
+    "Audited in live Chromium DOM · 24 Nov 2026 · 156 URLs checked",
+  );
+});
+
+test("footer/nav heading task is not labelled header-only", () => {
+  const doc = JSON.parse(
+    fs.readFileSync(path.join(repo, "public/data/semantic-tasks.json"), "utf8"),
+  );
+  for (const t of doc.tasks.filter((x) => x.rule === "heading-in-header-nav"))
+    assert.match(t.title, /<header>\/<nav>\/<footer>/);
 });

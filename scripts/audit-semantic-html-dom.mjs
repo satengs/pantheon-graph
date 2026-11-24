@@ -6,6 +6,9 @@
  * The same checks run on both, so every finding records Server HTML vs Client DOM counts.
  *
  * Usage: node scripts/audit-semantic-html-dom.mjs [--urls audit.json] [--out page-results.json] [--only substr]
+ *   --mode dual (default): raw + server (JS off) + live client DOM per URL (deep Chromium tier).
+ *   --mode server-sweep: full-site tier — concurrent fetch + JS-off Chromium parse of every URL
+ *     (--fetch-concurrency 30, --parse-concurrency 10), same 200/HTML/non-challenge guard.
  * The URL list is the `pages` array of a previous audit (brand, k, p, path, requested_url).
  */
 import fs from "node:fs";
@@ -22,6 +25,9 @@ const URLS_FILE = arg("--urls", "/workspace/semantic-html-audit-2026-11-24.json"
 const OUT = arg("--out", "/workspace/semantic-html-audit-work/dom-page-results.json");
 const ONLY = arg("--only", null);
 const CONCURRENCY = Number(arg("--concurrency", "5"));
+const MODE = arg("--mode", "dual"); // dual = raw + server (JS off) + client (JS on); server-sweep = tier 1
+const FETCH_CONCURRENCY = Number(arg("--fetch-concurrency", "30"));
+const PARSE_CONCURRENCY = Number(arg("--parse-concurrency", "10"));
 const NAV_TIMEOUT = 30000;
 const IDLE_TIMEOUT = 18000;
 const UA =
@@ -781,10 +787,402 @@ function auditDom(mode) {
       },
     });
   }
+  // ---------- Deep semantic checks (24 Nov 2026 deep audit) ----------
+  const VALID_ROLES = new Set(
+    "alert alertdialog application article banner blockquote button caption cell checkbox code columnheader combobox comment complementary contentinfo definition deletion dialog directory document emphasis feed figure form generic grid gridcell group heading img image insertion link list listbox listitem log main mark marquee math menu menubar menuitem menuitemcheckbox menuitemradio meter navigation none note option paragraph presentation progressbar radio radiogroup region row rowgroup rowheader scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem doc-abstract doc-acknowledgments doc-afterword doc-appendix doc-backlink doc-biblioentry doc-bibliography doc-biblioref doc-chapter doc-colophon doc-conclusion doc-cover doc-credit doc-credits doc-dedication doc-endnote doc-endnotes doc-epigraph doc-epilogue doc-errata doc-example doc-footnote doc-foreword doc-glossary doc-glossref doc-index doc-introduction doc-noteref doc-notice doc-pagebreak doc-pagelist doc-part doc-preface doc-prologue doc-pullquote doc-qna doc-subtitle doc-tip doc-toc graphics-document graphics-object graphics-symbol".split(
+      " ",
+    ),
+  );
+  const groupBy = (items, key) => {
+    const by = {};
+    items.forEach((x) => (by[key(x)] = (by[key(x)] ?? 0) + 1));
+    return Object.entries(by)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${k}:${v}`)
+      .join(",");
+  };
+  // Document language: invalid lang, or Spanish content declared as English.
+  if (lang && !/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/i.test(lang))
+    add("invalid-html-lang", "high", "document", {
+      variant: `lang=${lang.slice(0, 20)}`,
+      selector: "html",
+      snippet: `<html lang="${lang.slice(0, 40)}">`,
+    });
+  const spanishPath = /(^|\/)(es|espanol|en-espanol)(\/|$)/i.test(location.pathname);
+  if (spanishPath && !/^es\b/i.test(lang))
+    add("spanish-page-wrong-lang", "high", "document", {
+      variant: `lang=${lang || "missing"}`,
+      selector: "html",
+      snippet: `Spanish URL ${location.pathname} declares <html lang="${lang || ""}">`,
+    });
+  // Landmark nesting / duplicates.
+  const badMain = all('main,[role="main"]').filter((m) =>
+    m.parentElement?.closest(
+      'header,footer,nav,aside,article,section,[role="banner"],[role="contentinfo"]',
+    ),
+  );
+  if (badMain.length)
+    add("landmark-misnested", "high", "landmarks", {
+      variant: `main inside ${badMain[0].parentElement.closest("header,footer,nav,aside,article,section,[role]").tagName.toLowerCase()}`,
+      selector: cssPath(badMain[0]),
+      snippet: badMain
+        .slice(0, 3)
+        .map((m) => snip(m, 90))
+        .join(" | "),
+      count: badMain.length,
+    });
+  const sectioning = "article,aside,main,nav,section,header,footer";
+  const topHeaders = vis("header").filter((h) => !h.parentElement?.closest(sectioning));
+  const topFooters = vis("footer").filter((h) => !h.parentElement?.closest(sectioning));
+  if (topHeaders.length > 1 || topFooters.length > 1)
+    add("duplicate-banner-contentinfo", "medium", "landmarks", {
+      variant: `${topHeaders.length}-header,${topFooters.length}-footer`,
+      selector: cssPath((topHeaders.length > 1 ? topHeaders : topFooters)[1]),
+      snippet: [
+        ...(topHeaders.length > 1 ? topHeaders : []),
+        ...(topFooters.length > 1 ? topFooters : []),
+      ]
+        .slice(0, 4)
+        .map((h) => snip(h, 80))
+        .join(" | "),
+      count: Math.max(topHeaders.length, topFooters.length),
+    });
+  const asides = vis('aside,[role="complementary"]');
+  if (asides.length > 1) {
+    const labels = asides.map((n) =>
+      (
+        (n.getAttribute("aria-label") || "").trim() || byIdText(n.getAttribute("aria-labelledby"))
+      ).toLowerCase(),
+    );
+    const seen = new Map();
+    labels.forEach((l) => seen.set(l, (seen.get(l) ?? 0) + 1));
+    const bad = asides.filter((_, i) => !labels[i] || seen.get(labels[i]) > 1);
+    if (bad.length)
+      add("multiple-aside-unlabelled", "low", "landmarks", {
+        variant: `${asides.length}-asides`,
+        selector: cssPath(bad[0]),
+        snippet: bad
+          .slice(0, 3)
+          .map((n) => snip(n, 80))
+          .join(" | "),
+        count: bad.length,
+      });
+  }
+  const unnamedSections = vis("section").filter(
+    (s) =>
+      !(s.getAttribute("aria-label") || "").trim() &&
+      !byIdText(s.getAttribute("aria-labelledby")) &&
+      !s.querySelector("h1,h2,h3,h4,h5,h6,[role=heading]"),
+  );
+  if (unnamedSections.length)
+    add("section-without-name", unnamedSections.length >= 5 ? "low" : "low", "landmarks", {
+      variant: `${unnamedSections.length}-sections`,
+      selector: cssPath(unnamedSections[0]),
+      snippet: unnamedSections
+        .slice(0, 4)
+        .map((s) => snip(s, 80))
+        .join(" | "),
+      count: unnamedSections.length,
+    });
+  // Excessive <h2> dilution.
+  const allH2 = allHeadings.filter((h) => h.tagName === "H2");
+  if (allH2.length > 10)
+    add("excessive-h2", allH2.length > 20 ? "medium" : "low", "seo-outline", {
+      variant: allH2.length > 30 ? ">30 h2" : allH2.length > 20 ? "21-30 h2" : "11-20 h2",
+      selector: cssPath(allH2[0]),
+      snippet:
+        `${allH2.length} <h2> on the page (${allH2.filter((h) => h.closest(CHROME_SEL) || h.closest(FOOT_SEL)).length} in header/nav/footer). First: ` +
+        allH2
+          .slice(0, 8)
+          .map((h) => `"${hText(h).slice(0, 40)}"`)
+          .join(" | "),
+      count: allH2.length,
+      extra: { texts: allH2.slice(0, 15).map(hText) },
+    });
+  // Visual headings: big/bold short standalone text without heading semantics.
+  const fakeHeads = [];
+  const scope = document.querySelector('main,[role="main"]') || document.body;
+  for (const el of scope.querySelectorAll("div,span,p,strong,b")) {
+    if (fakeHeads.length > 40) break;
+    if (
+      inIgnored(el) ||
+      el.closest(
+        "h1,h2,h3,h4,h5,h6,[role=heading],a,button,label,legend,th,caption,figcaption,summary,nav,header,footer,li,blockquote,dt,select,option",
+      )
+    )
+      continue;
+    if ([...el.children].some((c) => !/^(BR|EM|I|STRONG|B|SPAN|SUP|SUB|SMALL)$/.test(c.tagName)))
+      continue;
+    if (
+      el.children.length &&
+      el.tagName === "DIV" &&
+      [...el.children].some((c) => (c.textContent ?? "").trim() === (el.textContent ?? "").trim())
+    )
+      continue;
+    const t = (el.textContent ?? "").replace(/\s+/g, " ").trim();
+    if (t.length < 4 || t.length > 70) continue;
+    const words = t.split(" ").length;
+    if (words > 10 || (/[.!?:]$/.test(t) && words > 6)) continue;
+    if (!/[A-Za-z]{3}/.test(t) || /^[$~]?\s*\d[\d.,]*\s*[%+xX]?\s*\S{0,12}\+?$/.test(t)) continue;
+    const cs = getComputedStyle(el);
+    const fs = parseFloat(cs.fontSize) || 0;
+    const fw = Number(cs.fontWeight) || (cs.fontWeight === "bold" ? 700 : 400);
+    if (!(fs >= 22 && fw >= 500) && !(fs >= 28)) continue;
+    if (hidden(el)) continue;
+    // Skip if the parent already contributes the same text (count the innermost block once).
+    if (fakeHeads.some((f) => f.el.contains(el) || el.contains(f.el))) continue;
+    fakeHeads.push({ el, t, fs, fw });
+  }
+  if (fakeHeads.length)
+    add("visual-heading-not-semantic", fakeHeads.length >= 3 ? "medium" : "low", "seo-outline", {
+      variant: groupBy(fakeHeads, (f) => f.el.tagName.toLowerCase()),
+      selector: cssPath(fakeHeads[0].el),
+      snippet: fakeHeads
+        .slice(0, 5)
+        .map(
+          (f) =>
+            `<${f.el.tagName.toLowerCase()}> "${f.t.slice(0, 50)}" (${Math.round(f.fs)}px/${f.fw})`,
+        )
+        .join(" | "),
+      count: fakeHeads.length,
+      extra: { texts: fakeHeads.slice(0, 10).map((f) => f.t) },
+    });
+  // iframes without an accessible title.
+  const frames = all("iframe").filter((f) => {
+    if (f.closest('[aria-hidden="true"]')) return false;
+    if ((f.getAttribute("title") || "").trim() || (f.getAttribute("aria-label") || "").trim())
+      return false;
+    const w = Number(f.getAttribute("width")),
+      h = Number(f.getAttribute("height"));
+    if ((w === 0 || w === 1) && (h === 0 || h === 1)) return false;
+    return !hidden(f);
+  });
+  if (frames.length)
+    add("iframe-missing-title", "medium", "media", {
+      variant: groupBy(frames, (f) => {
+        try {
+          return new URL(f.src, location.href).hostname || "inline";
+        } catch {
+          return "inline";
+        }
+      }),
+      selector: cssPath(frames[0]),
+      snippet: frames
+        .slice(0, 3)
+        .map((f) => snip(f, 110))
+        .join(" | "),
+      count: frames.length,
+    });
+  // Radio / checkbox groups without <fieldset>+<legend> or a named group role.
+  const groups = new Map();
+  for (const i of vis('input[type="radio"],input[type="checkbox"]')) {
+    const k = `${i.type}:${i.name || "(no name)"}:${i.form ? [...document.forms].indexOf(i.form) : -1}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(i);
+  }
+  const badGroups = [];
+  for (const [k, els] of groups) {
+    if (els.length < 2 || (k.includes("(no name)") && els[0].type === "checkbox")) continue;
+    const ok = els.every((e) => {
+      const fsEl = e.closest("fieldset");
+      if (fsEl && (fsEl.querySelector("legend")?.textContent ?? "").trim()) return true;
+      const g = e.closest('[role="radiogroup"],[role="group"]');
+      return (
+        !!g &&
+        !!(
+          (g.getAttribute("aria-label") || "").trim() || byIdText(g.getAttribute("aria-labelledby"))
+        )
+      );
+    });
+    if (!ok) badGroups.push({ k, el: els[0], n: els.length });
+  }
+  if (badGroups.length)
+    add("choice-group-missing-fieldset", "high", "forms", {
+      variant: groupBy(badGroups, (g) => g.k.split(":")[0]),
+      selector: cssPath(badGroups[0].el),
+      snippet: badGroups
+        .slice(0, 4)
+        .map((g) => `${g.n}× ${g.k.split(":").slice(0, 2).join(' name="')}" ${snip(g.el, 70)}`)
+        .join(" | "),
+      count: badGroups.length,
+    });
+  // Broken <label for>.
+  const brokenFor = all("label[for]").filter((l) => {
+    const id = l.getAttribute("for");
+    if (!id) return false;
+    const t = document.getElementById(id);
+    return !t || !/^(INPUT|SELECT|TEXTAREA|METER|PROGRESS|OUTPUT|BUTTON)$/.test(t.tagName);
+  });
+  if (brokenFor.length)
+    add("label-for-broken", "high", "forms", {
+      selector: cssPath(brokenFor[0]),
+      snippet: brokenFor
+        .slice(0, 4)
+        .map((l) => snip(l, 90))
+        .join(" | "),
+      count: brokenFor.length,
+    });
+  // ARIA: broken id references, invalid roles, conflicting roles, positive tabindex, focusable in aria-hidden.
+  const brokenRefs = [];
+  for (const el of all("[aria-labelledby],[aria-describedby],[aria-controls]")) {
+    for (const attr of ["aria-labelledby", "aria-describedby", "aria-controls"]) {
+      const v = (el.getAttribute(attr) || "").trim();
+      if (!v) continue;
+      for (const id of v.split(/\s+/))
+        if (!document.getElementById(id)) brokenRefs.push({ attr, id, el });
+    }
+  }
+  if (brokenRefs.length)
+    add(
+      "aria-reference-broken",
+      brokenRefs.some((b) => b.attr === "aria-labelledby") ? "high" : "medium",
+      "aria",
+      {
+        variant: groupBy(brokenRefs, (b) => b.attr),
+        selector: cssPath(brokenRefs[0].el),
+        snippet: brokenRefs
+          .slice(0, 4)
+          .map((b) => `${b.attr}="${b.id}" (no such id) ${snip(b.el, 70)}`)
+          .join(" | "),
+        count: brokenRefs.length,
+      },
+    );
+  const badRoles = [];
+  for (const el of all("[role]")) {
+    const roles = (el.getAttribute("role") || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!roles.length) continue;
+    const r = roles[0];
+    const tag = el.tagName.toLowerCase();
+    if (!VALID_ROLES.has(r)) badRoles.push({ v: `invalid role="${r}"`, el });
+    else if (tag === "a" && el.hasAttribute("href") && r === "button")
+      badRoles.push({ v: 'a[href] role="button"', el });
+    else if (tag === "button" && r === "link") badRoles.push({ v: 'button role="link"', el });
+    else if (/^h[1-6]$/.test(tag) && !["heading", "none", "presentation", "tab"].includes(r))
+      badRoles.push({ v: `${tag} role="${r}"`, el });
+    else if (["ul", "ol"].includes(tag) && ["button", "link"].includes(r))
+      badRoles.push({ v: `${tag} role="${r}"`, el });
+  }
+  if (badRoles.length)
+    add(
+      "aria-role-invalid",
+      badRoles.some((b) => b.v.startsWith("invalid")) ? "high" : "medium",
+      "aria",
+      {
+        variant: groupBy(badRoles, (b) => b.v),
+        selector: cssPath(badRoles[0].el),
+        snippet: badRoles
+          .slice(0, 4)
+          .map((b) => `${b.v} ${snip(b.el, 70)}`)
+          .join(" | "),
+        count: badRoles.length,
+      },
+    );
+  const posTab = all("[tabindex]").filter((e) => Number(e.getAttribute("tabindex")) > 0);
+  if (posTab.length)
+    add("positive-tabindex", "medium", "aria", {
+      variant: groupBy(posTab, (e) => `tabindex=${e.getAttribute("tabindex")}`),
+      selector: cssPath(posTab[0]),
+      snippet: posTab
+        .slice(0, 4)
+        .map((e) => snip(e, 90))
+        .join(" | "),
+      count: posTab.length,
+    });
+  const FOCUSABLE =
+    'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),iframe,[tabindex],[contenteditable="true"]';
+  const hiddenFocus = [];
+  for (const h of all('[aria-hidden="true"]')) {
+    const cands = [h, ...h.querySelectorAll(FOCUSABLE)].filter(
+      (e) => e.matches(FOCUSABLE) && e.getAttribute("tabindex") !== "-1" && !e.closest("[inert]"),
+    );
+    for (const e of cands) {
+      if (
+        typeof e.checkVisibility === "function" &&
+        !e.checkVisibility({ checkVisibilityCSS: true })
+      )
+        continue;
+      hiddenFocus.push(e);
+    }
+  }
+  if (hiddenFocus.length)
+    add("focusable-in-aria-hidden", "high", "aria", {
+      variant: groupBy(hiddenFocus, (e) => e.tagName.toLowerCase()),
+      selector: cssPath(hiddenFocus[0]),
+      snippet: hiddenFocus
+        .slice(0, 4)
+        .map((e) => snip(e, 90))
+        .join(" | "),
+      count: hiddenFocus.length,
+    });
+  // Links with no accessible name at all (icon-only links).
+  const unnamedLinks = vis("a[href]").filter((a) => !accName(a));
+  if (unnamedLinks.length)
+    add("link-missing-name", "high", "seo-links", {
+      selector: cssPath(unnamedLinks[0]),
+      snippet: unnamedLinks
+        .slice(0, 4)
+        .map((a) => snip(a, 100))
+        .join(" | "),
+      count: unnamedLinks.length,
+    });
+  // <img> alt that is a filename or generic placeholder.
+  const PLACEHOLDER_ALT =
+    /^(image|img|icon|logo|photo|picture|pic|graphic|banner|placeholder|untitled|spacer|thumbnail|hero|default|null|undefined|alt|image of|photo of)[\s_-]*\d*$/i;
+  const FILE_ALT =
+    /(\.(jpe?g|png|gif|webp|svg|avif|bmp)$)|^(img|dsc|dscn|image|screenshot|screen shot|shutterstock|getty|istock|adobestock)[\s_-]*\d+/i;
+  const badAlt = vis("img[alt]").filter((i) => {
+    const a = i.getAttribute("alt").trim();
+    return a && (PLACEHOLDER_ALT.test(a) || FILE_ALT.test(a));
+  });
+  if (badAlt.length)
+    add("img-placeholder-alt", "medium", "media", {
+      variant: groupBy(badAlt, (i) =>
+        FILE_ALT.test(i.alt.trim()) ? "filename" : `alt=${i.alt.trim().toLowerCase().slice(0, 20)}`,
+      ),
+      selector: cssPath(badAlt[0]),
+      snippet: badAlt
+        .slice(0, 4)
+        .map((i) => `alt="${i.getAttribute("alt").slice(0, 60)}" ${snip(i, 70)}`)
+        .join(" | "),
+      count: badAlt.length,
+    });
+  // Parity snapshot (compared server vs client in aggregation).
+  const mainEl = document.querySelector('main,[role="main"]');
+  const parityRoot = mainEl || document.body;
+  const parity = {
+    has_main: !!mainEl,
+    main_text: (parityRoot.textContent ?? "").replace(/\s+/g, " ").trim().length,
+    main_links: [
+      ...new Set(
+        [...parityRoot.querySelectorAll("a[href]")]
+          .filter((a) => !inIgnored(a))
+          .map((a) => {
+            try {
+              const u = new URL(a.getAttribute("href"), location.href);
+              return u.protocol.startsWith("http")
+                ? u.origin + u.pathname.replace(/\/+$/, "")
+                : null;
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean),
+      ),
+    ].slice(0, 600),
+    main_headings: [
+      ...new Set(
+        [...parityRoot.querySelectorAll("h1,h2,h3,h4,h5,h6")]
+          .filter((h) => !inIgnored(h))
+          .map((h) => `${h.tagName.toLowerCase()} ${hText(h)}`)
+          .filter((s) => s.length > 3),
+      ),
+    ].slice(0, 300),
+  };
   return {
     findings,
     counts: { ...counts, h1_texts: h1Texts.slice(0, 10) },
     streamed_segments: streamed,
+    parity,
   };
 }
 
@@ -1043,6 +1441,7 @@ async function auditOne(server, client, req, row) {
     rec.server_findings = s.findings;
     rec.server_counts = s.counts;
     rec.server_streamed_segments = s.streamed_segments;
+    rec.server_parity = s.parity;
     // 3) Client DOM: live hydrated page, validated as a real page too.
     const c = await renderPass(client, url, "client", raw, log);
     if (!c.ok) {
@@ -1057,6 +1456,7 @@ async function auditOne(server, client, req, row) {
     rec.final_url = c.final_url;
     rec.findings = c.findings;
     rec.client_counts = c.counts;
+    rec.client_parity = c.parity;
     rec.ok = true;
   } catch (e) {
     rec.error = `${e.name}: ${String(e.message).split("\n")[0]}`;
@@ -1064,6 +1464,196 @@ async function auditOne(server, client, req, row) {
     rec.elapsed_ms = Date.now() - t0;
   }
   return rec;
+}
+
+// ---------- Full-site server HTML sweep (tier 1) ----------
+const CSS_CACHE = new Map();
+function cssFor(url) {
+  if (!CSS_CACHE.has(url))
+    CSS_CACHE.set(
+      url,
+      fetch(url, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(20000) })
+        .then(async (r) =>
+          r.ok
+            ? {
+                body: Buffer.from(await r.arrayBuffer()),
+                ct: r.headers.get("content-type") || "text/css",
+              }
+            : null,
+        )
+        .catch(() => null),
+    );
+  return CSS_CACHE.get(url);
+}
+
+/** Raw initial HTML via Node fetch with a browser UA, validated as a genuine 200 HTML page (3 attempts). */
+async function fetchRawNode(url, log) {
+  let last = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(1500 * 2 ** (attempt - 1));
+    try {
+      const r = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "user-agent": UA,
+          accept: "text/html,application/xhtml+xml",
+          "accept-language": "en-US,en;q=0.9",
+        },
+        signal: AbortSignal.timeout(NAV_TIMEOUT),
+      });
+      const ct = r.headers.get("content-type") || "";
+      const buf = Buffer.from(await r.arrayBuffer());
+      const html = /html/i.test(ct) ? buf.toString("utf8") : "";
+      last = { status: r.status, ct, html, finalUrl: r.url, bytes: buf.length, via: "fetch" };
+      if (
+        !/html/i.test(ct) ||
+        (r.status >= 400 && r.status < 500 && r.status !== 403 && r.status !== 429)
+      )
+        return { ...last, reason: null, definitive: true };
+      const reason = invalidHtmlReason({ status: r.status, contentType: ct, html });
+      if (!reason) return { ...last, reason: null };
+      last.reason = reason;
+      log.push(`raw#${attempt + 1}: ${reason}`);
+    } catch (e) {
+      last = { ...(last || {}), reason: `${e.name}: ${String(e.message).split("\n")[0]}` };
+      log.push(`raw#${attempt + 1}: ${last.reason}`);
+    }
+  }
+  return last;
+}
+
+/** Parse validated raw HTML in Chromium with JS off (CSS applied from a shared cache, no other network). */
+async function serverParse(page, state, url, raw) {
+  state.url = raw.finalUrl || url;
+  state.html = raw.html;
+  const t0 = Date.now();
+  await page.goto(state.url, { waitUntil: "load", timeout: NAV_TIMEOUT });
+  const t1 = Date.now();
+  const probe = await page.evaluate(docProbe);
+  const reason = invalidDocReason(probe, raw.counts, raw.bytes);
+  if (reason) return { ok: false, reason: `server pass ${reason}` };
+  const out = await page.evaluate(auditDom, "server");
+  return { ok: true, ...out, timing: { goto: t1 - t0, audit: Date.now() - t1 } };
+}
+
+async function serverSweep(rows) {
+  const browser = await chromium.launch({ headless: true });
+  const ctx = await browser.newContext({
+    userAgent: UA,
+    viewport: { width: 1440, height: 900 },
+    locale: "en-US",
+    javaScriptEnabled: false,
+  });
+  const results = new Array(rows.length);
+  // Pipeline: FETCH_CONCURRENCY workers fetch raw HTML, then borrow one of PARSE_CONCURRENCY
+  // JS-off Chromium pages to parse it. Raw HTML is dropped right after parsing (bounded memory).
+  const pool = [];
+  const waiters = [];
+  for (let k = 0; k < PARSE_CONCURRENCY; k++) {
+    const page = await ctx.newPage();
+    const state = { url: null, html: null };
+    await page.route("**/*", async (route) => {
+      const req = route.request();
+      if (req.isNavigationRequest() && req.frame() === page.mainFrame())
+        return route.fulfill({
+          status: 200,
+          contentType: "text/html; charset=utf-8",
+          body: state.html ?? "",
+        });
+      if (req.resourceType() === "stylesheet") {
+        const c = await cssFor(req.url());
+        return c ? route.fulfill({ status: 200, contentType: c.ct, body: c.body }) : route.abort();
+      }
+      return route.abort();
+    });
+    pool.push({ page, state });
+  }
+  const borrow = () =>
+    pool.length ? Promise.resolve(pool.pop()) : new Promise((r) => waiters.push(r));
+  const giveBack = (p) => (waiters.length ? waiters.shift()(p) : pool.push(p));
+  const parseOnce = (slot, row, raw) =>
+    serverParse(slot.page, slot.state, row.requested_url, raw).catch((e) => ({
+      ok: false,
+      reason: `${e.name}: ${String(e.message).split("\n")[0]}`,
+    }));
+  let next = 0;
+  let done = 0;
+  await Promise.all(
+    Array.from({ length: FETCH_CONCURRENCY }, async () => {
+      while (next < rows.length) {
+        const i = next++;
+        const row = rows[i];
+        const log = [];
+        const raw = await fetchRawNode(row.requested_url, log);
+        const rec = {
+          brand: row.brand,
+          k: row.k,
+          p: row.p,
+          path: row.path,
+          requested_url: row.requested_url,
+          final_url: raw?.finalUrl ?? row.requested_url,
+          status: raw?.status ?? null,
+          ok: false,
+          content_type: raw?.ct ?? null,
+          bytes: raw?.bytes ?? 0,
+          error: null,
+          block: null,
+          tier: "server-sweep",
+          validation: { log },
+          raw_counts: null,
+          server_counts: null,
+          server_findings: [],
+        };
+        try {
+          if (raw?.ct && !/html/i.test(raw.ct))
+            rec.error = `non-html content: ${kindOf(raw.ct)} (${raw.ct.split(";")[0]})`;
+          else if (raw?.definitive && raw.status >= 400) rec.error = `http ${raw.status}`;
+          else if (!raw || raw.reason) {
+            rec.error = `server HTML invalid after 3 attempts: ${raw?.reason ?? "no response"}`;
+            rec.block = "server-pass-validation";
+          } else {
+            raw.counts = rawLandmarkCounts(raw.html);
+            rec.raw_counts = raw.counts;
+            const slot = await borrow();
+            let s;
+            try {
+              s = await parseOnce(slot, row, raw);
+              if (!s.ok) s = await parseOnce(slot, row, raw);
+            } finally {
+              slot.state.html = null;
+              giveBack(slot);
+            }
+            if (!s.ok) {
+              rec.error = s.reason;
+              rec.block = "server-pass-validation";
+            } else {
+              rec.ok = true;
+              rec.server_counts = s.counts;
+              rec.server_findings = s.findings;
+              rec.server_streamed_segments = s.streamed_segments;
+              rec.timing = s.timing;
+              rec.server_parity = {
+                has_main: s.parity.has_main,
+                main_text: s.parity.main_text,
+                main_links: s.parity.main_links.length,
+                main_headings: s.parity.main_headings.length,
+              };
+            }
+          }
+        } catch (e) {
+          rec.error = `${e.name}: ${String(e.message).split("\n")[0]}`;
+        }
+        if (raw) raw.html = null;
+        results[i] = rec;
+        if (++done % 100 === 0 || done === rows.length)
+          console.log(
+            `[server ${done}/${rows.length}] ${rec.ok ? "OK" : "FAIL"} ${rec.requested_url} ${rec.ok ? `h1=${rec.server_counts.h1} findings=${rec.server_findings.length}` : rec.error}`,
+          );
+      }
+    }),
+  );
+  await browser.close();
+  return results;
 }
 
 async function main() {
@@ -1076,6 +1666,24 @@ async function main() {
     requested_url: p.requested_url ?? p.url,
   }));
   if (ONLY) rows = rows.filter((r) => r.requested_url.includes(ONLY));
+  if (MODE === "server-sweep") {
+    const t0 = Date.now();
+    const results = await serverSweep(rows);
+    fs.writeFileSync(
+      OUT,
+      JSON.stringify({
+        audited_at: new Date(t0).toISOString(),
+        user_agent: UA,
+        mode: MODE,
+        elapsed_ms: Date.now() - t0,
+        results,
+      }) + "\n",
+    );
+    console.log(
+      `wrote ${OUT} · ${results.filter((r) => r.ok).length}/${results.length} server HTML parsed in ${Math.round((Date.now() - t0) / 1000)}s`,
+    );
+    return;
+  }
   const browser = await chromium.launch({ headless: true });
   const common = { userAgent: UA, viewport: { width: 1440, height: 900 }, locale: "en-US" };
   const server = await browser.newContext({ ...common, javaScriptEnabled: false });
@@ -1084,11 +1692,24 @@ async function main() {
   await wireRoutes(client);
   const req = client.request;
   const results = new Array(rows.length);
+  // Resumable: every finished URL is appended to OUT.jsonl; a restart skips those URLs.
+  const JSONL = `${OUT}.jsonl`;
+  const prior = new Map();
+  if (fs.existsSync(JSONL))
+    for (const line of fs.readFileSync(JSONL, "utf8").split("\n"))
+      if (line.trim()) {
+        const r = JSON.parse(line);
+        prior.set(r.requested_url, r);
+      }
+  rows.forEach((r, i) => {
+    if (prior.has(r.requested_url)) results[i] = prior.get(r.requested_url);
+  });
   let next = 0;
-  let done = 0;
+  let done = results.filter(Boolean).length;
   async function worker() {
     while (next < rows.length) {
       const i = next++;
+      if (results[i]) continue;
       let rec = await auditOne(server, client, req, rows[i]);
       if (
         !rec.ok &&
@@ -1098,6 +1719,7 @@ async function main() {
       )
         rec = await auditOne(server, client, req, rows[i]);
       results[i] = rec;
+      fs.appendFileSync(JSONL, JSON.stringify(rec) + "\n");
       done++;
       console.log(
         `[${done}/${rows.length}] ${rec.ok ? "OK" : "FAIL"} ${rec.status} ${rec.requested_url} ${rec.elapsed_ms}ms ` +

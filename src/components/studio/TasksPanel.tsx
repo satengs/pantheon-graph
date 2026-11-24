@@ -3,6 +3,8 @@ import { ChevronRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import {
+  type AuditCoverage,
+  type CoverageCount,
   type SemanticTask,
   type TaskBrand,
   type TaskFilters,
@@ -247,6 +249,7 @@ export function TasksPanel() {
           <div className="min-w-0">
             <h2 className="text-sm text-fg">Tasks</h2>
             <p className="mt-0.5 text-xs text-subtle">{doc.auditedAtLabel}</p>
+            {doc.coverage ? <CoverageLine coverage={doc.coverage} /> : null}
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
             <span>
@@ -281,8 +284,8 @@ export function TasksPanel() {
         </div>
         <p className="mt-2 max-w-3xl text-[11px] leading-snug text-subtle">
           Semantic HTML audit only. These counts are not Pantheon C/H/M/L and are not Evidence
-          findings. Every check ran on the server HTML (JavaScript off) and on the live client DOM;
-          Render source shows where they differ.
+          findings. Every check ran on the server HTML (JavaScript off) for the full site, and on
+          the live client DOM for the rendered sample; Render source shows where they differ.
         </p>
       </div>
 
@@ -400,6 +403,38 @@ export function TasksPanel() {
   );
 }
 
+const COVERAGE_BRANDS: TaskBrand[] = ["fdr", "achieve", "bills"];
+const fmtN = (n: number | undefined) => (n ?? 0).toLocaleString("en-US");
+
+/** Deep-audit coverage: Server HTML X / Y URLs · Live Chromium DOM Z URLs, split by brand. */
+function CoverageLine({ coverage }: { coverage: AuditCoverage }) {
+  const split = (by: Record<TaskBrand, CoverageCount>, withTotal: boolean) =>
+    COVERAGE_BRANDS.map(
+      (b) =>
+        `${BRAND_FILTER_LABEL[b]} ${fmtN(by[b]?.checked)}${withTotal ? ` / ${fmtN(by[b]?.total)}` : ""}`,
+    ).join(" · ");
+  return (
+    <div
+      className="mt-1 flex flex-col gap-0.5 text-[12px] tabular-nums text-[#C8CDD6]"
+      data-testid="tasks-coverage"
+    >
+      <span>
+        <span className="font-semibold text-fg">
+          Server HTML: {coverage.server.checked.toLocaleString("en-US")} /{" "}
+          {coverage.server.total.toLocaleString("en-US")} URLs
+        </span>{" "}
+        <span className="text-subtle">({split(coverage.server.byBrand, true)})</span>
+      </span>
+      <span>
+        <span className="font-semibold text-fg">
+          Live Chromium DOM: {coverage.chromium.checked.toLocaleString("en-US")} URLs
+        </span>{" "}
+        <span className="text-subtle">({split(coverage.chromium.byBrand, false)})</span>
+      </span>
+    </div>
+  );
+}
+
 function FilterSelect({
   label,
   testId,
@@ -495,12 +530,18 @@ function TaskRow({
               <span className="text-[11px] tabular-nums text-muted">{task.scopeLabel}</span>
             </div>
             <RenderMarks task={task} render={render} />
-            <h3 className="mt-1 text-sm text-fg [overflow-wrap:anywhere]">{task.title}</h3>
+            <h3
+              className="mt-1.5 text-[15px] font-semibold leading-snug text-[#F4F4F5] [overflow-wrap:anywhere]"
+              data-testid="task-title"
+            >
+              {task.title}
+            </h3>
             <p
               className={cn(
-                "mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]",
-                !expanded && "line-clamp-2",
+                "mt-0.5 text-[13px] leading-snug text-[#C8CDD6] [overflow-wrap:anywhere]",
+                !expanded && "line-clamp-1",
               )}
+              data-testid="task-problem"
             >
               {task.problem}
             </p>
@@ -522,6 +563,19 @@ function TaskRow({
           </select>
         </label>
       </div>
+
+      {task.reason ? (
+        <div className="px-3 pb-3" data-testid="task-why">
+          <div className="rounded-md border border-[rgba(255,255,255,0.14)] bg-[#151922] px-3 py-2">
+            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#E8C987]">
+              Why it matters
+            </div>
+            <p className="mt-1 text-[13.5px] leading-[1.45] text-[#ECEEF2] [overflow-wrap:anywhere]">
+              {task.reason}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {expanded ? (
         <div className="space-y-3 border-t border-border px-3 py-3">
@@ -569,12 +623,6 @@ function TaskRow({
           ) : null}
 
           <div>
-            <h4 className="text-[11px] uppercase tracking-wide text-subtle">Why it matters</h4>
-            <p className="mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]">
-              {task.reason}
-            </p>
-          </div>
-          <div>
             <h4 className="text-[11px] uppercase tracking-wide text-subtle">Fix</h4>
             <p className="mt-1 text-xs leading-snug text-fg [overflow-wrap:anywhere]">{task.fix}</p>
           </div>
@@ -582,7 +630,13 @@ function TaskRow({
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 className="text-[11px] uppercase tracking-wide text-subtle">
-                Affected URLs · {task.affectedUrls.length}
+                Affected URLs ·{" "}
+                {(task.affectedUrlsTotal ?? task.affectedUrls.length).toLocaleString("en-US")}
+                {(task.affectedUrlsTotal ?? 0) > task.affectedUrls.length ? (
+                  <span className="ml-1 normal-case tracking-normal">
+                    (listing {task.affectedUrls.length}, Chromium-rendered first)
+                  </span>
+                ) : null}
               </h4>
               {task.graphNodeId ? (
                 <Button
@@ -609,7 +663,14 @@ function TaskRow({
                       aria-hidden
                     />
                   </a>
-                  {u.renderSource && u.renderSource !== "server+client" && u.ssrDiff ? (
+                  {u.tier === "server" ? (
+                    <span
+                      className="shrink-0 font-mono text-[11px] text-muted"
+                      title="Found by the full-site server HTML sweep; client DOM not rendered for this URL"
+                    >
+                      Server HTML{u.serverLabel ? `: ${u.serverLabel}` : ""}
+                    </span>
+                  ) : u.renderSource && u.renderSource !== "server+client" && u.ssrDiff ? (
                     <span
                       className="shrink-0 font-mono text-[11px] text-muted"
                       title={RENDER_SOURCE_LABEL[u.renderSource]}
