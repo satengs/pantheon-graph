@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Build public/data/semantic-tasks.json from the 24 Nov 2026 semantic HTML audit.
+ * Build public/data/semantic-tasks.json from the 24 Nov 2026 semantic HTML audit
+ * (scripts/audit-semantic-html-dom.mjs: live Chromium, server HTML vs client DOM on every check).
  * Keeps every finding. Maps affected URLs to graph node IDs (hub or brand).
  * Service owners are mapped from URLs/hubs onto Public, Loans, Apply, Enroll,
  * Dashboard, or Login. Accessibility / SEO from the audit are kept as tags.
@@ -11,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
-const DEFAULT_AUDIT = "/workspace/semantic-html-audit-2026-11-24.json";
+const DEFAULT_AUDIT = "/workspace/grood-ssr-audit/semantic-html-audit-ssr-2026-11-24.json";
 const CRAWL = path.join(repo, "public/data/crawl.json");
 const OUT = path.join(repo, "public/data/semantic-tasks.json");
 
@@ -29,7 +30,15 @@ const FDR_NOT_HUBS = new Set([
 const SEED_PRODUCTS = {
   fdr: ["settlement", "debt-relief", "consolidation", "glossary", "apply"],
   achieve: ["personal-loan", "heloc", "hel", "wellness", "debt-relief", "glossary"],
-  bills: ["consolidation", "hel", "heloc", "personal-loan", "credit-cards", "student-loans", "insurance"],
+  bills: [
+    "consolidation",
+    "hel",
+    "heloc",
+    "personal-loan",
+    "credit-cards",
+    "student-loans",
+    "insurance",
+  ],
 };
 
 export function urlKey(url) {
@@ -59,7 +68,11 @@ export function graphNodeId(brand, product) {
 
 export function brandOfHost(url) {
   const k = urlKey(url);
-  if (k === "freedomdebtrelief.com" || k.startsWith("freedomdebtrelief.com/") || k.includes("apply.freedomdebtrelief.com"))
+  if (
+    k === "freedomdebtrelief.com" ||
+    k.startsWith("freedomdebtrelief.com/") ||
+    k.includes("apply.freedomdebtrelief.com")
+  )
     return "fdr";
   if (k === "achieve.com" || k.startsWith("achieve.com/")) return "achieve";
   if (k === "bills.com" || k.startsWith("bills.com/")) return "bills";
@@ -94,7 +107,10 @@ const LOAN_PREFIXES = [
 ];
 
 function pathMatches(path, prefix) {
-  const p = String(path ?? "/").toLowerCase().replace(/\/+$/, "") || "/";
+  const p =
+    String(path ?? "/")
+      .toLowerCase()
+      .replace(/\/+$/, "") || "/";
   const pre = prefix.toLowerCase().replace(/\/+$/, "");
   return p === pre || p.startsWith(`${pre}/`);
 }
@@ -130,7 +146,8 @@ export function classifyService(url) {
   ) {
     return "Login";
   }
-  if (pathMatches(path, "/dashboard") || pathMatches(path, "/portal") || /^my\./i.test(host)) return "Dashboard";
+  if (pathMatches(path, "/dashboard") || pathMatches(path, "/portal") || /^my\./i.test(host))
+    return "Dashboard";
   if (LOAN_PREFIXES.some((pre) => pathMatches(path, pre))) return "Loans";
   return "Public";
 }
@@ -158,7 +175,13 @@ export function taskServiceOwner(urls) {
   const services = [...votes.keys()];
   if (services.length === 1) return services[0];
   if (votes.has("Public")) return "Public";
-  return SERVICE_OWNERS.filter((s) => votes.has(s)).sort((a, b) => (votes.get(b) ?? 0) - (votes.get(a) ?? 0) || SERVICE_OWNERS.indexOf(a) - SERVICE_OWNERS.indexOf(b))[0] ?? "Public";
+  return (
+    SERVICE_OWNERS.filter((s) => votes.has(s)).sort(
+      (a, b) =>
+        (votes.get(b) ?? 0) - (votes.get(a) ?? 0) ||
+        SERVICE_OWNERS.indexOf(a) - SERVICE_OWNERS.indexOf(b),
+    )[0] ?? "Public"
+  );
 }
 
 export function buildCrawlIndex(crawl) {
@@ -173,8 +196,13 @@ export function buildCrawlIndex(crawl) {
             ? "bills.com"
             : null;
     if (!host) continue;
-    const pathPart = String(page.path ?? "").replace(/\/+$/, "").toLowerCase();
-    const key = pathPart && pathPart !== "/" ? `${host}${pathPart.startsWith("/") ? pathPart : `/${pathPart}`}` : host;
+    const pathPart = String(page.path ?? "")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+    const key =
+      pathPart && pathPart !== "/"
+        ? `${host}${pathPart.startsWith("/") ? pathPart : `/${pathPart}`}`
+        : host;
     byKey.set(urlKey(`https://${key}`), page);
   }
   return byKey;
@@ -192,7 +220,24 @@ function pickTaskGraphNode(urlNodes, brand) {
   if (ids.length === 1) return ids[0];
   const hubs = ids.filter((id) => id.startsWith("hub:"));
   if (hubs.length === 1) return hubs[0];
-  return brand ? `brand:${brand}` : ids[0] ?? null;
+  return brand ? `brand:${brand}` : (ids[0] ?? null);
+}
+
+export const RENDER_SOURCES = ["server+client", "client-only", "diff"];
+
+/** Server + Client | Client-only | Server vs Client diff (missing data counts as matching). */
+export function renderSourceOf(v) {
+  return RENDER_SOURCES.includes(v) ? v : "server+client";
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Audited in live Chromium DOM · 24 Nov 2026 · 156 URLs checked" (date in the audit's own offset). */
+export function auditedLabel(meta, totals = {}) {
+  const n = meta.pages_selected ?? totals.pages_selected ?? 0;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(meta.audited_at ?? ""));
+  const date = m ? ` · ${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : "";
+  return `Audited in live Chromium DOM${date} · ${n} URLs checked`;
 }
 
 export function transformAudit(audit, crawl) {
@@ -217,6 +262,10 @@ export function transformAudit(audit, crawl) {
         countOnPage: u.count_on_page ?? null,
         inCrawl: Boolean(page),
         graphNodeId: graphNodeId(b, product),
+        renderSource: renderSourceOf(u.render_source),
+        serverLabel: u.server_label ?? null,
+        clientLabel: u.client_label ?? null,
+        ssrDiff: u.ssr_diff ?? null,
       };
     });
     const examples = (t.examples ?? []).map((e) => ({
@@ -229,6 +278,9 @@ export function transformAudit(audit, crawl) {
       variant: e.variant ?? null,
       ...(e.h1_texts || e.h1Texts ? { h1Texts: e.h1_texts || e.h1Texts } : {}),
       ...(e.client_injected || e.clientInjected ? { clientInjected: true } : {}),
+      renderSource: renderSourceOf(e.render_source),
+      serverLabel: e.server_label ?? null,
+      clientLabel: e.client_label ?? null,
     }));
     const variants = (t.variants ?? []).map((v) =>
       typeof v === "string" ? { variant: v } : { variant: v.variant, pages: v.pages ?? null },
@@ -253,6 +305,16 @@ export function transformAudit(audit, crawl) {
       occurrenceCount: t.occurrence_count,
       scopeLabel: scopeLabel(t.page_count, brandAudited),
       graphNodeId: pickTaskGraphNode(affectedUrls, brand),
+      renderSource: renderSourceOf(t.render_source),
+      renderCounts: {
+        serverClient: t.render_counts?.server_client ?? 0,
+        clientOnly: t.render_counts?.client_only ?? 0,
+        diff: t.render_counts?.diff ?? 0,
+      },
+      ssrDiff: t.ssr_diff ?? null,
+      renderDiff: t.render_diff
+        ? { url: t.render_diff.url, server: t.render_diff.server, client: t.render_diff.client }
+        : null,
       affectedUrls,
       examples,
       variants,
@@ -268,7 +330,8 @@ export function transformAudit(audit, crawl) {
 
   return {
     auditedAt: meta.audited_at,
-    auditedAtLabel: `Audited in live Chromium DOM · ${meta.pages_selected ?? totals.pages_selected ?? 0} URLs checked`,
+    auditedAtLabel: auditedLabel(meta, totals),
+    method: meta.method ?? null,
     pagesAudited: meta.pages_selected ?? totals.pages_selected ?? 0,
     htmlParsed: meta.pages_ok ?? totals.pages_ok ?? 0,
     nonHtmlCount: meta.pages_failed ?? totals.pages_failed ?? 0,
@@ -290,6 +353,11 @@ export function transformAudit(audit, crawl) {
         bills: byBrand.bills?.tasks ?? tasks.filter((t) => t.brand === "bills").length,
       },
       bySeverity,
+      byRenderSource: {
+        "server+client": tasks.filter((t) => t.renderSource === "server+client").length,
+        "client-only": tasks.filter((t) => t.renderSource === "client-only").length,
+        diff: tasks.filter((t) => t.renderSource === "diff").length,
+      },
     },
     tasks,
   };
@@ -297,7 +365,8 @@ export function transformAudit(audit, crawl) {
 
 export function assertCleanText(doc) {
   const blob = JSON.stringify(doc);
-  if (blob.includes("/workspace/")) throw new Error("internal path leaked into semantic-tasks.json");
+  if (blob.includes("/workspace/"))
+    throw new Error("internal path leaked into semantic-tasks.json");
   return true;
 }
 
@@ -308,6 +377,11 @@ function main() {
   const doc = transformAudit(audit, crawl);
   assertCleanText(doc);
   if (!doc.tasks.length) throw new Error("expected imported tasks, got 0");
+  const learn = doc.tasks.filter((t) =>
+    t.affectedUrls.some((u) => urlKey(u.url) === "achieve.com/learn"),
+  );
+  if (learn.some((t) => t.rule === "missing-h1"))
+    throw new Error("achieve.com/learn must not be flagged missing-h1");
   fs.writeFileSync(OUT, JSON.stringify(doc, null, 2) + "\n");
   const { totals } = doc;
   console.log(

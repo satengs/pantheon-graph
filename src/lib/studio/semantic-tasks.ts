@@ -4,6 +4,22 @@ import { BUILD_SHA } from "@/lib/build-info";
 export type TaskSeverity = "critical" | "high" | "medium" | "low";
 export type TaskBrand = "fdr" | "achieve" | "bills";
 export type TaskWorkStatus = "open" | "in_progress" | "done";
+/** Where an issue shows up: identical in server HTML and client DOM, only after hydration, or different. */
+export type TaskRenderSource = "server+client" | "client-only" | "diff";
+
+export const RENDER_SOURCE_ORDER: TaskRenderSource[] = ["server+client", "client-only", "diff"];
+
+export const RENDER_SOURCE_LABEL: Record<TaskRenderSource, string> = {
+  "server+client": "Server + Client",
+  "client-only": "Client-only",
+  diff: "Server vs Client diff",
+};
+
+export function taskRenderSource(t: { renderSource?: string | null }): TaskRenderSource {
+  return t.renderSource === "client-only" || t.renderSource === "diff"
+    ? t.renderSource
+    : "server+client";
+}
 
 export type TaskUrl = {
   url: string;
@@ -13,6 +29,10 @@ export type TaskUrl = {
   countOnPage: number | null;
   inCrawl: boolean;
   graphNodeId: string | null;
+  renderSource?: TaskRenderSource;
+  serverLabel?: string | null;
+  clientLabel?: string | null;
+  ssrDiff?: string | null;
 };
 
 export type TaskExample = {
@@ -23,6 +43,11 @@ export type TaskExample = {
   snippet: string;
   countOnPage: number | null;
   variant: string | null;
+  h1Texts?: string[];
+  clientInjected?: boolean;
+  renderSource?: TaskRenderSource;
+  serverLabel?: string | null;
+  clientLabel?: string | null;
 };
 
 export type SemanticTask = {
@@ -45,6 +70,10 @@ export type SemanticTask = {
   occurrenceCount: number;
   scopeLabel: string;
   graphNodeId: string | null;
+  renderSource?: TaskRenderSource;
+  renderCounts?: { serverClient: number; clientOnly: number; diff: number };
+  ssrDiff?: string | null;
+  renderDiff?: { url: string; server: string; client: string } | null;
   affectedUrls: TaskUrl[];
   examples: TaskExample[];
   variants: Array<{ variant: string; pages?: number | null }>;
@@ -61,6 +90,7 @@ export type SemanticTasksDoc = {
     tasks: number;
     byBrand: Record<TaskBrand, number>;
     bySeverity: Record<TaskSeverity, number>;
+    byRenderSource?: Record<TaskRenderSource, number>;
   };
   tasks: SemanticTask[];
 };
@@ -81,11 +111,20 @@ export type TaskFilters = {
   category: "all" | string;
   severity: "all" | TaskSeverity;
   status: "all" | TaskWorkStatus;
+  render: "all" | TaskRenderSource;
   query: string;
 };
 
 export function emptyTaskFilters(): TaskFilters {
-  return { brand: "all", owner: "all", category: "all", severity: "all", status: "all", query: "" };
+  return {
+    brand: "all",
+    owner: "all",
+    category: "all",
+    severity: "all",
+    status: "all",
+    render: "all",
+    query: "",
+  };
 }
 
 export function loadTaskStatuses(): Record<string, TaskWorkStatus> {
@@ -127,6 +166,7 @@ export function filterTasks(
     if (filters.category !== "all" && t.category !== filters.category) return false;
     if (filters.severity !== "all" && t.severity !== filters.severity) return false;
     if (filters.status !== "all" && taskStatus(t.id, statuses) !== filters.status) return false;
+    if (filters.render !== "all" && taskRenderSource(t) !== filters.render) return false;
     if (!q) return true;
     const hay = [
       t.title,
@@ -138,6 +178,8 @@ export function filterTasks(
       t.rule,
       t.category,
       t.scopeLabel,
+      RENDER_SOURCE_LABEL[taskRenderSource(t)],
+      t.ssrDiff ?? "",
       ...t.affectedUrls.map((u) => u.url),
       ...t.examples.flatMap((e) => [e.url, e.selector, e.snippet]),
     ]
@@ -161,7 +203,9 @@ const SERVICE_OWNER_ORDER = ["Public", "Loans", "Apply", "Enroll", "Dashboard", 
 export function uniqueOwners(tasks: SemanticTask[]): string[] {
   const present = new Set(tasks.map((t) => t.owner));
   const known = SERVICE_OWNER_ORDER.filter((s) => present.has(s));
-  const extra = [...present].filter((s) => !SERVICE_OWNER_ORDER.includes(s)).sort((a, b) => a.localeCompare(b));
+  const extra = [...present]
+    .filter((s) => !SERVICE_OWNER_ORDER.includes(s))
+    .sort((a, b) => a.localeCompare(b));
   return [...known, ...extra];
 }
 
@@ -181,7 +225,9 @@ export function categoryLabel(cat: string): string {
 let inflight: Promise<SemanticTasksDoc | null> | null = null;
 
 export function loadSemanticTasks(): Promise<SemanticTasksDoc | null> {
-  inflight ??= fetch(`/data/semantic-tasks.json?v=${encodeURIComponent(BUILD_SHA)}`, { cache: "no-cache" })
+  inflight ??= fetch(`/data/semantic-tasks.json?v=${encodeURIComponent(BUILD_SHA)}`, {
+    cache: "no-cache",
+  })
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);
   return inflight;

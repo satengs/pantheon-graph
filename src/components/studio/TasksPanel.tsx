@@ -6,9 +6,13 @@ import {
   type SemanticTask,
   type TaskBrand,
   type TaskFilters,
+  type TaskRenderSource,
   type TaskSeverity,
   type TaskWorkStatus,
   TASK_STATUS_LABEL,
+  RENDER_SOURCE_LABEL,
+  RENDER_SOURCE_ORDER,
+  taskRenderSource,
   categoryLabel,
   emptyTaskFilters,
   filterTasks,
@@ -48,6 +52,12 @@ const SEV_LETTER: Record<TaskSeverity, string> = {
   low: "L",
 };
 
+const RENDER_PILL: Record<TaskRenderSource, string> = {
+  "server+client": "bg-raised text-subtle",
+  "client-only": "bg-[#4ab8e0]/15 text-[#7ccbe8]",
+  diff: "bg-[#6b8cff]/15 text-[#9fb3ff]",
+};
+
 function Pill({ className, children }: { className: string; children: ReactNode }) {
   return (
     <span
@@ -68,13 +78,19 @@ function openInGraph(nodeId: string) {
   store.setGraphInspectorOpen(true);
 }
 
+/**
+ * Auto-open the first card only once per page session. Kept outside the component so a
+ * remount (tab switch, URL sync) never re-expands a card the user just collapsed.
+ */
+let autoOpenDone = false;
+
 export function TasksPanel() {
   const { doc, error } = useSemanticTasks();
   const [filters, setFilters] = useState<TaskFilters>(emptyTaskFilters);
   const [statuses, setStatuses] = useState<Record<string, TaskWorkStatus>>({});
   const [openId, setOpenId] = useState<string | null>(null);
   const [urlLimit, setUrlLimit] = useState(8);
-  const didInitOpen = useRef(false);
+  const didInitOpen = useRef(autoOpenDone);
 
   useEffect(() => {
     setStatuses(loadTaskStatuses());
@@ -83,6 +99,7 @@ export function TasksPanel() {
       if (id) {
         setOpenId(id);
         didInitOpen.current = true;
+        autoOpenDone = true;
       }
     } catch {
       /* ignore */
@@ -94,7 +111,8 @@ export function TasksPanel() {
       const u = new URL(window.location.href);
       if (openId) u.searchParams.set("task", openId);
       else u.searchParams.delete("task");
-      if (u.href !== window.location.href) window.history.replaceState(window.history.state, "", u.href);
+      if (u.href !== window.location.href)
+        window.history.replaceState(window.history.state, "", u.href);
     } catch {
       /* ignore */
     }
@@ -111,12 +129,14 @@ export function TasksPanel() {
     if (!visible.length) return;
     if (openId && visible.some((t) => t.id === openId)) {
       didInitOpen.current = true;
+      autoOpenDone = true;
       return;
     }
     // First load (or a deep link): open the first visible card once.
     if (!didInitOpen.current) {
       setOpenId(visible[0]!.id);
       didInitOpen.current = true;
+      autoOpenDone = true;
       setUrlLimit(8);
       return;
     }
@@ -149,9 +169,18 @@ export function TasksPanel() {
   }
 
   const { totals } = doc;
+  const renderCounts: Record<TaskRenderSource, number> = {
+    "server+client": 0,
+    "client-only": 0,
+    diff: 0,
+  };
+  for (const t of doc.tasks) renderCounts[taskRenderSource(t)] += 1;
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-testid="tasks-panel">
+    <section
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      data-testid="tasks-panel"
+    >
       <div
         className="shrink-0 border-b border-border bg-surface px-4 py-3"
         data-testid="tasks-summary"
@@ -167,22 +196,44 @@ export function TasksPanel() {
               <span className="font-medium tabular-nums text-fg">{totals.tasks}</span> tasks
             </span>
             <span>
-              FDR {totals.byBrand.fdr} · Achieve {totals.byBrand.achieve} · Bills.com {totals.byBrand.bills}
+              FDR {totals.byBrand.fdr} · Achieve {totals.byBrand.achieve} · Bills.com{" "}
+              {totals.byBrand.bills}
             </span>
-            <span className="inline-flex items-center gap-1 tabular-nums" title="Semantic HTML severity — not Pantheon C/H/M/L">
+            <span
+              className="inline-flex items-center gap-1 tabular-nums"
+              title="Semantic HTML severity — not Pantheon C/H/M/L"
+            >
               <span className="text-danger">C{totals.bySeverity.critical}</span>
               <span className="text-[#ff8c1a]">H{totals.bySeverity.high}</span>
               <span className="text-[#c6e86a]">M{totals.bySeverity.medium}</span>
               <span className="text-muted">L{totals.bySeverity.low}</span>
             </span>
+            <span
+              className="tabular-nums"
+              data-testid="tasks-render-summary"
+              title="Server HTML (JavaScript off) vs live client DOM"
+            >
+              {RENDER_SOURCE_ORDER.map((r, i) => (
+                <span key={r}>
+                  {i ? " · " : ""}
+                  {RENDER_SOURCE_LABEL[r]} {renderCounts[r]}
+                </span>
+              ))}
+            </span>
           </div>
         </div>
         <p className="mt-2 max-w-3xl text-[11px] leading-snug text-subtle">
-          Semantic HTML audit only. These counts are not Pantheon C/H/M/L and are not Evidence findings.
+          Semantic HTML audit only. These counts are not Pantheon C/H/M/L and are not Evidence
+          findings. Every check ran on the server HTML (JavaScript off) and on the live client DOM;
+          Render source shows where they differ.
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2" role="group" aria-label="Task filters">
+      <div
+        className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-bg px-4 py-2"
+        role="group"
+        aria-label="Task filters"
+      >
         <FilterSelect
           label="Brand"
           testId="task-filter-brand"
@@ -207,7 +258,10 @@ export function TasksPanel() {
           testId="task-filter-category"
           value={filters.category}
           onChange={(v) => setFilters((f) => ({ ...f, category: v }))}
-          options={[{ value: "all", label: "All" }, ...categories.map((c) => ({ value: c, label: categoryLabel(c) }))]}
+          options={[
+            { value: "all", label: "All" },
+            ...categories.map((c) => ({ value: c, label: categoryLabel(c) })),
+          ]}
         />
         <FilterSelect
           label="Severity"
@@ -232,6 +286,19 @@ export function TasksPanel() {
             { value: "open", label: "Open" },
             { value: "in_progress", label: "In Progress" },
             { value: "done", label: "Done" },
+          ]}
+        />
+        <FilterSelect
+          label="Render source"
+          testId="task-filter-render"
+          value={filters.render}
+          onChange={(v) => setFilters((f) => ({ ...f, render: v as TaskFilters["render"] }))}
+          options={[
+            { value: "all", label: "All" },
+            ...RENDER_SOURCE_ORDER.map((r) => ({
+              value: r,
+              label: `${RENDER_SOURCE_LABEL[r]} (${renderCounts[r]})`,
+            })),
           ]}
         />
         <label className="flex min-w-[12rem] flex-1 items-center gap-2 text-xs text-muted">
@@ -260,6 +327,8 @@ export function TasksPanel() {
                 expanded={openId === task.id}
                 urlLimit={openId === task.id ? urlLimit : 8}
                 onToggle={() => {
+                  didInitOpen.current = true;
+                  autoOpenDone = true;
                   setOpenId((id) => (id === task.id ? null : task.id));
                   setUrlLimit(8);
                 }}
@@ -324,6 +393,7 @@ function TaskRow({
   onShowAllUrls: () => void;
 }) {
   const example = task.examples[0];
+  const render = taskRenderSource(task);
   const urls = task.affectedUrls.slice(0, urlLimit);
   const hidden = task.affectedUrls.length - urls.length;
 
@@ -350,24 +420,46 @@ function TaskRow({
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Pill className={BRAND_PILL[task.brand]}>{BRAND_FILTER_LABEL[task.brand]}</Pill>
-            <Pill className={SEV_PILL[task.severity]}>
-              {SEV_LETTER[task.severity]} {task.severity}
-            </Pill>
-            <span className="text-[11px] text-subtle">{categoryLabel(task.category)}</span>
-            <span className="text-[11px] text-muted">{task.owner}</span>
-            {(task.tags ?? []).map((tag) => (
-              <span key={tag} className="inline-flex h-5 items-center rounded-sm bg-raised px-1.5 text-[10px] text-subtle">
-                {tag}
-              </span>
-            ))}
-            <span className="text-[11px] tabular-nums text-muted">{task.scopeLabel}</span>
-          </div>
-          <h3 className="mt-1 text-sm text-fg [overflow-wrap:anywhere]">{task.title}</h3>
-          <p className={cn("mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]", !expanded && "line-clamp-2")}>
-            {task.problem}
-          </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Pill className={BRAND_PILL[task.brand]}>{BRAND_FILTER_LABEL[task.brand]}</Pill>
+              <Pill className={SEV_PILL[task.severity]}>
+                {SEV_LETTER[task.severity]} {task.severity}
+              </Pill>
+              <span className="text-[11px] text-subtle">{categoryLabel(task.category)}</span>
+              <span className="text-[11px] text-muted">{task.owner}</span>
+              {(task.tags ?? []).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex h-5 items-center rounded-sm bg-raised px-1.5 text-[10px] text-subtle"
+                >
+                  {tag}
+                </span>
+              ))}
+              <span className="text-[11px] tabular-nums text-muted">{task.scopeLabel}</span>
+              <Pill className={RENDER_PILL[render]}>
+                <span data-testid="task-render-source">{RENDER_SOURCE_LABEL[render]}</span>
+              </Pill>
+            </div>
+            <h3 className="mt-1 text-sm text-fg [overflow-wrap:anywhere]">{task.title}</h3>
+            <p
+              className={cn(
+                "mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]",
+                !expanded && "line-clamp-2",
+              )}
+            >
+              {task.problem}
+            </p>
+            {task.renderDiff && render !== "server+client" ? (
+              <p
+                className="mt-1 font-mono text-[11px] leading-snug text-fg [overflow-wrap:anywhere]"
+                data-testid="task-render-diff-line"
+              >
+                Server HTML: {task.renderDiff.server} → Client DOM: {task.renderDiff.client}
+                <span className="ml-1.5 font-sans text-subtle">
+                  {shortUrl(task.renderDiff.url)}
+                </span>
+              </p>
+            ) : null}
           </div>
         </button>
         <label className="flex shrink-0 items-center gap-1.5 text-[11px] text-subtle">
@@ -389,6 +481,33 @@ function TaskRow({
 
       {expanded ? (
         <div className="space-y-3 border-t border-border px-3 py-3">
+          <div className="min-w-0" data-testid="task-render-compare">
+            <h4 className="text-[11px] uppercase tracking-wide text-subtle">
+              Render source · {RENDER_SOURCE_LABEL[render]}
+            </h4>
+            {task.ssrDiff ? (
+              <p className="mt-1 text-xs leading-snug text-muted">{task.ssrDiff}</p>
+            ) : null}
+            {task.renderDiff && render !== "server+client" ? (
+              <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="min-w-0 rounded-md border border-border bg-bg p-2">
+                  <div className="text-[10px] uppercase tracking-wide text-subtle">
+                    Server HTML (initial response)
+                  </div>
+                  <div className="mt-0.5 font-mono text-xs text-fg">{task.renderDiff.server}</div>
+                </div>
+                <div className="min-w-0 rounded-md border border-border bg-bg p-2">
+                  <div className="text-[10px] uppercase tracking-wide text-subtle">
+                    Client DOM (after hydration)
+                  </div>
+                  <div className="mt-0.5 font-mono text-xs text-fg">{task.renderDiff.client}</div>
+                </div>
+                <p className="text-[11px] text-subtle sm:col-span-2 [overflow-wrap:anywhere]">
+                  {shortUrl(task.renderDiff.url)}
+                </p>
+              </div>
+            ) : null}
+          </div>
           {example?.selector || example?.snippet ? (
             <div className="min-w-0">
               <h4 className="text-[11px] uppercase tracking-wide text-subtle">Element / snippet</h4>
@@ -407,7 +526,9 @@ function TaskRow({
 
           <div>
             <h4 className="text-[11px] uppercase tracking-wide text-subtle">Why it matters</h4>
-            <p className="mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]">{task.reason}</p>
+            <p className="mt-1 text-xs leading-snug text-muted [overflow-wrap:anywhere]">
+              {task.reason}
+            </p>
           </div>
           <div>
             <h4 className="text-[11px] uppercase tracking-wide text-subtle">Fix</h4>
@@ -420,7 +541,11 @@ function TaskRow({
                 Affected URLs · {task.affectedUrls.length}
               </h4>
               {task.graphNodeId ? (
-                <Button size="sm" variant="secondary" onClick={() => openInGraph(task.graphNodeId!)}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => openInGraph(task.graphNodeId!)}
+                >
                   Open in Graph
                 </Button>
               ) : null}
@@ -435,8 +560,19 @@ function TaskRow({
                     className="min-w-0 truncate text-accent underline-offset-2 hover:underline"
                   >
                     {u.url.replace(/^https:\/\//, "")}
-                    <ExternalLink className="ml-1 inline size-3 align-[-1px] text-subtle" aria-hidden />
+                    <ExternalLink
+                      className="ml-1 inline size-3 align-[-1px] text-subtle"
+                      aria-hidden
+                    />
                   </a>
+                  {u.renderSource && u.renderSource !== "server+client" && u.ssrDiff ? (
+                    <span
+                      className="shrink-0 font-mono text-[11px] text-muted"
+                      title={RENDER_SOURCE_LABEL[u.renderSource]}
+                    >
+                      {u.ssrDiff}
+                    </span>
+                  ) : null}
                   {u.graphNodeId ? (
                     <button
                       type="button"
@@ -450,7 +586,11 @@ function TaskRow({
               ))}
             </ul>
             {hidden > 0 ? (
-              <button type="button" className="mt-1 text-[11px] text-muted hover:text-fg" onClick={onShowAllUrls}>
+              <button
+                type="button"
+                className="mt-1 text-[11px] text-muted hover:text-fg"
+                onClick={onShowAllUrls}
+              >
                 Show all {task.affectedUrls.length} URLs
               </button>
             ) : null}
@@ -459,4 +599,8 @@ function TaskRow({
       ) : null}
     </li>
   );
+}
+
+function shortUrl(url: string) {
+  return url.replace(/^https?:\/\/(www\.)?/, "");
 }
