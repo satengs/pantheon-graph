@@ -10,6 +10,7 @@ export type StudioTab =
   | "recommend"
   | "validation"
   | "issues"
+  | "tasks"
   | "rules"
   | "gate"
   | "states"
