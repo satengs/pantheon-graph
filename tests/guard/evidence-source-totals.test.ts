@@ -139,6 +139,26 @@ describe("guard: evidence source totals", () => {
     expect(bot.scope).toMatch(/Shared across FDR, Achieve and Bills; counted once at the parent/);
   });
 
+  test("E135 names two separate live Meta ads, not one creative, and stays Funnel High", () => {
+    const row = doc.items.find((i) => i.id === "E135")!;
+    expect(row.severity).toBe("high");
+    expect(row.why).toMatch(/two separate live Meta ads, 1457628736343949 and 1475846561179857/);
+    expect(row.why).not.toMatch(/same creative/i);
+  });
+
+  test("PR-touched generic owners were remapped to service teams", () => {
+    const want: Record<string, string> = {
+      E21: "Apply",
+      E123: "Public",
+      E140: "Public",
+      MS01: "Public",
+      MS05: "Public",
+    };
+    for (const [id, owner] of Object.entries(want)) {
+      expect(doc.items.find((i) => i.id === id)?.owner, id).toBe(owner);
+    }
+  });
+
   test("UI strings contain no personal names or box paths", () => {
     const leak = /Satenik|Alea Hunt|\/workspace\//;
     for (const i of doc.items) {

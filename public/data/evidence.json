@@ -45,9 +45,12 @@
     "manualSkipped": [],
     "confirmationMissing": [],
     "overridesApplied": [
+      "E21",
       "E70",
       "E79",
+      "E123",
       "E133",
+      "E140",
       "E146",
       "E163",
       "E170",
@@ -57,7 +60,9 @@
       "E181",
       "E183",
       "E185",
-      "E190"
+      "E190",
+      "MS01",
+      "MS05"
     ],
     "funnelSeverities": [
       {
@@ -1344,7 +1349,7 @@
       "title": "Apply + Valpak dest still APP_ENV=test / BRAND=fdr",
       "brand": "fdr",
       "urls": [],
-      "owner": "Apply / Consult",
+      "owner": "Apply",
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-24",
@@ -6134,7 +6139,7 @@
       "title": "Google Search Central shared AI-training robots.txt control planned for 2027",
       "brand": "fdr",
       "urls": [],
-      "owner": "Public / measurement",
+      "owner": "Public",
       "status": "open",
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-11-06",
@@ -6644,7 +6649,7 @@
       "daysOpen": 14,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-05) impact: high",
-      "why": "1457628736343949 (Achieve Loans, Nov 5) → get-started?section=achieve-hl, noindex shell, 0 rates. /heloc 6.10% and 0 real 5.75 (EB). Google top HELOC card CR16682374652428812289 (last shown Nov 11) is 6.10% \"5 days\". Evidence Brief 2026-11-20: /heloc hero 'as low as 5.75% APR' is back next to disclosure 6.10%–15.17%; '5 days' vs '10-12 business days' on the same page. Evidence Brief 2026-11-27: the /heloc hero \"as low as 5.75% APR\" is still live next to disclosure 6.10%–15.17%. Meta now runs the same creative at 5.75% (1457628736343949) and 6.10% (1475846561179857) at once. Speed lines still conflict (5 days vs under 2 weeks vs 10-12 business days). Re-date the week of Dec 9.",
+      "why": "1457628736343949 (Achieve Loans, Nov 5) → get-started?section=achieve-hl, noindex shell, 0 rates. /heloc 6.10% and 0 real 5.75 (EB). Google top HELOC card CR16682374652428812289 (last shown Nov 11) is 6.10% \"5 days\". Evidence Brief 2026-11-20: /heloc hero 'as low as 5.75% APR' is back next to disclosure 6.10%–15.17%; '5 days' vs '10-12 business days' on the same page. Evidence Brief 2026-11-27: the /heloc hero \"as low as 5.75% APR\" is still live next to disclosure 6.10%–15.17%. The 5.75% and 6.10% rates come from two separate live Meta ads, 1457628736343949 and 1475846561179857. Speed lines still conflict (5 days vs under 2 weeks vs 10-12 business days). Re-date the week of Dec 9.",
       "fix": "/fast/heloc-loans empty noindex shell (EB confirms). Google 5.75% creative ID still not captured (soft). Rate claim flagged for Compliance review",
       "firstReport": "",
       "links": [],
@@ -6945,7 +6950,7 @@
         "https://www.freedomdebtrelief.com/fees/",
         "https://www.freedomdebtrelief.com/vs/"
       ],
-      "owner": "Public (competitor)",
+      "owner": "Public",
       "status": "open",
       "statusText": "UPDATE · STILL OPEN",
       "firstSeen": "2026-11-13",
@@ -8317,7 +8322,7 @@
       "urls": [
         "https://www.achieve.com/learn/home-equity-loans/is-it-risky-to-use-a-heloc-to-pay-off-credit-card-debt"
       ],
-      "owner": "Achieve public site",
+      "owner": "Public",
       "status": "open",
       "statusText": "open",
       "firstSeen": "2026-11-16",
@@ -8510,7 +8515,7 @@
       "urls": [
         "https://www.freedomdebtrelief.com/scam/"
       ],
-      "owner": "FDR public site",
+      "owner": "Public",
       "status": "open",
       "statusText": "open",
       "firstSeen": "2026-11-16",

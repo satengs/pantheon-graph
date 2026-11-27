@@ -163,6 +163,21 @@
         ],
         "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
       }
+    },
+    "E21": {
+      "owner": "Apply"
+    },
+    "E123": {
+      "owner": "Public"
+    },
+    "E140": {
+      "owner": "Public"
+    },
+    "MS01": {
+      "owner": "Public"
+    },
+    "MS05": {
+      "owner": "Public"
     }
   }
 }
