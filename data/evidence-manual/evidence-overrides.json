@@ -53,13 +53,116 @@
       "fix": "Add App Store and Google Play links, and add inlinks from home or /how-it-works/."
     },
     "E170": {
-      "fix": "Owner to decide after verification"
+      "fix": "Compliance wording; correct the press-list date and the stray LendingTree sentence.",
+      "owner": "Public",
+      "statusText": "CONFIRMED"
     },
     "E70": {
       "title": "apply.freedomdebtrelief.com/fbcfos is still a test page; the Meta “$280 per month” claim is missing from the FDR homepage",
       "why": "/fbcfos is still a test page (APP_ENV test, noindex). The Meta “$280 per month” claim is not on the FDR homepage.",
       "fix": "Take the page out of test, match the landing copy to the ad claims, and capture the lead flow in DevTools. Owner: Apply + Compliance.",
       "owner": "Apply + Compliance"
+    },
+    "E175": {
+      "brand": "fdr",
+      "owner": "Apply",
+      "urls": [
+        "https://start.freedomfinancialnetwork.com/home"
+      ],
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "brand:fdr"
+        ],
+        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
+      },
+      "fix": "Compliance review once creative IDs are tied; the rendered start.FFN slider shows neither the $15K nor the $25,000 minimum."
+    },
+    "E176": {
+      "owner": "Public",
+      "urls": [
+        "https://www.freedomdebtrelief.com/"
+      ],
+      "fix": "Re-verify the BBB widget and fix the alt text. Compliance review of the FFN card.",
+      "brand": "fdr"
+    },
+    "E180": {
+      "owner": "Loans",
+      "title": "Seven Achieve holiday /learn pages are stale (dateModified 2023-11 to 2024-08, or missing)",
+      "why": "Funnel Fix's 26 Nov 2026 check found all 7 Achieve holiday /learn URLs return 200, are indexable and self-canonical, and contain 0 mentions of 2025. dateModified is 2023-11-30 to 2024-08-22 on 6 of them; /learn/personal-loans/holiday-loans has no dateModified. All 7 also carry dev.Achieve.com (already tracked as the site-wide /learn template issue). These need a real content refresh, not a date-only bump.",
+      "fix": "Refresh the holiday /learn content for the current season. Do not change dateModified without a substantial edit.",
+      "urls": [
+        "https://www.achieve.com/learn/everyday-finances/4-hacks-save-money-during-holidays",
+        "https://www.achieve.com/learn/everyday-finances/5-ways-to-reduce-holiday-debt-stress",
+        "https://www.achieve.com/learn/everyday-finances/7-creative-ideas-debt-free-holiday",
+        "https://www.achieve.com/learn/everyday-finances/budget-before-holiday-season",
+        "https://www.achieve.com/learn/everyday-finances/should-you-borrow-in-a-holiday-cash-crunch",
+        "https://www.achieve.com/learn/everyday-finances/why-holiday-spending-skyrockets",
+        "https://www.achieve.com/learn/personal-loans/holiday-loans"
+      ]
+    },
+    "E181": {
+      "owner": "Loans",
+      "title": "The HELOC draw-period explainer has 0 inlinks from /heloc and /home-equity-loan",
+      "why": "Funnel Fix's 26 Nov 2026 check found /learn/home-equity-loans/heloc-draw-period returns 200, is indexable, and mentions end of draw 8 times, but /heloc and /home-equity-loan link to it 0 times and mention end of draw 0 times.",
+      "fix": "Add internal links from /heloc and /home-equity-loan to the draw-period explainer (end-of-draw hook).",
+      "urls": [
+        "https://www.achieve.com/learn/home-equity-loans/heloc-draw-period",
+        "https://www.achieve.com/heloc",
+        "https://www.achieve.com/home-equity-loan"
+      ]
+    },
+    "E183": {
+      "owner": "Public + Enroll",
+      "brand": "fdr",
+      "title": "FDR /facts/ figures drifted from the dated fact set and the CNBC Select release",
+      "why": "NDR vs FDR (Nov 24) found /facts/ changed: program length 39 → 34 months, average deposit $427 → $472, first settlement within 3 months \"60%+\" → \"Over 65%\", plus a new \"fees vary by state\" note. The footnote still reads \"as of October 2024\" while the same page says \"as of January 2025\". The CNBC Select release says \">70% within three months\" and \">45% within one month\". Not yet Funnel-confirmed. Settlement-speed figures are flagged for Compliance review, not a violation.",
+      "fix": "Publish one dated fact set on /facts/ and in the CNBC Select release figures. Compliance review.",
+      "urls": [
+        "https://www.freedomdebtrelief.com/facts/"
+      ]
+    },
+    "E185": {
+      "owner": "Public",
+      "title": "FDR home USA Today badge has a null link and names no award source",
+      "why": "Funnel Fix's 26 Nov 2026 render of the FDR home found the USA Today trust badge (\"America's Best Customer Service\") has a null link and no page names the award source. That is a different award from USA Today's Nov 11 debt-relief ranking. Flagged for Compliance review.",
+      "fix": "Link the badge to its award source, or remove it. Compliance review before quoting either award.",
+      "urls": [
+        "https://www.freedomdebtrelief.com/"
+      ],
+      "brand": "fdr"
+    },
+    "E190": {
+      "owner": "Apply",
+      "brand": "fdr",
+      "title": "Apply /fb back-button behaviour is untested against Google's Nov 23 FAQ",
+      "why": "Google's back-button spam FAQ (Nov 23) also covers social and ad-platform traffic. /fb has not been tested for back-button behaviour.",
+      "fix": "Render-test /fb back-button behaviour (no submit).",
+      "urls": [
+        "https://apply.freedomdebtrelief.com/fb"
+      ],
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
+      }
+    },
+    "E79": {
+      "brand": "fdr",
+      "owner": "Apply",
+      "urls": [
+        "https://apply.freedomdebtrelief.com/fb",
+        "https://apply.freedomdebtrelief.com/fbcfos"
+      ],
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
+      }
     }
   }
 }

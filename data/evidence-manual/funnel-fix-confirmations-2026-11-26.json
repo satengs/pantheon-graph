@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "asOf": "2026-11-26",
+  "note": "Cross-check only. Funnel Fix's 26 Nov 2026 render and curl pack confirmed five existing or new Evidence Brief items. No Funnel impact rating was given, so those rows stay Unrated unless they already had a Funnel impact. This map does not import Funnel Fix rows as a new source. Googlebot / Cloudflare (E146) stays unverified. Already-confirmed WR-FF rows are not re-stamped.",
+  "confirmed": [
+    {
+      "funnel": "cnbc-select-curl",
+      "title": "FDR CNBC Select release contains the >45% / >70% line and a stray LendingTree sentence",
+      "evidenceIds": ["E170"]
+    },
+    {
+      "funnel": "bbb-widget-render",
+      "title": "FDR home BBB widget lastTimeVerified 2025-10-01, alt says A rating, 0 Accredited",
+      "evidenceIds": ["E176"]
+    },
+    {
+      "funnel": "usa-today-badge-render",
+      "title": "FDR home USA Today badge link is null and names no award source",
+      "evidenceIds": ["E185"]
+    },
+    {
+      "funnel": "holiday-learn-dates",
+      "title": "Seven Achieve holiday /learn URLs are stale (dateModified 2023-11 to 2024-08 or missing)",
+      "evidenceIds": ["E180"]
+    },
+    {
+      "funnel": "heloc-draw-inlinks",
+      "title": "heloc-draw-period has 0 inlinks from /heloc and /home-equity-loan",
+      "evidenceIds": ["E181"]
+    }
+  ],
+  "unverified": []
+}

@@ -1,22 +1,22 @@
 {
   "version": 1,
-  "asOf": "2026-11-20",
+  "asOf": "2026-11-27",
   "newestBrief": {
     "kind": "daily",
-    "date": "2026-11-20",
-    "file": "seo-vs-mkt/evidence-brief-2026-11-20/daily-brief.md"
+    "date": "2026-11-27",
+    "file": "seo-vs-mkt/evidence-brief-2026-11-27/daily-brief.md"
   },
-  "briefsReplayed": 23,
+  "briefsReplayed": 24,
   "weeklyBriefs": [],
   "defectsSource": "ndr-vs-fdr/scoreboard.md",
   "summary": {
-    "imported": 167,
-    "briefRows": 155,
+    "imported": 174,
+    "briefRows": 162,
     "defects": 7,
-    "matched": 54,
-    "matchedDrawnPage": 26,
-    "matchedBrandRollupOnly": 28,
-    "siteWide": 113,
+    "matched": 62,
+    "matchedDrawnPage": 28,
+    "matchedBrandRollupOnly": 34,
+    "siteWide": 112,
     "unmapped": 0,
     "screenshots": 26,
     "severity": {
@@ -24,17 +24,17 @@
       "high": 8,
       "medium": 7,
       "low": 1,
-      "unrated": 138
+      "unrated": 145
     },
     "status": {
-      "open": 163,
+      "open": 170,
       "partly fixed": 3,
       "fixed": 1
     },
     "scout": 5,
-    "toVerify": 3,
+    "toVerify": 5,
     "unverified": 1,
-    "funnelConfirmed": 22,
+    "funnelConfirmed": 27,
     "manualAdded": [
       "MS01",
       "MS02",
@@ -46,10 +46,18 @@
     "confirmationMissing": [],
     "overridesApplied": [
       "E70",
+      "E79",
       "E133",
       "E146",
       "E163",
-      "E170"
+      "E170",
+      "E175",
+      "E176",
+      "E180",
+      "E181",
+      "E183",
+      "E185",
+      "E190"
     ],
     "funnelSeverities": [
       {
@@ -321,6 +329,88 @@
         "into": [
           "MS03"
         ]
+      },
+      {
+        "from": "E174",
+        "into": [
+          "E133",
+          "E134"
+        ]
+      },
+      {
+        "from": "E177",
+        "into": [
+          "E59",
+          "E70",
+          "E98",
+          "E151"
+        ]
+      },
+      {
+        "from": "E177",
+        "into": [
+          "E131"
+        ]
+      },
+      {
+        "from": "E178",
+        "into": [
+          "E79",
+          "E59"
+        ]
+      },
+      {
+        "from": "E179",
+        "into": [
+          "E135"
+        ]
+      },
+      {
+        "from": "E182",
+        "into": [
+          "MS02",
+          "E137",
+          "MS01"
+        ]
+      },
+      {
+        "from": "E184",
+        "into": [
+          "E170"
+        ]
+      },
+      {
+        "from": "E184",
+        "into": [
+          "E103"
+        ]
+      },
+      {
+        "from": "E186",
+        "into": [
+          "E105",
+          "E140"
+        ]
+      },
+      {
+        "from": "E187",
+        "into": [
+          "E146",
+          "E122",
+          "E123"
+        ]
+      },
+      {
+        "from": "E192",
+        "into": [
+          "E2",
+          "E21",
+          "E152",
+          "E20",
+          "E113",
+          "E138",
+          "MS05"
+        ]
       }
     ],
     "skippedRows": [
@@ -328,12 +418,17 @@
       "E164",
       "E168",
       "E171",
-      "E172"
+      "E172",
+      "E188",
+      "E189",
+      "E191"
     ],
     "briefSeverities": [],
     "newToVerify": [
       "E163",
-      "E170"
+      "E175",
+      "E183",
+      "E190"
     ]
   },
   "items": [
@@ -349,7 +444,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "policy title live (Fri Ads re-fetch); organic owns settlement education; FDR Google Transparency 0 (g-fdr-hold.png)",
@@ -395,8 +490,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 60,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 67,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-01) impact: critical",
       "why": "Valpak fdrvp2406. Evidence Brief 2026-11-20: www /apply 301 still tags all /apply traffic utm_source=fdr_dm_valpak, so organic and direct visits are counted as Valpak print; landing is still a test + noindex apply host.",
@@ -407,7 +502,8 @@
         "Evidence Brief 2026-10-02",
         "Evidence Brief 2026-10-05",
         "Evidence Brief 2026-10-06",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -472,7 +568,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-05",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "critical",
       "severityBasis": "brief labels the row \"P0-2\"",
       "why": "hold (not re-curled; nothing shipped)",
@@ -511,7 +607,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-05",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "critical",
       "severityBasis": "brief labels the row \"P0-3\"",
       "why": "hold",
@@ -549,7 +645,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-05",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "critical",
       "severityBasis": "brief labels the row \"P0-4\"",
       "why": "hold (Funnel Fri did not re-curl learn; no ship)",
@@ -587,7 +683,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "cite CF shots 2026-09-14 only",
@@ -625,7 +721,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -663,7 +759,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "foresight does not relax",
@@ -704,7 +800,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-08",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Achieve Loans only; Ads creatives still 5.75% APR HELOC (~400 ads); NEW live /heloc floor APRs from 6.10% / fixed 6.10%–15.17% (no 5.75% on page) — creative↔landing gap; /fast/heloc-loans 200 noindex→picker HOLD; Figure ~800 hold",
@@ -795,7 +891,7 @@
       "statusText": "NEW / MIXED",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-05",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Fed bank-card DQ Q2 2.85% (Q1 2.91%) eases — mixed, no trend call",
@@ -833,7 +929,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-05",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "BBB 4.35 lowest of picks; Trustpilot 4.5/47k+), NDR (Fast Resolution)",
@@ -873,7 +969,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-11-06",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -919,7 +1015,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -957,7 +1053,7 @@
       "statusText": "CONFIRMED / NEW",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "ChatGPT Ads closed for settlement; NEW AI Max Phase 1 CB/ACA window closed Sep 30; DSA automigration still Feb 2027; Achieve HELOC Search console audit STILL OPEN (Transparency ≠ console); Meta frozen",
@@ -997,7 +1093,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-21",
       "lastSeen": "2026-10-02",
-      "daysOpen": 60,
+      "daysOpen": 67,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -1036,7 +1132,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-22",
       "lastSeen": "2026-10-02",
-      "daysOpen": 59,
+      "daysOpen": 66,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR Transparency 0 ≠ “chose Meta”; bills Transparency 0 re-shot",
@@ -1074,7 +1170,7 @@
       "statusText": "CONFIRMED / NEW",
       "firstSeen": "2026-09-22",
       "lastSeen": "2026-10-02",
-      "daysOpen": 59,
+      "daysOpen": 66,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "NEW ClearOne Advantage ~200 Google settlement-peer ads; NEW Beyond Finance 23; nonprofit GreenPath/MMI (+ peers) Transparency 0 (soft Ascend domain)",
@@ -1115,7 +1211,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-22",
       "lastSeen": "2026-10-02",
-      "daysOpen": 59,
+      "daysOpen": 66,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "not ROAS; under spam-update pressure",
@@ -1170,7 +1266,7 @@
       "statusText": "CONFIRMED / NEW",
       "firstSeen": "2026-09-22",
       "lastSeen": "2026-10-02",
-      "daysOpen": 59,
+      "daysOpen": 66,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "NEW loans/publisher shelf SoFi ~8K / LendingClub ~400 / Upstart ~900 / Bankrate ~700 / NerdWallet ~9K",
@@ -1209,8 +1305,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-24",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 57,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 64,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-10) impact: high",
       "why": "",
@@ -1221,7 +1317,8 @@
         "Evidence Brief 2026-10-16",
         "Evidence Brief 2026-10-30",
         "Evidence Brief 2026-11-06",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -1251,8 +1348,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-24",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 57,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 64,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-01) impact: critical",
       "why": "bills estimated-debt test hold. Evidence Brief 2026-11-20: www /apply 301 still tags all /apply traffic utm_source=fdr_dm_valpak, so organic and direct visits are counted as Valpak print; landing is still a test + noindex apply host.",
@@ -1263,7 +1360,8 @@
         "Evidence Brief 2026-09-30",
         "Evidence Brief 2026-10-01",
         "Evidence Brief 2026-10-02",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -1294,7 +1392,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-09-24",
       "lastSeen": "2026-10-02",
-      "daysOpen": 57,
+      "daysOpen": 64,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -1332,7 +1430,7 @@
       "statusText": "NEW / UPDATED",
       "firstSeen": "2026-09-24",
       "lastSeen": "2026-10-05",
-      "daysOpen": 57,
+      "daysOpen": 64,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Freddie PMMS 30yr 7.28% (Oct 1, from 7.03%; largest weekly jump since Oct 2022 per Realtor.com); Bankrate HELOC avg 7.29% (Sep 30)",
@@ -1370,7 +1468,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-24",
       "lastSeen": "2026-10-02",
-      "daysOpen": 57,
+      "daysOpen": 64,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -1408,7 +1506,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-09-28",
       "lastSeen": "2026-10-02",
-      "daysOpen": 53,
+      "daysOpen": 60,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "student-loan creative risk HOLD",
@@ -1446,7 +1544,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-09-28",
       "lastSeen": "2026-10-02",
-      "daysOpen": 53,
+      "daysOpen": 60,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "past-year + pace + next-12m buckets (see §10); next Foresight Fri Oct 9",
@@ -1484,7 +1582,7 @@
       "statusText": "CONFIRMED",
       "firstSeen": "2026-10-01",
       "lastSeen": "2026-10-02",
-      "daysOpen": 50,
+      "daysOpen": 57,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -1523,7 +1621,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-02",
       "lastSeen": "2026-10-08",
-      "daysOpen": 49,
+      "daysOpen": 56,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Loans owns APR sync (Funnel Fri + Ads claims)",
@@ -1589,7 +1687,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "content exists on /faq/ (200, FAQPage) + newsroom guarantee post (200, in sitemap) with 0 inbound links from 10 www pages fetched; /how-it-works/ 0 guarantee/attorney mentions → intent-URL mismatch (same pattern as fees",
@@ -1649,7 +1747,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "WebPage named \"Page Not Found | Freedom Debt Relief\"; url /reviews//; AggregateRating values typed as arrays (4.8 / 11,263 — source unlabeled vs Money's Trustpilot 4.5/47k+; soft)",
@@ -1689,7 +1787,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "200 noindex,nofollow + APP_ENV:\"test\" — organic review traffic lands on the paid test shell (extends #7/#21)",
@@ -1754,7 +1852,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "median score −96 vs −20 bankruptcy; Harvard Kennedy (AFCC-commissioned) 55% settled within 3 yrs; pushes Debt Settlement Consumer Disclosure Act",
@@ -1793,7 +1891,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Achieve has no debt-relief credit-impact page (404) and two self-canonical consolidation-credit twins in sitemap (cannibalization risk); Achieve /learn/debt-relief/credit-card-lawyer (Nov 2024) lacks Legal Partner Network mention that /debt-relief has",
@@ -1833,7 +1931,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-05",
       "lastSeen": "2026-10-05",
-      "daysOpen": 46,
+      "daysOpen": 53,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "second wave ~Sep 30",
@@ -1871,7 +1969,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "apply.freedomdebtrelief.com (noindex). Credit-stressed audience = the TransUnion −96 / Disclosure Act narrative (row 32). Soft: which apply path; no spend",
@@ -1911,7 +2009,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Apply Now\" (apply). Claims have no indexable fee/legal landing (/fees/, legal synonyms 404)",
@@ -1955,7 +2053,7 @@
       "statusText": "NEW · NDR-better",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Spanish \"¿Califica?\" + debt-snowball explainer; FDR Google 0 (gated) and no visible Spanish surface",
@@ -1993,7 +2091,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-08",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "\"HELOC For 640+ Credit Score\" — no HELOC credit floor in /heloc server HTML (soft; may be in app/FAQ)",
@@ -2051,7 +2149,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Achieve 5.75%↔6.10% gap is visible in a crowded shelf",
@@ -2089,7 +2187,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-08",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "product bleed, extends row 9/28",
@@ -2147,7 +2245,7 @@
       "statusText": "CLOSED channel",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -2186,7 +2284,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "404 (real page /about/ 200). Re-curled 18:00: 404",
@@ -2226,7 +2324,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "CNBC/Fortune repeat old numbers",
@@ -2265,7 +2363,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -2305,7 +2403,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Re-curled 18:00: 404",
@@ -2345,7 +2443,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/debt-relief-near-me/ 404; hub noindex — vs NDR clean /debt-relief/{state}/ + indexable hub",
@@ -2385,7 +2483,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-14",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "0 EY). FDR 1,188 (0; all sitemap files byte-identical to Oct 13). NDR reviews widget 59,328→59,337 (+9)",
@@ -2423,7 +2521,7 @@
       "statusText": "BASELINE · Structural",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-06",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "licensing, not SEO",
@@ -2459,7 +2557,7 @@
       "statusText": "HOLD · FDR leads",
       "firstSeen": "2026-10-06",
       "lastSeen": "2026-10-07",
-      "daysOpen": 45,
+      "daysOpen": 52,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "",
@@ -2498,7 +2596,7 @@
       "statusText": "HOLD",
       "firstSeen": "2026-10-07",
       "lastSeen": "2026-10-16",
-      "daysOpen": 44,
+      "daysOpen": 51,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "All 6 NDR EY posts still 200 index,follow; home / + /debt-relief/us-states/ latest-card no longer surfaces EY by-state (student-loan post now). FDR still 0 EY/ACDR URLs in sitemaps/newsroom",
@@ -2550,7 +2648,7 @@
       "statusText": "NEW · FDR leads (keep) + NDR-better",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-08",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "CA guide (search read; direct 403) + FDR release Oct 6 (PRNewswire 302899442) + indexable newsroom item. Shelf win alongside CNBC #1 and NerdWallet. Reviews still NDR-better: 4.9/58,814 vs FDR 4.5/34,625 → Dashboard + Consult. Homepage badge is plain unlinked text (\"ConsumerAffairs - Debt Settlement (2026) - Best Overall\"; addendum #9)",
@@ -2589,7 +2687,7 @@
       "statusText": "STILL OPEN · P0",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-13",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "critical",
       "severityBasis": "brief status \"NEW · FDR-self-inflicted · **P0**\"",
       "why": "held from Mon). Same FTC 16 CFR 465 review flag",
@@ -2630,7 +2728,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-08",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "CA newsroom post \"More than 45% … within one month of their first program deposit and more than 70% within three months\" (start point stated; cohort Apr–Jun 2026 incl. affiliates); /faq/ (index) \"between months four and six\"; /choose-freedom-debt-relief/ \"Over 60% … first 3 months of enrollment\" (noindex,nofollow but in root sitemap — extends D3); releases Apr 14 2025 \"Over 40% … 1 month … more than 70% … three months\" and Feb 11 2026 \"over 40% … nearly 70%\". 45%/70% on 0 of 896 sitemapped pages; only the newsroom post + PR release (addendum #6–8)",
@@ -2671,7 +2769,7 @@
       "statusText": "UPDATE · FDR-self-inflicted (D2)",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-08",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/facts/ + homepage 1M/$20B (\"More than 1 million people… $20 billion+\"); Achieve /debt-relief \"$2M+ members served · $20B+\"; Oct 6 release 2M/$22B; ConsumerAffairs FDR profile repeats 1M/$20B (SOFT). Meta \"Get the facts\" lands on /facts/",
@@ -2714,7 +2812,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-15",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Product 301s done; content cleanup not shipped",
@@ -2764,7 +2862,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-08",
       "lastSeen": "2026-10-08",
-      "daysOpen": 43,
+      "daysOpen": 50,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "only JSON-LD BreadcrumbList (no Article/author/date); breadcrumb parent /l/debt-solutions/ (unmapped); /learn/ + /learn/debt-solutions/ 404; not linked from /facts/, homepage or /press-releases/; /media-assets/ links only the PDF; /newsroom/ 301 → /; SSR Trustpilot widget \"0 / 5 … 0+ reviews\" (may hydrate; untested). CTA pid=learn,debt-solutions,deep-in-debt… collapses to pid=learn&campaign=home on Apply (addendum #1–5)",
@@ -2824,7 +2922,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-10-14",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "medium",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-06) impact: medium",
       "why": "See rows 68, 73",
@@ -2885,7 +2983,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-10-13",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "contrast row 77 Spanish TV",
@@ -2927,11 +3025,11 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-09",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 42,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 49,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-02) impact: high",
-      "why": "Extends Fri 5 publishers: NEW co-brand Pages usmagazine (Oct 9), a co-brand publisher + Divorce Glow Collective (both Oct 12), plus Debt Help Now (Oct 12 → apply.freedomdebtrelief.com with FDR disclosure — affiliate, unconfirmed). \"Denied for a personal loan? No problem.\" now on ~75 ads. Destinations: still apply…/fb 200 APP_ENV\":\"test\"; NEW apply…/fbcfos 200 test; /testimonials/ (index); dgtracking→resilientscript (owner unknown). 0 Meta ads on vanity www…/apply → Valpak poison not fed by Meta. Server HTML on /fb still claim-absent (Mon Funnel). Evidence Brief 2026-11-20: Meta FDR traffic still lands on test + noindex apply hosts (/fb, /fbcfos, /366o1, /espanol), 0 claim support. Lead-on-load stays unverified (no browser capture).",
+      "why": "Extends Fri 5 publishers: NEW co-brand Pages usmagazine (Oct 9), a co-brand publisher + Divorce Glow Collective (both Oct 12), plus Debt Help Now (Oct 12 → apply.freedomdebtrelief.com with FDR disclosure — affiliate, unconfirmed). \"Denied for a personal loan? No problem.\" now on ~75 ads. Destinations: still apply…/fb 200 APP_ENV\":\"test\"; NEW apply…/fbcfos 200 test; /testimonials/ (index); dgtracking→resilientscript (owner unknown). 0 Meta ads on vanity www…/apply → Valpak poison not fed by Meta. Server HTML on /fb still claim-absent (Mon Funnel). Evidence Brief 2026-11-20: Meta FDR traffic still lands on test + noindex apply hosts (/fb, /fbcfos, /366o1, /espanol), 0 claim support. Lead-on-load stays unverified (no browser capture). Evidence Brief 2026-11-27: Funnel Fix's 26 Nov rendered capture shows /fb still on a test + noindex host. A leadId is created on load with a heartbeat, before any input; there is no Lead event on load (later Lead UNVERIFIED). Whether never-submitted leadIds are counted is unverified and needs a Data check.",
       "fix": "Apply: /fb + /fbcfos out of test + claim match; Compliance: BBB/scams/\"Denied\" framing",
       "firstReport": "Partnership ads pinned (closes Thu open). → 5 publishers (Thrillist, SB Nation, Scary Mommy, The Dodo NEW Sep 29, Granny Bibbins); \"Denied for a personal loan? No problem.\" → apply.freedomdebtrelief.com/fb?utm_source=facebook…&utm_publisher={{placement}} (Library detail 1103180942704547, 1617601613252924); /fb 200 test env (18:20). New image claim \"DON'T FALL FOR DEBT RELIEF SCAMS … BBB A+ RATED\". Nurture → /testimonials/ 4.6/51,466 + \"1 million+\". Macros unfilled in Library = stored template, not proof clicks lose IDs. → Apply: /fb out of test build; Compliance: BBB A+ / scams framing vs landing",
       "links": [],
@@ -2939,7 +3037,8 @@
         "Evidence Brief 2026-10-12",
         "Evidence Brief 2026-10-13",
         "Evidence Brief 2026-10-14",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -3028,7 +3127,7 @@
       "statusText": "NEW · Structural",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-10-09",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Figure ~800 (\"America's Fast and Easy HELOC\", \"No In-Person Appraisal Needed\", \"Money's Best HELOC Picks\"), Unlock ~2K (\"HELOC Alternative\", 600+), Point ~300, OneMain ~2K (PL). Pacific Debt 4 \"A Top-Rated Debt Consolidation Company\" = second settlement-labeled-consolidation case (with NDR Spanish). CuraDebt 3 via a law office (Ch. 7/13). bills.com 0 on Meta + Google. Counts = Transparency totals, not SoV",
@@ -3065,7 +3164,7 @@
       "statusText": "HELD",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-11-06",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "SER + SEL confirm Google Search Central: rollout complete Oct 8 (started Sep 24, ~14 days). Connectors still unavailable (Ahrefs needsAuth; Treg failed_to_load / no TREG_TOKEN; GSC not in usable set). No SoV / rank-% invented. Window open for Evidence/Data Engineer once auth works. Don't cut SEO mid-flight",
@@ -3103,7 +3202,7 @@
       "statusText": "DUE / OPEN",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-10-15",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR + bills Google Transparency still 0 ads (Ads Tue + Fri), so Search/PMax auto-promotions that require location assets (Google Help) are likely N/A for FDR. Achieve Loans console-only — no status claimed from public tools. Oct 16 business-name change still open, console-only",
@@ -3143,7 +3242,7 @@
       "statusText": "DUE / OPEN",
       "firstSeen": "2026-10-09",
       "lastSeen": "2026-10-15",
-      "daysOpen": 42,
+      "daysOpen": 49,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Creative Center: box browser not signed in (no login attempted). Lane stays unmeasurable without a signed-in Ads account (owner decision). AI Max also unmeasured",
@@ -3181,7 +3280,7 @@
       "statusText": "HELD",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-11-06",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Same as 61 UPDATE; tracked so Mon Scout handoff is visible on the spine. Owner: Public + Data Engineer (Ahrefs/Treg/GSC)",
@@ -3219,7 +3318,7 @@
       "statusText": "NEW · demand floor (relative)",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-12",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Freddie PMMS as of 10/08/2026: 30-yr 7.40% (prior week 7.28%; YoY 6.30%). Bankrate HELOC national avg 7.33% as of Oct 7 (↑4 bp, 3rd consecutive week up). Epiq/AACER Sep individual BK filings 49,672 (+7% YoY); YTD 444,252 (+7%). Relative signal only — not a \"debt surge\" for paid",
@@ -3260,7 +3359,7 @@
       "statusText": "NEW · NDR-adjacent + citation gap · near-P0",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-12",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "BestMoney FDR vs NDR (Oct 6): both 15–25%, $7,500 min; cites FDR 2019 CFPB + pending 2026 Georgia AG investigation (Atlanta News First Mar 10); NDR no CFPB/FTC found (Oct 2026 check). Money Oct shelf: FDR Best for Legal Support (legal-support landing gap unchanged). CNBC Select (updated Oct 3): FDR Best for customer service; Achieve as consolidation-loan alt. Funnel addendum: /vs/national-debt-relief/, /fees/, /cost/, /debt-relief-near-me/ all 404; homepage 0 mentions of \"National Debt Relief\"",
@@ -3311,7 +3410,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-12",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/es/espanol/ 200, byte-identical to Fri (CF HIT ~4.6d): html lang=\"es\" but no hreflang; H1 English \"DEBT RELIEF QUE FUNCIONA\"; JSON-LD inLanguage: \"en-US\" (×2); Org AggregateRating 4.6 / 49,928; body equates \"debt settlement and debt consolidation\". /es/ 404. CTA → apply /espanol 200 noindex, wildcard route, html lang=\"en\" around Spanish copy; links 3× to www /login → homepage. Secondary /como-funciona-el-programa-freedom-debt-relief/ 200. Disclosure Act: still discussion draft (July 22 hearing), no bill number — ad-rule adjacency on consolidation wording. Soft: \"alivio de deudas\" SERP not measured",
@@ -3363,7 +3462,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-14",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "re-verified /heloc)",
@@ -3421,7 +3520,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-15",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "critical",
       "severityBasis": "brief status \"NEW · FDR-family self-inflicted · **P0**\"",
       "why": "sitemap-video 26 re-verified)",
@@ -3460,8 +3559,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-12",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 39,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 46,
       "severity": "critical",
       "severityBasis": "brief labels the row \"Same P0, new dest + new claim.\"",
       "why": "/fbcfos is still a test page (APP_ENV test, noindex). The Meta “$280 per month” claim is not on the FDR homepage.",
@@ -3472,7 +3571,8 @@
         "Evidence Brief 2026-10-12",
         "Evidence Brief 2026-10-13",
         "Evidence Brief 2026-10-14",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -3508,7 +3608,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-12",
       "lastSeen": "2026-10-14",
-      "daysOpen": 39,
+      "daysOpen": 46,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Spanish EN-tagged Apply; Achieve dashboard loop — held",
@@ -3549,7 +3649,7 @@
       "statusText": "NEW · FDR-self-inflicted",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-13",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Ad 1104943982398289 (Oct 12): \"You could free up $280 per month\". Live curl 13:10: FDR homepage server HTML has 0 matches for $280. Contrast: \"1+ million\" / \"Award-winning\" (1082634924389450) = /facts/ 1M+ version (not release 2M); \"24-48 months\" (a co-brand publisher) matches home + /faq/",
@@ -3609,7 +3709,7 @@
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-14",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Ads 1636893724684124 (5-day) and Taste of Home 1051426217673202 (5.75% APR) both land on achieve.com/get-started?section=achieve-hl (200 noindex). Same 5-day ad: body \"as little as 5 days\" vs headline \"under 2 weeks\". NEW: Meta \"no in-person appraisals\" (1305511961123106) vs /heloc \"In most cases, a full in-person inspection… will not be necessary\" (AVM hedge). Figure /home-equity-line/ footnotes both promises (funding in as few as 5 days on loans ≤$400k; no in-person appraisal²). Achieve does not",
@@ -3683,7 +3783,7 @@
       "statusText": "NEW · competitor crowded",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-13",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR Meta \"~75 Denied…\" · Americor via Mario Lopez (11 ads, Oct 8): \"federally regulated\" / 500,000 Americans / 40% lower payments / 50% reduce debt — lands americordebtrelief.com (noindex); \"federally regulated\" and \"500,000\" not in that page's server HTML; landing then shows a personal-loan APR disclosure (5.99%–29.99%). InCharge Google \"~200\": \"You Don't Need a Loan to Eliminate Credit Card Debt\". MMI Google 47: \"We Are Not A Loan Company\". FDR's version is the only one landing on a test-env build (/fb)",
@@ -3745,7 +3845,7 @@
       "statusText": "NEW · competitor badge share",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-13",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Meta: \"A+ BBB Rated\", \"Over 1M People Helped\", \"Debt Free in 24-48 Months\", \"$1B\" saved, NerdWallet co-brand. So FDR's paid \"BBB A+\" badge is no longer distinctive. Spanish look-alike: IG accredited__relief → misspelled accreditedebitrelief.com (unverified impostor; Fri OCR item). ClearOne Meta = 0",
@@ -3781,7 +3881,7 @@
       "statusText": "NEW · channel expansion",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-13",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Point ~300 ads: \"Access Up To $600k For Home Improvements Or Debt Relief\" / \"No Monthly Payments For 30 Yrs\" (4.8★). MMI 47 · InCharge ~200 · LightStream ~300 (\"$0 Down, $0 Fees\") · Americor 96 · New Era 2 · Debt.com 6 (video only). Credit Associates / Iconic / Clean Start = 0 on Google. FDR + bills still 0",
@@ -3820,7 +3920,7 @@
       "statusText": "NEW · channel expansion · soft scale",
       "firstSeen": "2026-10-13",
       "lastSeen": "2026-10-13",
-      "daysOpen": 38,
+      "daysOpen": 45,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "NDR: 56 creatives, 11,657 national airings 9/13–10/13 (spend #115, airing #29), incl. Spanish \"Jaime, Henry y Karina\". Accredited: 7 creatives / 1,743 airings, spokesperson Rob Lowe. FDR: 9 creatives (airings blurred) incl. Spanish \"Libre de deudas\" — Spanish TV while Fri Spanish Meta = 0. iSpot desc of \"Debt Free in Months\" cites \"settled over 8 billion in debt\" = fourth scale figure next to home $20B, /facts/ 1M+, release 2M/$22B (air date locked → soft/older spot). Achieve.com TV brand not found (iSpot \"Achieve\" = unrelated nonprofit)",
@@ -3858,7 +3958,7 @@
       "statusText": "HOLD",
       "firstSeen": "2026-10-14",
       "lastSeen": "2026-10-16",
-      "daysOpen": 37,
+      "daysOpen": 44,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "NDR release (Martinsville Oct 31, 2026, CW; \"second time\"); Jayski pickup SOFT. FDR newest release still Oct 6 (press-releases byte-identical). Scoreboard News Parity → NDR; tally NDR 15 · FDR 4 · split 2 (was 14/4/2). Brand-awareness / newsroom cadence — not an SEO technical defect",
@@ -3900,16 +4000,17 @@
       "status": "open",
       "statusText": "NEW · CONFIRMED (updates 59/72)",
       "firstSeen": "2026-10-15",
-      "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "Browser render of apply /fb + /fbcfos: \"Choose your debt amount\", 3-min/pay-less/24–48-mo bullets, Forbes/Money/Trustpilot/BBB logo strip (no \"A+\"); 0 hits Denied / personal loan / $280 / award / 1 million / scam / never call. Both client-side redirect to estimated-debt?leadId=<uuid> on load (Next.js \"redirect\":\"/estimated-debt\"; curl gets no leadId). SOFT: leadId-on-load may inflate lead counts depending on definition",
+      "why": "Browser render of apply /fb + /fbcfos: \"Choose your debt amount\", 3-min/pay-less/24–48-mo bullets, Forbes/Money/Trustpilot/BBB logo strip (no \"A+\"); 0 hits Denied / personal loan / $280 / award / 1 million / scam / never call. Both client-side redirect to estimated-debt?leadId=<uuid> on load (Next.js \"redirect\":\"/estimated-debt\"; curl gets no leadId). SOFT: leadId-on-load may inflate lead counts depending on definition. Evidence Brief 2026-11-27: a new Popsugar FDR co-brand Meta batch (e.g. 1394749552871383) uses the hook \"Denied for a personal loan?\"; that hook is still absent on the rendered /fb landing.",
       "fix": "Apply: claim on landing per ad or retire claim; confirm leadId counting",
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-10-15"
+        "Evidence Brief 2026-10-15",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -3972,7 +4073,7 @@
       "statusText": "HOLD",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-11-06",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "www /espanol now routes to marketing /es/espanol/ (CHANGED vs Oct 30; apply-host still the paid risk)",
@@ -4024,7 +4125,7 @@
       "statusText": "NEW (updates 57/68/73)",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "get-started?section=achieve-hl → /get-started/loans/603/eligibility \"How much do you want to borrow? $1,000–$700,000+\", \"Are you a homeowner?\" Disclaimer: \"average funding time is 5-9 business days for 2025, including rescission\" — joins ad \"5 days\", headline \"under 2 weeks\", /heloc \"10-12 business days\". 5.75% not on landing (HE 6.10%–15.17%). /heloc appraisal copy \"In most cases, a full in-person inspection… will not be necessary\" vs ad's unqualified \"no in-person appraisals\"",
@@ -4087,7 +4188,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Hub /reviews/debt 200, 50 reviews, linked 3× from bills home (Funnel corrects Scout \"orphaned\"); 0 of 2,144 sitemap locs; /reviews 404; breadcrumb skips hub. Review JSON-LD on Product, FDR 4.65 vs NDR 4.6, dateModified \"Oct 1, 2026\" (non-ISO). Only generic \"affiliated\" disclosure; footer 2114 E Achieve Way; FDR/Achieve never named as affiliate. 2 CTAs/page visit_id=undefined (P0-4 reaches reviews). FDR review says \"1.5 million clients\" and \"1 million+ (as of July 2025)\"",
@@ -4183,7 +4284,7 @@
       "statusText": "NEW · LIVE",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Sitemap lastmod Oct 12; index,follow; 0 internal links (home, /faq/, /facts/, /scam/, /testimonials/, /debt-relief-program/, apply /fb /fbcfos /apply). Says FDR doesn't provide settlement in all states; names Turnbull Law Group (+SC, NJ) and Arrow Ridge Law by state. Typo \"West Virgina\"; state subpaths 404. SOFT context: Atlanta News First, Mar 10 reported a Georgia AG pending investigation naming Turnbull + FDR (no charges reported). Apply only has generic footer \"may be offered through a law firm\"",
@@ -4229,7 +4330,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/login 307 → homepage ?url=…/login (index,follow, canonical root); /dashboard → /login → same; home CTA → apply with url=…/login&estimated_debt=25000. /client-login/ /my-account/ 404; my. 522. Achieve real sign-in /signin 200 indexable (no robots meta)",
@@ -4269,7 +4370,7 @@
       "statusText": "NEW · LIVE",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-10-15",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/debt-relief-program/ relabelled Jan→Sept 2026 (avg FICO 593→587, enrolled debt $25,843→$24,514) but mortgage figures unchanged and SCF citation year edited. Money.com study now has three dates (release Oct 1, sitemap-news Oct 1, press list Oct 10). FDR sitemap 1,188→1,189; NDR 1,648→1,647",
@@ -4306,7 +4407,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-15",
       "lastSeen": "2026-11-06",
-      "daysOpen": 36,
+      "daysOpen": 43,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "7.18% (Nov 5; third consecutive weekly decline); 15-yr 6.57%. FOMC hold Oct 28 (10–2) carried. Conference Board Oct 91.7 vs UMich 48.0 — mixed; don't claim demand surge. Bankrate HELOC 7.36% (Scout). Date every rate claim; HELOC stays Achieve's relative product",
@@ -4349,7 +4450,7 @@
       "statusText": "NEW · CONFIRMED (updates 59/72/79)",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Meta detail: \"$280 per month\" (1104943982398289, Oct 12) → /fbcfos; \"Denied for a personal loan?\" (usmagazine, Oct 9) + \"1+ million\" → /fb. Server HTML (Ads 13:14, EB 17:54) + Thu render: 0 Denied/$280/award, APP_ENV\":\"test\". Affiliate path dgtracking → resilientscript → ifatrk → apply…/366o1 (also test; owner SOFT). 0 Meta on vanity /apply",
@@ -4420,7 +4521,7 @@
       "statusText": "NEW (updates 83)",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "medium",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-08) impact: medium",
       "why": "Thrillist creative 1103180942704547 image: \"DON'T FALL FOR DEBT RELIEF SCAMS\" → /fb test. No FDR \"never call\"/impersonation ad found in Meta text search. /scam/ still 0 impersonation (re-curl 17:54). Foresight: FTC impersonation-rule ANPR comments due Nov 30, 2026",
@@ -4517,7 +4618,7 @@
       "statusText": "NEW · PARTIAL (updates 57/73/81)",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": ", IDs 1830192927973261 / 1139491065301277 (Oct 7). Still running: ToH 5.75% on Meta; Google Transparency cards 5.75% \"Funds In As Little As 5 Days\"; \"no in-person appraisals\". Not found in Meta today (SOFT absence): \"bad credit\", 560, \"5 days\", \"under 2 weeks\". /personal-loans 6.25% + 24–72h matches Meta",
@@ -4598,7 +4699,7 @@
       "statusText": "NEW (updates 77/78)",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Google Transparency nationaldebtrelief.com ~4K ads vs FDR 0 / bills 0 (structural Debt-services gate; 15189135 re-verified). iSpot NDR 56 creatives, 12,080 airings (Tue 11,657), \"NASCAR: When Debt Hits Hard\" (Denny Hamlin); Meta NASCAR = 0. Panel counts, not SoV",
@@ -4636,7 +4737,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Accredited Spanish look-alike accredited__relief → accreditedebitrelief.com confirmed on Meta; NDR-name lead-gen look-alikes (smart-finance-advisor.com, debt-solve.com). Combined with 83/89: impostor traffic is a live category pattern",
@@ -4674,7 +4775,7 @@
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Google, Oct 15); Preferred Sources \">7x since the start of the year\"; creator/publisher profile test. No AI click reporting",
@@ -4713,7 +4814,7 @@
       "statusText": "UPDATE → see 125",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-11-06",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "brand CWV baseline still none (PSI 429 again Thu)",
@@ -4751,7 +4852,7 @@
       "statusText": "NEW · Foresight (updates 62/63)",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Business-name enforcement contested Oct 16 (SERoundtable) vs Oct 19 (elsop), likely Oct 19; auto-promotions live since Oct 12 (opt-out); Meta product browsing default-on Oct 28 (PPC Land); Meta Q3 Oct 21. Ads in AI answers opened to US pharma (Oct 12–13) but Help 16297775 still excludes finance. AI Max search-term × headline × landing report (Oct 14) = audit tool for row 90. ChatGPT debt ban re-verified",
@@ -4792,7 +4893,7 @@
       "statusText": "NEW · quiet",
       "firstSeen": "2026-10-16",
       "lastSeen": "2026-10-16",
-      "daysOpen": 35,
+      "daysOpen": 42,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Sitemaps NDR 1,647→1,650 (3 blog incl. re-add), FDR 1,189→1,191 (pumpkin-spice post + author); 17 FDR lastmods churned to Oct 15; law-firms still lastmod Oct 12 + orphaned; 56 status URLs identical. Tally 15/4/2 unchanged",
@@ -4828,7 +4929,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Superseded claim weight now Award / $438 / risk-free / 1+ million (",
@@ -4866,8 +4967,8 @@
       "status": "open",
       "statusText": "NEW · UNVERIFIED (updates 79)",
       "firstSeen": "2026-10-30",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 21,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 28,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-02) impact: high",
       "why": "fdr-cx-acquisition.prd.fdrgcp.com + Tealium …/prod/utag.js; 0 fbq(/GTM in server HTML. Lead-on-load inflation stays UNVERIFIED: tags load through Tealium, so it needs a browser network capture (not run)",
@@ -4876,7 +4977,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-10-30",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -4935,7 +5037,7 @@
       "statusText": "HOLD",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/fbcfos landing still test",
@@ -4982,7 +5084,7 @@
       "statusText": "UPDATE · PARTIAL",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Google 5.75% back (→ 114); 6.24% closed (→ 118). Still open: \"Funds In As Little As 5 Days\" + \"No in Person Appraisal Needed\" vs /heloc 5 days + 10–12 + \"in most cases\". Speed/appraisal flagged for Compliance review, not a violation",
@@ -5044,7 +5146,7 @@
       "statusText": "UPDATE · PARTIAL",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-04) impact: high",
       "why": "Payload still 3× dev.Achieve.com on home / /heloc / /personal-loans (EB). Press template still broken: dev.Achieve.com + telephone \"85288\" (Tempe ZIP) on LendingTree 3Q26 press (Scout + Funnel + EB). Empty-anchor count 5→0 on that URL (Funnel→EB) but schema/phone remain",
@@ -5111,7 +5213,7 @@
       "statusText": "UPDATE",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "host live. Look-alike pattern now includes NDR-name network (",
@@ -5143,22 +5245,25 @@
       "source": "brief",
       "title": "D7 persists",
       "brand": "fdr",
-      "urls": [],
+      "urls": [
+        "https://www.freedomdebtrelief.com/press-releases/"
+      ],
       "owner": "Public",
       "status": "open",
       "statusText": "UPDATE · STILL OPEN",
       "firstSeen": "2026-10-30",
-      "lastSeen": "2026-11-06",
-      "daysOpen": 8,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "all 10 page-1 press releases now show \"October 28, 2026\" (was Oct 23). Day 8 as of NDR Tue 3. Article pages + news sitemap keep true dates. YMYL freshness still looks manufactured",
+      "why": "all 10 page-1 press releases now show \"October 28, 2026\" (was Oct 23). Day 8 as of NDR Tue 3. Article pages + news sitemap keep true dates. YMYL freshness still looks manufactured. Evidence Brief 2026-11-27: the CNBC Select item is dated Nov 19 on the press list vs Nov 18 on the article; 8 of the other 9 page-1 items still say October 28, 2026 (D7, day 29).",
       "fix": "fix template",
       "firstReport": "D7 date integrity: FDR /press-releases/ shows \"October 23, 2026\" on all 10 page-1 releases (incl. 2020/2025) while article pages + news sitemap keep true dates (NDR vs FDR Tue 27). YMYL freshness signal looks manufactured → fix template",
       "links": [],
       "refs": [
         "Evidence Brief 2026-10-30",
-        "Evidence Brief 2026-11-06"
+        "Evidence Brief 2026-11-06",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -5167,10 +5272,11 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "site-wide",
+        "kind": "page",
         "nodes": [
-          "brand:fdr"
-        ]
+          "freedomdebtrelief.com/press-releases"
+        ],
+        "drawn": false
       },
       "screenshots": []
     },
@@ -5188,7 +5294,7 @@
       "statusText": "UPDATE · STILL OPEN",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR 1,190→1,184 (−6 dead /learn/ + personal-finance URLs pruned, 0 adds). Tally still NDR 15 · FDR 4 · split 2; FDR-defect rows 7",
@@ -5220,22 +5326,26 @@
       "source": "brief",
       "title": "Review widget home 51,861 / how-it-works+bills 51,996",
       "brand": "fdr",
-      "urls": [],
+      "urls": [
+        "https://www.freedomdebtrelief.com/",
+        "https://www.freedomdebtrelief.com/how-it-works/"
+      ],
       "owner": "Public",
       "status": "open",
       "statusText": "UPDATE (D6)",
       "firstSeen": "2026-10-30",
-      "lastSeen": "2026-11-06",
-      "daysOpen": 29,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "AggregateRating schema 51,861. Self-serving markup still present. Flagged for Compliance review, not a violation. D1–D6 still open (day 29 as of NDR Tue 3; EB re-curl confirms /about-us/ /fees/ /vs/ still 404)",
+      "why": "AggregateRating schema 51,861. Self-serving markup still present. Flagged for Compliance review, not a violation. D1–D6 still open (day 29 as of NDR Tue 3; EB re-curl confirms /about-us/ /fees/ /vs/ still 404). Evidence Brief 2026-11-27: Trustpilot counts still disagree — 52,617 on /how-it-works/ vs the home widget 52,415 vs schema 51,861. Use one count source.",
       "fix": "",
       "firstReport": "FDR review widget 51,625→51,755; AggregateRating schema now 51,755 (was 50,113), how-it-works shows 51,861 same day. Self-serving markup still present. Flagged for Compliance review, not a violation. /how-it-works/ added an estimates disclaimer (small positive)",
       "links": [],
       "refs": [
         "Evidence Brief 2026-10-30",
-        "Evidence Brief 2026-11-06"
+        "Evidence Brief 2026-11-06",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -5244,10 +5354,12 @@
       "verification": "reported",
       "flags": {},
       "match": {
-        "kind": "site-wide",
+        "kind": "page",
         "nodes": [
-          "brand:fdr"
-        ]
+          "freedomdebtrelief.com",
+          "freedomdebtrelief.com/how-it-works"
+        ],
+        "drawn": false
       },
       "screenshots": []
     },
@@ -5263,7 +5375,7 @@
       "statusText": "HOLD · Scout",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Add Oct 27–29 to annotate list (extends Oct 16, 20–21, 23–24). Ranking quieter this week (Dashboard quiet through Nov 5). GSC clicks-spike ~Oct 31–Nov 4 = bug, not a re-baseline. Only GSC can call \"SEO dropped\"",
@@ -5303,7 +5415,7 @@
       "statusText": "NEW · Scout",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-10-30",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(LLM Authority Index, Jul–Sep, 4,972 responses): NerdWallet 31.2%, CNBC 29.0%, Bankrate 27.8%; achieve.com #72; FDR / NDR / bills not in Top 100. Archipel: rankings/comparison pages 42.8% of cited sources (directional, mostly FR). Investopedia: FDR \"Best With Legal Support\", \"recommend FDR over Accredited\" (Oct 6) — but FDR /vs/accredited-debt-relief/ 404 while Accredited × Benzinga Learn (Oct 22)",
@@ -5345,7 +5457,7 @@
       "statusText": "NEW · Scout",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-10-30",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(debt mgmt, Jan 1–Oct 25 via API): FFN (FDR/Achieve parent, family-level) 79 YTD (54 same window 2025 to Oct 18), NDR 143. Category-wide rise; directional, not a quality ranking. Trust queries are SEO's lane",
@@ -5383,7 +5495,7 @@
       "statusText": "UPDATE · CONFIRMED",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-11-06",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Text changed, finance serving unconfirmed",
@@ -5420,7 +5532,7 @@
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-10-30",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Google, Oct 20); US categories/registries unpublished",
@@ -5460,7 +5572,7 @@
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-10-30",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Alphabet Q3 — finance #2 contributor to Search growth; Meta Q3 price per ad +14% vs impressions +10%. More paid surface on finance queries = organic share worth more; Meta into /fb gets costlier. Industry figures, not brand ledger",
@@ -5522,7 +5634,7 @@
       "statusText": "NEW · Scout/Ads",
       "firstSeen": "2026-10-30",
       "lastSeen": "2026-10-30",
-      "daysOpen": 21,
+      "daysOpen": 28,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(CW); NDR /nascar/ 404; NASCAR Meta 0 three days out; NDR Meta ~20 new \"Approved in as little as minutes\" ads + 6+ \"National Debt Relief Program\" look-alike pages. Expect an NDR branded/News bump that is sponsorship, not SEO",
@@ -5559,8 +5671,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-10-30",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 21,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 28,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-10) impact: high",
       "why": "plain / (EB confirms)",
@@ -5570,7 +5682,8 @@
       "refs": [
         "Evidence Brief 2026-10-30",
         "Evidence Brief 2026-11-06",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -5605,7 +5718,7 @@
       "statusText": "NEW · CONFIRMED (corrects 100)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Ads Wed 4; soft: card cut off, creative ID not captured) → display path achieve.com/fast/heloc-loans. Funnel Thu + EB re-curl: that URL is a 200 noindex,nofollow ~12 KB shell with 0×5.75 / 0×6.10 / 0×\"5 days\", while /heloc shows 6.10% (11×) and 0×5.75 in raw visible rate copy (payload may still carry leftover 5.75). Meta still 6.10% only. Rate claim flagged for Compliance review, not a violation",
@@ -5696,7 +5809,7 @@
       "statusText": "NEW · CONFIRMED (extends 97)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Oct 28 cards: \"Award-winning…1+ million\" (1634441858350593), \"$438 per month average\" (977720545413345), \"It's risk-free\" (1285315513744880), \"Personal loan alternative\" (1441518401474902). 82/100 FDR cards → /fb. Server HTML 0 for award/$438/million/risk (Ads + Funnel + EB). Browser estimated-debt render also 0 those strings (Funnel). Absolute / award / risk-free / scale claims flagged for Compliance review, not a violation. NY Post trio still active → /fb. \"too high\" IDs no longer rendering → likely retired (unproven)",
@@ -5760,7 +5873,7 @@
       "statusText": "NEW · CONFIRMED",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(?utm_medium=nurture; first Public Meta path Ads noted). index,follow. Shows \"1 million+ clients\" / \"4 million+ accounts settled\" / \"over 1 million…Since 2002\"; 0 \"Individual results\" / 0 \"as of\" (Funnel + EB). Scale claims flagged for Compliance review, not a violation",
@@ -5799,7 +5912,7 @@
       "statusText": "NEW · CONFIRMED",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(IDs 2018940256177743, 977563052088010). \"6.25% APR… funds in 24-72 hours\" matches /personal-loans (6.25%×9 raw HTML). get-started itself is noindex shell. No \"LendingTree top-3\" in sampled ads — that proof lives on landing/press only",
@@ -5875,7 +5988,7 @@
       "statusText": "NEW · CONFIRMED (updates 109)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "\"About ads in AI-powered experiences\". Search/Shopping/PMax auto-eligible incl. AI Mode follow-ups; no opt-out; \"All Google Ads policies apply\"; no finance carve-out; AI explainers draw on advertiser websites",
@@ -5911,7 +6024,7 @@
       "statusText": "NEW · Scout/Funnel",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Oct 23; >$480K; 3,000+ liens) = SEO/education opening. Funnel: no dedicated zombie / time-barred HELOC explainer on Achieve, bills, or FDR. Closest: Achieve glossary zombie-debt + statute-of-limitations; bills second-mortgage / foreclosure / heloc-foreclosure",
@@ -5949,7 +6062,7 @@
       "statusText": "NEW · Scout/Funnel",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "bills has /reviews/loans/lending-club-review (Happen×160); Achieve has 0 vs/compare/reviews paths (all guesses 404). Competitor rename reshuffles branded SERPs/AI answers — gap is Achieve-side compare",
@@ -5987,8 +6100,8 @@
       "status": "open",
       "statusText": "NEW · Funnel/Foresight",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Achieve + FDR ship Content-Signal: search=yes, ai-input=yes, ai-train=no + named AI UAs (OAI-SearchBot, Claude-SearchBot, PerplexityBot, CoBiBot, meta-externalagent, ChatGPT-User, Claude-User, Perplexity-User); do not name GPTBot / ClaudeBot / Google-Extended. bills.com has neither Content-Signal nor named AI UA rules",
@@ -5996,7 +6109,8 @@
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-11-06"
+        "Evidence Brief 2026-11-06",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6024,8 +6138,8 @@
       "status": "open",
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(blog Oct 30). Builds on Google-Extended / IETF AIPREF. Makes row 122 a calendar item, not optional hygiene",
@@ -6033,7 +6147,8 @@
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-11-06"
+        "Evidence Brief 2026-11-06",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6061,7 +6176,7 @@
       "statusText": "NEW · Foresight",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(119th Cong.; introduced Aug 24, 2026; referred House Energy & Commerce; status Introduced). Resolves Oct 30 open Q. Watch only — no copy change yet",
@@ -6097,7 +6212,7 @@
       "statusText": "NEW · Foresight (updates 94)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Sep 2026 dataset, pub Oct 13): good LCP 72.1% (+5.6), CLS 85.1% (+4.2), INP 87.4% (+2.3), overall 59.5% (+6.4). Still experimental; Search Console graduation target May 2027. Fills Oct 30 \"still none\" gap. PSI 429 again Thu",
@@ -6135,7 +6250,7 @@
       "statusText": "NEW · NDR",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR kept #1 \"Best for customer service\"; NDR #5 flipped from \"Best for smaller debts\" to near-identical \"Best customer service\" (Accredited took \"smaller debts\"). Top summary list still shows NDR under \"smaller debts\". Fee sentence now \"typically 15% to 25%\"",
@@ -6174,7 +6289,7 @@
       "statusText": "NEW · NDR",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "dateline → Oct 28; Sept 2026 FICO 587 / enrolled $24,514 block replaced by card-by-age table (All: 7 cards, $15,142, $424/mo) + student debt (27%, $48,703). Watch consistency with other scale claims",
@@ -6213,7 +6328,7 @@
       "statusText": "NEW · Ads/Funnel (extends 102)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Nov 2–3): Happy Finances → typo host nationaldeptrelief.org (now 404), plus Smart Money People / Debt Relief Karma / Smart Finance Hub / Best Debt Relief. freedomrelifworld.com Meta ad gone from Library; host still 200 with (555)555-5555. Brand-confusion risk, not a violation. /scam/ still 0",
@@ -6250,7 +6365,7 @@
       "statusText": "UPDATE · Scout (extends 107)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "SoFi/Upstart/Upgrade/LightStream dominate PL brand mentions; Achieve not any engine's top 10; comparison sites 18.5% of finance AI sources vs brand sites 1.4%; Achieve named 1/60 (49th/93). FDR/bills/NDR have no Rezolve page. Paid can't buy these answers — /vs/ + comparison citations are the lever",
@@ -6286,7 +6401,7 @@
       "statusText": "UPDATE · Foresight (updates 112)",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Carson Kvapil won Oct 31; TV CW 928k (+27% YoY), peak 1.193M (Jayski Nov 4). Viewership only — SEO/brand lift still unmeasured (no GSC/Ahrefs/Treg). Ads: 0 post-race NASCAR creatives; Google cards still say \"Enroll Before October 31st\" (deadline passed; last-shown not captured)",
@@ -6323,16 +6438,17 @@
       "status": "open",
       "statusText": "STILL OPEN · UNVERIFIED (extends 98)",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "Funnel browser reached /fb/estimated-debt?leadId=… (leadId in URL); Tealium prod utag.js on APP_ENV=test; DevTools Lead events (Pixel/CAPI/GA) not confirmed. Same pattern on Valpak apply host (test + prod Tealium + leadUUID). Needs network capture",
+      "why": "Funnel browser reached /fb/estimated-debt?leadId=… (leadId in URL); Tealium prod utag.js on APP_ENV=test; DevTools Lead events (Pixel/CAPI/GA) not confirmed. Same pattern on Valpak apply host (test + prod Tealium + leadUUID). Needs network capture. Evidence Brief 2026-11-27: Funnel Fix's 26 Nov rendered capture confirms a leadId is created on load with a heartbeat and there is no Lead event on load (later Lead UNVERIFIED). Whether never-submitted leadIds are counted is still unverified and needs a Data check. Meta on-device conversion counting has been on by default since Nov 12, so Meta-reported leads can rise without new sales.",
       "fix": "",
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-11-06"
+        "Evidence Brief 2026-11-06",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6374,7 +6490,7 @@
       "statusText": "NEW · Funnel/Foresight",
       "firstSeen": "2026-11-06",
       "lastSeen": "2026-11-06",
-      "daysOpen": 14,
+      "daysOpen": 21,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "nothing shipped on classic P0s since Oct 29. Prefer Split only works if the eng floor moves. Owners unchanged: Apply (/fb/Valpak), Loans (/fast/heloc + press), Public (/scam/ /vs/ D1–D7), Login (/login), Dashboard (my. 522)",
@@ -6440,17 +6556,18 @@
       "status": "open",
       "statusText": "NEW · CONTRADICTS locked \"FDR 0 on Google\" line",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "high",
       "severityBasis": "Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High",
-      "why": "CR08208089467987165185, CR03493627218628706305, CR07212080985767149569) → start.freedomfinancialnetwork.com/home. Funnel + EB re-curl: 200, noindex, APP_ENV test, production API (fdr-cx-acquisition.prd.fdrgcp.com) and prod Tealium, footer \"Freedom Financial Network, LLC\"; 0 of 5 ad claims in HTML; display paths 404 (display ≠ final URL, so not a defect claim). H-A ONLINE ↔ company link not confirmed on the page. Foresight: Google 15189135 wording (US debt services: §111 non-profit + certified only) vs live FFN creatives → policy wording vs live creatives, Compliance to reconcile, not a breach; Transparency does not show Google's classification or the account's certification, and several cards are credit counseling/consolidation worded (Ads Watch). Paid demand builds 0 equity on freedomdebtrelief.com. Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML. The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account.",
+      "why": "CR08208089467987165185, CR03493627218628706305, CR07212080985767149569) → start.freedomfinancialnetwork.com/home. Funnel + EB re-curl: 200, noindex, APP_ENV test, production API (fdr-cx-acquisition.prd.fdrgcp.com) and prod Tealium, footer \"Freedom Financial Network, LLC\"; 0 of 5 ad claims in HTML; display paths 404 (display ≠ final URL, so not a defect claim). H-A ONLINE ↔ company link not confirmed on the page. Foresight: Google 15189135 wording (US debt services: §111 non-profit + certified only) vs live FFN creatives → policy wording vs live creatives, Compliance to reconcile, not a breach; Transparency does not show Google's classification or the account's certification, and several cards are credit counseling/consolidation worded (Ads Watch). Paid demand builds 0 equity on freedomdebtrelief.com. Evidence Brief 2026-11-20: FFN Google cards ($434 Avg. Payment; last shown Nov 17) still land on a noindex APP_ENV test host with 0 of the claims in served HTML. Evidence Brief 2026-11-27: FFN Google creatives CR01753369967086010369 and CR09261306777150947329 (\"$438 avg\", \"Debt Free in 24-60 Months\"; last shown Nov 24) still land on a noindex APP_ENV test host. The rendered page shows none of those claims; its only \"24 to 60 months\" is the Achieve personal-loan footer disclosure. Display paths /debt/consolidation and /debt/help still 404. The ads carry FDR's name and land on FDR's sign-up app; they only run on Achieve's advertiser account.",
       "fix": "owner named; out of test; support or drop claims; Compliance policy read before any scale",
       "firstReport": "",
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6481,8 +6598,8 @@
       "status": "open",
       "statusText": "NEW · soft",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "loan-vs-settlement mixed message. \"$434 Avg. Payment\" seen once, no creative ID vs Meta \"$438/mo avg\" 977720545413345",
@@ -6491,7 +6608,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6515,23 +6633,25 @@
       "brand": "achieve",
       "urls": [
         "https://www.achieve.com/fast/heloc-loans",
-        "https://www.achieve.com/heloc"
+        "https://www.achieve.com/heloc",
+        "https://www.achieve.com/"
       ],
       "owner": "Loans",
       "status": "open",
       "statusText": "CONTRADICTED (corrects Ads Nov 4 \"Meta 6.10% only\")",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-05) impact: high",
-      "why": "1457628736343949 (Achieve Loans, Nov 5) → get-started?section=achieve-hl, noindex shell, 0 rates. /heloc 6.10% and 0 real 5.75 (EB). Google top HELOC card CR16682374652428812289 (last shown Nov 11) is 6.10% \"5 days\". Evidence Brief 2026-11-20: /heloc hero 'as low as 5.75% APR' is back next to disclosure 6.10%–15.17%; '5 days' vs '10-12 business days' on the same page.",
+      "why": "1457628736343949 (Achieve Loans, Nov 5) → get-started?section=achieve-hl, noindex shell, 0 rates. /heloc 6.10% and 0 real 5.75 (EB). Google top HELOC card CR16682374652428812289 (last shown Nov 11) is 6.10% \"5 days\". Evidence Brief 2026-11-20: /heloc hero 'as low as 5.75% APR' is back next to disclosure 6.10%–15.17%; '5 days' vs '10-12 business days' on the same page. Evidence Brief 2026-11-27: the /heloc hero \"as low as 5.75% APR\" is still live next to disclosure 6.10%–15.17%. Meta now runs the same creative at 5.75% (1457628736343949) and 6.10% (1475846561179857) at once. Speed lines still conflict (5 days vs under 2 weeks vs 10-12 business days). Re-date the week of Dec 9.",
       "fix": "/fast/heloc-loans empty noindex shell (EB confirms). Google 5.75% creative ID still not captured (soft). Rate claim flagged for Compliance review",
       "firstReport": "",
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6545,6 +6665,7 @@
       "match": {
         "kind": "page",
         "nodes": [
+          "achieve.com",
           "achieve.com/heloc"
         ],
         "drawn": true
@@ -6617,7 +6738,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "medium",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-06) impact: medium",
       "why": "(4.8/5, best for fair credit, up to $700K, 30 states, min 600, \"funds in as little as ten business days\", data as of Nov 5; Funnel curl 200). Ads say \"5 days\"; /heloc says both 5 days and 10–12 business days; Achieve vs Figure says \"average around 11 business days\"",
@@ -6679,8 +6800,8 @@
       "status": "open",
       "statusText": "NEW · extends press row",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-19 (WR-FF-04, learn-template-sweep; worst impact: critical)",
       "why": "/heloc /home-equity-loan /personal-loans ld+json clean (payload still carries the string). Value fix, not schema rework",
@@ -6689,7 +6810,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6745,8 +6867,8 @@
       "status": "open",
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "medium",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-07) impact: medium",
       "why": "restore or 301",
@@ -6755,7 +6877,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6787,7 +6910,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Forbes shelf 403, so label not re-verified. Speed/guarantee/rating claims flagged for Compliance review. Forbes row stays Split",
@@ -6826,8 +6949,8 @@
       "status": "open",
       "statusText": "UPDATE · STILL OPEN",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-13",
-      "daysOpen": 15,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "/learn/ 438→390 (hygiene, not a content gain). NDR 1,669→1,678 (+9). Tally NDR 15 · FDR 4 · split 2. D7 day 15 (9/10 page-1 releases \"October 28, 2026\"); D1–D6 day 36 (EB: /about-us/ /fees/ /vs/ still 404)",
@@ -6835,7 +6958,8 @@
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-11-13"
+        "Evidence Brief 2026-11-13",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -6911,7 +7035,7 @@
       "statusText": "NEW · directional",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "FDR #19 (−10), named by 1 of 9 models; NDR #11 (−7); Achieve #10 (+3). AI Mode names NDR, not FDR, for debt settlement. One prompt per model per month → directional only. OpenAI: ChatGPT ~1/5 of Google's searches and bans debt ads",
@@ -6949,7 +7073,7 @@
       "statusText": "NEW · extends look-alike row",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "4464502350528908 → freedom-helper.org/dbtvn1, 200 on EB); Smart Money People 1150943410573448 displays nationaldebtrelief.com but links aw-search.com. Ownership unverified; brand-confusion risk, not a violation. FDR's own veteran Google ad sits in the same space. /scam/ 0 impersonation (EB). Hooks: FTC $106.8M Accelerated judgment (D. Ariz.) + Nov 9 phantom-debt TRO (Foresight)",
@@ -6989,7 +7113,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "low",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-09) impact: low",
       "why": "/personal-finance/credit-repair (200, index) covers credit-repair scams with 0 CROA (Funnel + EB)",
@@ -7032,7 +7156,7 @@
       "statusText": "NEW · CONFIRMED",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "(Status Dashboard; ~2 weeks → ~Nov 24). Baseline Nov 3–9; first fair GSC read ~Dec 1 (overlaps Black Friday → use YoY too). Supersedes Scout Mon's \"unconfirmed noise\" (pre-dated)",
@@ -7067,17 +7191,18 @@
       "status": "open",
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
-      "why": "confirm Cloudflare verified-bot exemptions on FDR, Achieve, bills during the update. UNVERIFIED: Funnel's Nov 13 curl with a Googlebot user-agent saw no challenge, but that can't prove real Googlebot passes; needs GSC URL Inspection/crawl stats or Cloudflare security events (needs Search Console or Cloudflare access). my. 522 still open (EB). Evidence Brief 2026-11-20: a Nov 18 Cloudflare Community case shows AI-crawler Training=Block can also block Googlebot. FDR and Achieve declare Content-Signal ai-train=no; whether a Cloudflare Training=Block rule sits behind it is unverified and needs dashboard or GSC access.",
+      "why": "confirm Cloudflare verified-bot exemptions on FDR, Achieve, bills during the update. UNVERIFIED: Funnel's Nov 13 curl with a Googlebot user-agent saw no challenge, but that can't prove real Googlebot passes; needs GSC URL Inspection/crawl stats or Cloudflare security events (needs Search Console or Cloudflare access). my. 522 still open (EB). Evidence Brief 2026-11-20: a Nov 18 Cloudflare Community case shows AI-crawler Training=Block can also block Googlebot. FDR and Achieve declare Content-Signal ai-train=no; whether a Cloudflare Training=Block rule sits behind it is unverified and needs dashboard or GSC access. Evidence Brief 2026-11-27: the FDR robots file added meta-webindexer to its AI group (Content-Signal ai-train=no); Achieve and bills.com are unchanged. Content-Signal ai-train=no is not Google's opt-out. The Search Console AI-control state and whether Cloudflare Training=Block also blocks Googlebot stay unverified and need dashboard access. Decide on Google-Extended.",
       "fix": "",
       "firstReport": "",
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -7110,7 +7235,7 @@
       "statusText": "NEW · context",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Dec 9 Fed hike priced (CNBC); Freddie 7.11% (Nov 12); NY Fed Q3 HELOC +$23B, largest since 2005, cards record $1.29T; G.19 Sep revolving +14.5% annualised; card 21.19% vs 24-mo PL 11.90%; Figure Q3 marketplace $5.119B (+107% YoY); Upstart $4.1B. Context, not our ledger",
@@ -7146,7 +7271,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "current terms already allow crawling advertiser sites for training (SEJ Nov 10). robots unchanged on all 3 hosts; bills has no AI rules",
@@ -7182,7 +7307,7 @@
       "statusText": "NEW · context",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "shift reputation monitoring to review shelves + state dockets",
@@ -7218,7 +7343,7 @@
       "statusText": "UPDATE · peer",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "unrated",
       "severityBasis": "no P0 label or severity wording in any brief version of this row",
       "why": "Peer hygiene, not ours",
@@ -7258,8 +7383,8 @@
       "status": "open",
       "statusText": "STILL OPEN · UNVERIFIED",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "high",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-02) impact: high",
       "why": "/fb /fbcfos /366o1 apply-host /espanol still test + noindex with 0 claim support (EB). Lead-on-load still UNVERIFIED — reason: no DevTools/browser capture ran this week (Funnel curl-only). New Nov 10 video waves say only \"1 affordable monthly payment\"",
@@ -7268,7 +7393,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -7346,8 +7472,8 @@
       "status": "open",
       "statusText": "STILL OPEN",
       "firstSeen": "2026-11-13",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 7,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 14,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-01, WR-FF-10; worst impact: critical)",
       "why": "test apply host (P0); /login 307 → /; my. 522; /testimonials/ million 8× / 0 \"individual results\" (Compliance review); /vs/accredited /fees/ 404; /fast/heloc-loans empty shell (all EB 17:58). Evidence Brief 2026-11-20: www /apply 301 still tags all /apply traffic utm_source=fdr_dm_valpak, so organic and direct visits are counted as Valpak print; landing is still a test + noindex apply host.",
@@ -7356,7 +7482,8 @@
       "links": [],
       "refs": [
         "Evidence Brief 2026-11-13",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -7424,7 +7551,7 @@
       "statusText": "STILL OPEN · ship stall",
       "firstSeen": "2026-11-13",
       "lastSeen": "2026-11-13",
-      "daysOpen": 7,
+      "daysOpen": 14,
       "severity": "critical",
       "severityBasis": "brief labels the row \"Nothing on the classic P0 list shipped since Oct 29\"",
       "why": "(Funnel Thu ship-check + EB re-curl). Third straight week",
@@ -7460,7 +7587,7 @@
       "statusText": "NEW",
       "firstSeen": "2026-11-20",
       "lastSeen": "2026-11-20",
-      "daysOpen": 0,
+      "daysOpen": 7,
       "severity": "unrated",
       "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
       "why": "The /mobile-app-download/ page is indexable but has no App Store or Google Play link in the HTML, and no inlinks from home or /how-it-works/.",
@@ -7476,7 +7603,7 @@
       "confirmations": [],
       "verification": "to_verify",
       "flags": {},
-      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-20",
+      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-27",
       "match": {
         "kind": "site-wide",
         "nodes": [
@@ -7489,23 +7616,68 @@
       "id": "E170",
       "row": 170,
       "source": "brief",
-      "title": "FDR CNBC Select release (Nov 18, per Foresight) repeats \">45% first settlement in one month\" and carries a stray \"LendingTree\" sentence",
+      "title": "FDR CNBC Select release (Nov 18) includes a \">45% one month / >70% three months\" line and a stray LendingTree sentence",
       "brand": "fdr",
-      "urls": [],
-      "owner": "Public (FDR)",
+      "urls": [
+        "https://www.freedomdebtrelief.com/press-releases/"
+      ],
+      "owner": "Public",
       "status": "open",
-      "statusText": "NEW · to verify",
+      "statusText": "CONFIRMED",
       "firstSeen": "2026-11-20",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 0,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 7,
       "severity": "unrated",
-      "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
-      "why": "Funnel to curl next week. Speed claim flagged for Compliance review",
-      "fix": "Owner to decide after verification",
+      "severityBasis": "no P0 label or severity wording in any brief version of this row",
+      "why": "Funnel Fix's 26 Nov curl of the PR Newswire release confirmed the \">45% first settlement in one month / >70% within three months\" line and a stray \"Its recognition by LendingTree…\" sentence. The FDR press list dates the release Nov 19 vs the article date Nov 18. Speed-claim wording is flagged for Compliance review, not a violation.",
+      "fix": "Compliance wording; correct the press-list date and the stray LendingTree sentence.",
       "firstReport": "",
       "links": [],
       "refs": [
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [
+        "funnel-fix"
+      ],
+      "verification": "confirmed",
+      "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (cnbc-select-curl)",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "freedomdebtrelief.com/press-releases"
+        ],
+        "drawn": false
+      },
+      "screenshots": []
+    },
+    {
+      "id": "E175",
+      "row": 175,
+      "source": "brief",
+      "title": "New FFN card copy on the advertiser page: \"BBB A+ Accredited\", \"Have $15K or More in Debt?\" vs \"Consolidate $25,000 or More\", a customer-re…",
+      "brand": "fdr",
+      "urls": [
+        "https://start.freedomfinancialnetwork.com/home"
+      ],
+      "owner": "Apply",
+      "status": "open",
+      "statusText": "NEW · advertiser-level (no creative IDs)",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
+      "why": "Rendered start.FFN debt slider runs $5,000–$100k+ with a $25,000 default and states neither minimum. Soft until Ads Watch ties creative IDs. Flagged for Compliance review, not a violation",
+      "fix": "Compliance review once creative IDs are tied; the rendered start.FFN slider shows neither the $15K nor the $25,000 minimum.",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "evidence-brief"
@@ -7513,14 +7685,336 @@
       "confirmations": [],
       "verification": "to_verify",
       "flags": {},
-      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-20",
       "match": {
         "kind": "site-wide",
         "nodes": [
           "brand:fdr"
-        ]
+        ],
+        "reason": "FDR sign-up app (start.freedomfinancialnetwork.com) — rolled up to the FDR brand"
+      },
+      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-27",
+      "screenshots": []
+    },
+    {
+      "id": "E176",
+      "row": 176,
+      "source": "brief",
+      "title": "FDR home BBB trust marker: grade \"A+\", lastTimeVerified 2025-10-01 (other markers re-verified 2026-11-23)",
+      "brand": "fdr",
+      "urls": [
+        "https://www.freedomdebtrelief.com/"
+      ],
+      "owner": "Public",
+      "status": "open",
+      "statusText": "NEW",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "no P0 label or severity wording in any brief version of this row",
+      "why": "image alt reads \"bbb A rating\"; 0× \"Accredited\" on the home page. The FFN \"BBB A+ Accredited\" card has no on-site support. Evidence only; flagged for Compliance review, not a violation",
+      "fix": "Re-verify the BBB widget and fix the alt text. Compliance review of the FFN card.",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [
+        "funnel-fix"
+      ],
+      "verification": "confirmed",
+      "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (bbb-widget-render)",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "freedomdebtrelief.com"
+        ],
+        "drawn": false
       },
       "screenshots": []
+    },
+    {
+      "id": "E180",
+      "row": 180,
+      "source": "brief",
+      "title": "Seven Achieve holiday /learn pages are stale (dateModified 2023-11 to 2024-08, or missing)",
+      "brand": "achieve",
+      "urls": [
+        "https://www.achieve.com/learn/everyday-finances/4-hacks-save-money-during-holidays",
+        "https://www.achieve.com/learn/everyday-finances/5-ways-to-reduce-holiday-debt-stress",
+        "https://www.achieve.com/learn/everyday-finances/7-creative-ideas-debt-free-holiday",
+        "https://www.achieve.com/learn/everyday-finances/budget-before-holiday-season",
+        "https://www.achieve.com/learn/everyday-finances/should-you-borrow-in-a-holiday-cash-crunch",
+        "https://www.achieve.com/learn/everyday-finances/why-holiday-spending-skyrockets",
+        "https://www.achieve.com/learn/personal-loans/holiday-loans"
+      ],
+      "owner": "Loans",
+      "status": "open",
+      "statusText": "NEW",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "no P0 label or severity wording in any brief version of this row",
+      "why": "Funnel Fix's 26 Nov 2026 check found all 7 Achieve holiday /learn URLs return 200, are indexable and self-canonical, and contain 0 mentions of 2025. dateModified is 2023-11-30 to 2024-08-22 on 6 of them; /learn/personal-loans/holiday-loans has no dateModified. All 7 also carry dev.Achieve.com (already tracked as the site-wide /learn template issue). These need a real content refresh, not a date-only bump.",
+      "fix": "Refresh the holiday /learn content for the current season. Do not change dateModified without a substantial edit.",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [
+        "funnel-fix"
+      ],
+      "verification": "confirmed",
+      "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (holiday-learn-dates)",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "achieve.com/learn/everyday-finances/4-hacks-save-money-during-holidays",
+          "achieve.com/learn/everyday-finances/5-ways-to-reduce-holiday-debt-stress",
+          "achieve.com/learn/everyday-finances/7-creative-ideas-debt-free-holiday",
+          "achieve.com/learn/everyday-finances/budget-before-holiday-season",
+          "achieve.com/learn/everyday-finances/should-you-borrow-in-a-holiday-cash-crunch",
+          "achieve.com/learn/everyday-finances/why-holiday-spending-skyrockets",
+          "achieve.com/learn/personal-loans/holiday-loans"
+        ],
+        "drawn": true
+      },
+      "screenshots": []
+    },
+    {
+      "id": "E181",
+      "row": 181,
+      "source": "brief",
+      "title": "The HELOC draw-period explainer has 0 inlinks from /heloc and /home-equity-loan",
+      "brand": "achieve",
+      "urls": [
+        "https://www.achieve.com/learn/home-equity-loans/heloc-draw-period",
+        "https://www.achieve.com/heloc",
+        "https://www.achieve.com/home-equity-loan"
+      ],
+      "owner": "Loans",
+      "status": "open",
+      "statusText": "NEW",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "no P0 label or severity wording in any brief version of this row",
+      "why": "Funnel Fix's 26 Nov 2026 check found /learn/home-equity-loans/heloc-draw-period returns 200, is indexable, and mentions end of draw 8 times, but /heloc and /home-equity-loan link to it 0 times and mention end of draw 0 times.",
+      "fix": "Add internal links from /heloc and /home-equity-loan to the draw-period explainer (end-of-draw hook).",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [
+        "funnel-fix"
+      ],
+      "verification": "confirmed",
+      "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (heloc-draw-inlinks)",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "achieve.com/heloc",
+          "achieve.com/home-equity-loan",
+          "achieve.com/learn/home-equity-loans/heloc-draw-period"
+        ],
+        "drawn": true
+      },
+      "screenshots": [
+        {
+          "file": "/evidence/aba85d6ad405.png",
+          "name": "g-achieve-heloc-card.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-02",
+          "date": "2026-10-02"
+        },
+        {
+          "file": "/evidence/7172ff509ffd.png",
+          "name": "g-achieve-hold.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-02",
+          "date": "2026-10-02"
+        },
+        {
+          "file": "/evidence/1c1ab0f61ae3.png",
+          "name": "g-achieve-video.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-06",
+          "date": "2026-10-06"
+        }
+      ]
+    },
+    {
+      "id": "E183",
+      "row": 183,
+      "source": "brief",
+      "title": "FDR /facts/ figures drifted from the dated fact set and the CNBC Select release",
+      "brand": "fdr",
+      "urls": [
+        "https://www.freedomdebtrelief.com/facts/"
+      ],
+      "owner": "Public + Enroll",
+      "status": "open",
+      "statusText": "NEW · D2",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
+      "why": "NDR vs FDR (Nov 24) found /facts/ changed: program length 39 → 34 months, average deposit $427 → $472, first settlement within 3 months \"60%+\" → \"Over 65%\", plus a new \"fees vary by state\" note. The footnote still reads \"as of October 2024\" while the same page says \"as of January 2025\". The CNBC Select release says \">70% within three months\" and \">45% within one month\". Not yet Funnel-confirmed. Settlement-speed figures are flagged for Compliance review, not a violation.",
+      "fix": "Publish one dated fact set on /facts/ and in the CNBC Select release figures. Compliance review.",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [],
+      "verification": "to_verify",
+      "flags": {},
+      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-27",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "freedomdebtrelief.com/facts"
+        ],
+        "drawn": false
+      },
+      "screenshots": [
+        {
+          "file": "/evidence/0643691fea2d.png",
+          "name": "g-beyondfinance.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-02",
+          "date": "2026-10-02"
+        },
+        {
+          "file": "/evidence/971fc2c1dfc2.png",
+          "name": "ispot-fdr.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-16",
+          "date": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "id": "E185",
+      "row": 185,
+      "source": "brief",
+      "title": "FDR home USA Today badge has a null link and names no award source",
+      "brand": "fdr",
+      "urls": [
+        "https://www.freedomdebtrelief.com/"
+      ],
+      "owner": "Public",
+      "status": "open",
+      "statusText": "NEW",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "no P0 label or severity wording in any brief version of this row",
+      "why": "Funnel Fix's 26 Nov 2026 render of the FDR home found the USA Today trust badge (\"America's Best Customer Service\") has a null link and no page names the award source. That is a different award from USA Today's Nov 11 debt-relief ranking. Flagged for Compliance review.",
+      "fix": "Link the badge to its award source, or remove it. Compliance review before quoting either award.",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [
+        "funnel-fix"
+      ],
+      "verification": "confirmed",
+      "flags": {},
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (usa-today-badge-render)",
+      "match": {
+        "kind": "page",
+        "nodes": [
+          "freedomdebtrelief.com"
+        ],
+        "drawn": false
+      },
+      "screenshots": []
+    },
+    {
+      "id": "E190",
+      "row": 190,
+      "source": "brief",
+      "title": "Apply /fb back-button behaviour is untested against Google's Nov 23 FAQ",
+      "brand": "fdr",
+      "urls": [
+        "https://apply.freedomdebtrelief.com/fb"
+      ],
+      "owner": "Apply",
+      "status": "open",
+      "statusText": "NEW · to verify",
+      "firstSeen": "2026-11-27",
+      "lastSeen": "2026-11-27",
+      "daysOpen": 0,
+      "severity": "unrated",
+      "severityBasis": "unrated until Funnel Fix confirms; brief severity is held",
+      "why": "Google's back-button spam FAQ (Nov 23) also covers social and ad-platform traffic. /fb has not been tested for back-button behaviour.",
+      "fix": "Render-test /fb back-button behaviour (no submit).",
+      "firstReport": "",
+      "links": [],
+      "refs": [
+        "Evidence Brief 2026-11-27"
+      ],
+      "sources": [
+        "evidence-brief"
+      ],
+      "confirmations": [],
+      "verification": "to_verify",
+      "flags": {},
+      "match": {
+        "kind": "site-wide",
+        "nodes": [
+          "hub:fdr:apply"
+        ],
+        "reason": "FDR Apply service (apply.freedomdebtrelief.com) — rolled up to the Apply hub"
+      },
+      "verificationNote": "To verify — first reported in Evidence Brief 2026-11-27",
+      "screenshots": [
+        {
+          "file": "/evidence/5055c00dbfae.png",
+          "name": "fb-estimated-debt-rendered.webp",
+          "pack": "seo-vs-mkt/funnel-fix-2026-11-05/evidence",
+          "date": "2026-11-05"
+        },
+        {
+          "file": "/evidence/8e39f1feb8f2.png",
+          "name": "meta-detail-dodo.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-09",
+          "date": "2026-10-09"
+        },
+        {
+          "file": "/evidence/05e7777183aa.png",
+          "name": "meta-detail-thrillist.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-09",
+          "date": "2026-10-09"
+        },
+        {
+          "file": "/evidence/41e9e21c3f61.png",
+          "name": "meta-fdr-detail-1million.png",
+          "pack": "seo-vs-mkt/ads-watch-2026-10-16",
+          "date": "2026-10-16"
+        }
+      ]
     },
     {
       "id": "D1",
@@ -7827,8 +8321,8 @@
       "status": "open",
       "statusText": "open",
       "firstSeen": "2026-11-16",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 4,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 11,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-19 (WR-FF-04, learn-template-sweep; worst impact: critical)",
       "why": "Market Scout curl on 16 Nov 2026 (Yerevan) returned 200. The page contains \"dev.Achieve.com\" once, has no dateModified, and cites no NY Fed Q3 figures (HELOC balances up $23B to $481B, the largest increase since 2005). Extends Funnel Fix's 12 Nov dev.Achieve.com finding beyond the /learn comparison pages. Evidence Brief 2026-11-20: dateModified 2026-08-08 vs updatedAt 2026-11-17; still no NY Fed hook.",
@@ -7840,7 +8334,8 @@
       ],
       "refs": [
         "Market Scout 2026-11-16",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "scout",
@@ -7876,17 +8371,18 @@
       "status": "open",
       "statusText": "open",
       "firstSeen": "2026-11-16",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 4,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 11,
       "severity": "critical",
       "severityBasis": "Funnel Fix 2026-11-19 (learn-template-sweep) impact: critical",
-      "why": "Funnel Fix's 19 Nov 2026 sitemap sweep confirmed Organization JSON-LD alternateName \"dev.Achieve.com\" and telephone \"85288\" on 693 of 710 live /learn articles (one template; 17 clean hub pages; 8 sitemap URLs 301). Money pages /heloc, /home-equity-loan, /personal-loans stay clean in JSON-LD. This is a site-wide Achieve /learn template issue — do not expand every /learn page.",
+      "why": "Funnel Fix's 19 Nov 2026 sitemap sweep confirmed Organization JSON-LD alternateName \"dev.Achieve.com\" and telephone \"85288\" on 693 of 710 live /learn articles (one template; 17 clean hub pages; 8 sitemap URLs 301). Money pages /heloc, /home-equity-loan, /personal-loans stay clean in JSON-LD. This is a site-wide Achieve /learn template issue — do not expand every /learn page. Evidence Brief 2026-11-27: the /learn template still carries Organization JSON-LD alternateName \"dev.Achieve.com\" and telephone \"85288\" (Funnel Fix sample re-check; full re-sweep skipped as the template is unchanged). Google's 24 Nov AI-source documentation raises the YMYL bar and uses Knowledge Graph corroboration, so the wrong entity values on ~693 pages work against citation. This stays a site-wide Achieve /learn template issue — do not expand every /learn page.",
       "fix": "Fix the /learn template values (alternateName and telephone).",
       "firstReport": "",
       "links": [],
       "refs": [
         "Market Scout 2026-11-16",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "scout",
@@ -8018,8 +8514,8 @@
       "status": "open",
       "statusText": "open",
       "firstSeen": "2026-11-16",
-      "lastSeen": "2026-11-20",
-      "daysOpen": 4,
+      "lastSeen": "2026-11-27",
+      "daysOpen": 11,
       "severity": "medium",
       "severityBasis": "Funnel Fix 2026-11-12 (WR-FF-08) impact: medium",
       "why": "FDR's /scam/ page still has no impersonation or advance-fee copy. The DFPI's September actions, published 12 Nov 2026, include E-Capital Inc. (ordered to stop charging upfront fees for debt-relief services it never performed) and Frontier Legal Group (fake lawsuits and wage-garnishment threats). Together with FTC Arizona and the GA AG, that is three states in three weeks. /scam/ is in the crawl as an 'other' page, so it rolls up to the FDR brand node (it is not a drawn product-hub page). Evidence Brief 2026-11-20: /scam/ still has 0 impersonation / advance-fee block while affinity look-alikes run (brand-confusion risk, not a violation) and state cases grow.",
@@ -8031,7 +8527,8 @@
       ],
       "refs": [
         "Market Scout 2026-11-16",
-        "Evidence Brief 2026-11-20"
+        "Evidence Brief 2026-11-20",
+        "Evidence Brief 2026-11-27"
       ],
       "sources": [
         "scout",

@@ -19,13 +19,13 @@ describe("guard: evidence source totals", () => {
     expect([totals.critical, totals.high, totals.medium, totals.low]).toEqual([8, 10, 3, 0]);
   });
 
-  // Data change pending sign-off (Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep):
-  // MS02/MS04 moved to confirmed; new to-verify rows are E163 and E170; MS03 stays to-verify;
-  // E146 stays the only unverified row. Parent/brand tags below are the new real values.
-  test("to-verify and unverified are the new Nov 20 rows plus MS03 and Googlebot", () => {
-    expect(queue.toVerify).toBe(3);
+  // Data change pending sign-off (Evidence Brief 2026-11-27 + Funnel Fix Nov 26 pack):
+  // E170 is now Funnel-confirmed (no impact, stays Unrated). New to-verify rows are
+  // E175, E183 and E190; E163 and MS03 stay to-verify. E146 stays the only unverified row.
+  test("to-verify and unverified are the Nov 27 new rows plus E163, MS03 and Googlebot", () => {
+    expect(queue.toVerify).toBe(5);
     expect(queue.unverified).toBe(1);
-    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["E163", "E170", "MS03"]);
+    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["E163", "E175", "E183", "E190", "MS03"]);
     expect(doc.items.find((i) => i.verification === "unverified")?.id).toBe("E146");
   });
 
@@ -64,13 +64,13 @@ describe("guard: evidence source totals", () => {
     expect(roll?.items.map((i) => i.id).sort()).toEqual(["MS01", "MS02", "MS03", "MS04", "MS05"]);
   });
 
-  test("parent and brand evidence labels after the Nov 20 brief (data change pending sign-off)", () => {
+  test("parent and brand evidence labels after the Nov 27 brief (data change pending sign-off)", () => {
     const idx = buildEvidenceIndex(doc);
-    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 167 · 13 critical");
-    expect(evidenceLabel(idx.forBrand("fdr")?.items)?.full).toBe("Evidence 122 · 8 critical");
-    expect(evidenceLabel(idx.forBrand("achieve")?.items)?.full).toBe("Evidence 44 · 4 critical");
+    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 174 · 13 critical");
+    expect(evidenceLabel(idx.forBrand("fdr")?.items)?.full).toBe("Evidence 127 · 8 critical");
+    expect(evidenceLabel(idx.forBrand("achieve")?.items)?.full).toBe("Evidence 46 · 4 critical");
     expect(evidenceLabel(idx.forBrand("bills")?.items)?.full).toBe("Evidence 8 · 1 critical");
-    expect(evidenceLabel(idx.forHub("fdr", "apply")?.items)?.full).toBe("Evidence 10 · 1 critical");
+    expect(evidenceLabel(idx.forHub("fdr", "apply")?.items)?.full).toBe("Evidence 11 · 1 critical");
   });
 
   test("every unmapped row has a visible reason (none expected after Apply remap)", () => {
@@ -81,9 +81,9 @@ describe("guard: evidence source totals", () => {
     }
   });
 
-  test("FDR Apply hub carries the ten apply.freedomdebtrelief.com rows, including E70", () => {
+  test("FDR Apply hub carries the eleven apply.freedomdebtrelief.com rows, including E70 and E190", () => {
     const idx = buildEvidenceIndex(doc);
-    const ids = ["E59", "E70", "E74", "E79", "E88", "E98", "E99", "E111", "E115", "E131"];
+    const ids = ["E59", "E70", "E74", "E79", "E88", "E98", "E99", "E111", "E115", "E131", "E190"];
     for (const id of ids) {
       const row = doc.items.find((i) => i.id === id)!;
       expect(row.brand).toBe("fdr");
@@ -112,16 +112,23 @@ describe("guard: evidence source totals", () => {
 
   test("Funnel-confirmed rows take Funnel impact; to-verify and unverified stay Unrated", () => {
     const confirmed = doc.items.filter((i) => (i.confirmations ?? []).includes("funnel-fix"));
-    expect(confirmed.length).toBe(22);
+    expect(confirmed.length).toBe(27);
+    const nov26Unrated = new Set(["E170", "E176", "E180", "E181", "E185"]);
     for (const i of confirmed) {
       expect(i.verification).toBe("confirmed");
-      expect(i.severity).not.toBe("unrated");
       // E133 keeps Funnel High; the brief P0 is a note on severityBasis, not a severity upgrade.
       if (i.id === "E133") {
         expect(i.severity).toBe("high");
         expect(i.severityBasis).toMatch(/Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
         continue;
       }
+      // Funnel Fix 26 Nov confirmed these rows but gave no impact, so they stay Unrated.
+      if (nov26Unrated.has(i.id)) {
+        expect(i.severity).toBe("unrated");
+        expect(i.verificationNote).toMatch(/Funnel Fix 2026-11-26/);
+        continue;
+      }
+      expect(i.severity).not.toBe("unrated");
       expect(i.severityBasis).toMatch(/Funnel Fix 2026-11-1[29]/);
     }
     expect(doc.items.filter((i) => i.verification === "to_verify").every((i) => i.severity === "unrated")).toBe(true);
