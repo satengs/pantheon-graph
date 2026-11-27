@@ -10,7 +10,7 @@ import { crawlFindings, familyIssues, severityTotals, useFamilyIssues } from "@/
 import { SevTotals } from "@/components/studio/SevTotals";
 import { SourceBar, ToVerifyNote } from "@/components/studio/StatusChips";
 import { EvidenceCard } from "@/components/studio/EvidenceCard";
-import { familyEvidenceQueue, filterEvBySource, showsEvidence } from "@/lib/graph/evidence-filter";
+import { evidenceMatchesQuery, familyEvidenceQueue, filterEvBySource, showsEvidence } from "@/lib/graph/evidence-filter";
 import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
 import { evidenceLabel } from "@/lib/graph/evidence-label";
 import { RULES } from "@/data/rules-seed";
@@ -118,8 +118,10 @@ export function Backlog() {
   const setSource = useStudio((st) => st.setIssueSourceFilter);
   const evidenceRows = useMemo(() => {
     if (!showsEvidence(source)) return [];
-    return filterEvBySource(evIndex.forAll(), source)?.items ?? [];
-  }, [evIndex, source]);
+    const rows = filterEvBySource(evIndex.forAll(), source)?.items ?? [];
+    const q = query.trim();
+    return q ? rows.filter((i) => evidenceMatchesQuery(i, q)) : rows;
+  }, [evIndex, source, query]);
   const evidenceHeading = evidenceLabel(evidenceRows);
 
   const familyFindings = useMemo(
@@ -412,7 +414,15 @@ export function Backlog() {
             Page or scope, problem, why, fix and owner are on every row. These are not counted in Gate until verified.
           </p>
           {evidenceRows.length ? (
-            evidenceRows.map((i) => <EvidenceCard key={i.id} item={i} unmapped={i.match.kind === "unmapped"} />)
+            evidenceRows.map((i) => (
+              <EvidenceCard
+                key={i.id}
+                item={i}
+                unmapped={i.match.kind === "unmapped"}
+                selectable
+                asOf={evDoc?.asOf ?? evDoc?.newestBrief.date}
+              />
+            ))
           ) : (
             <p className="px-1 text-xs text-subtle">No evidence rows for this source filter.</p>
           )}

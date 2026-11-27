@@ -24,6 +24,8 @@ import {
   type SevRollup,
 } from "@/lib/graph/severity";
 import {
+  brandPlacementNote,
+  brandTagCaption,
   buildEvidenceIndex,
   EV_COLOR,
   EV_LABEL,
@@ -265,6 +267,9 @@ function layoutOf(
   }
   return pos;
 }
+
+/** Clear the default GraphClickNote (14.5rem + 12px inset) so the Bills tag is not covered. */
+const CLICK_NOTE_RIGHT = "16rem";
 
 function fitView(pts: Pt[], pad: number, bottomExtra = 0) {
   if (!pts.length) return { x: -560, y: -340, w: 1120, h: 720 + bottomExtra };
@@ -947,6 +952,7 @@ export function GraphCanvas() {
           viewBox={`${r2(vb.x + (vb.w - vb.w / zoom) / 2)} ${r2(vb.y + (vb.h - vb.h / zoom) / 2)} ${r2(vb.w / zoom)} ${r2(vb.h / zoom)}`}
           preserveAspectRatio="xMidYMid meet"
           className="absolute inset-0 h-full w-full touch-none select-none bg-bg"
+          style={{ right: CLICK_NOTE_RIGHT }}
           role="img"
           aria-label="Content graph. Double-click a node to load related nodes. Back undoes the last step."
           onPointerDown={(e) => {
@@ -1260,13 +1266,23 @@ export function GraphCanvas() {
               const evShow = !!evr && (n.kind !== "page" || pagesLegible);
               const evLbl = evShow ? evidenceLabel(evr!.items) : null;
               const evText = evLbl?.full ?? "";
-              // Brand / parent: one line left of the node, "◇ Evidence 60 · 2 critical". Hubs / pages sit
-              // ~45px apart at default zoom, so they get the compact form: "◇ 5" (5 rows, none rated) or a
-              // two-line "◇ 3" over "1 crit" when a row is rated. Legend explains both.
+              // Brand / parent: one line left of the node. Brand tags carry the brand name so the
+              // Bills tag is not just "Evidence 8 · 1 critical". Hubs / pages sit ~45px apart at
+              // default zoom, so they get the compact form: "◇ 5" or a two-line "◇ 3" / "1 crit".
               const evStack = n.kind !== "brand" && n.kind !== "parent";
-              const evLines = !evLbl ? [] : evStack ? evLbl.compact : [evLbl.full];
-              // ≥ ~10px text on screen at any zoom (world size grows as you zoom out), capped.
-              const evFs = n.kind === "page" ? Math.min(14, Math.max(7.5, 9.5 / pxPerUnit)) : Math.min(30, Math.max(10, 10.5 / pxPerUnit));
+              const evLines = !evLbl
+                ? []
+                : evStack
+                  ? evLbl.compact
+                  : n.kind === "brand" && n.brand
+                    ? [brandTagCaption(n.brand, evLbl.full)]
+                    : [evLbl.full];
+              // Brand/parent tags stay readable at default zoom. The SVG's right inset (CLICK_NOTE_RIGHT)
+              // keeps the Bills tag off the Clicks note, so we do not inflate the viewBox around tags.
+              const evFs =
+                n.kind === "page"
+                  ? Math.min(14, Math.max(7.5, 9.5 / pxPerUnit))
+                  : Math.min(30, Math.max(10, 10.5 / pxPerUnit));
               const evH = evFs * (evLines.length > 1 ? 2.75 : 1.7);
               // Mono ≈ 0.6em/char; the diamond sits on line 1 only (1.45em), later lines start at 0.45em.
               const evW =
@@ -1589,7 +1605,7 @@ export function GraphCanvas() {
                     </g>
                   ) : null}
                   {evr && evLbl && !evCritMarker ? (
-                    <g pointerEvents="none" data-ev-marker={evr.worst} data-ev-label={evText}>
+                    <g pointerEvents="none" data-ev-marker={evr.worst} data-ev-label={evText} data-ev-brand={n.kind === "brand" ? n.brand : undefined}>
                       {/* Neutral outline, square corners, hollow diamond: a row count, not a severity pill. */}
                       <rect x={evX} y={evY} width={evW} height={evH} fill={EV_TAG_FILL} stroke={EV_TAG_STROKE} strokeWidth={evFs / 9} />
                       <rect
@@ -1921,7 +1937,7 @@ export function GraphCanvas() {
               {pagesLegible ? null : <span className="shrink-0">· page tags show when zoomed in</span>}
             </span>
             <span className="text-subtle" data-testid="legend-shared-count">
-              Rows shared between brands count once at the parent.
+              {brandPlacementNote(evIndex) ?? "Rows spanning brands count once in the total."}
             </span>
             <span className="flex flex-wrap items-center gap-1.5" data-testid="legend-ev-critical-ring">
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="shrink-0">

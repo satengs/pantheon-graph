@@ -50,6 +50,7 @@ type StudioState = {
   selectedState: string | null;
   hoveredIssueId: string | null;
   selectedFindingId: string | null;
+  selectedEvidenceId: string | null;
   issueDrawerOpen: boolean;
   drawerPageUrl: string | null;
   query: string;
@@ -80,6 +81,7 @@ type StudioState = {
   selectState: (code: string | null) => void;
   hoverIssue: (id: string | null) => void;
   selectFinding: (id: string | null) => void;
+  selectEvidence: (id: string | null) => void;
   openIssueDrawer: (opts?: { issueId?: string | null; findingId?: string | null; pageUrl?: string | null }) => void;
   closeIssueDrawer: () => void;
   toggleIssueSelect: (id: string) => void;
@@ -184,6 +186,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   selectedState: null,
   hoveredIssueId: null,
   selectedFindingId: null,
+  selectedEvidenceId: null,
   issueDrawerOpen: false,
   drawerPageUrl: null,
   query: "",
@@ -231,6 +234,7 @@ export const useStudio = create<StudioState>((set, get) => ({
       set({
         selectedNodeId,
         selectedIssueId: selectedNodeId.replace("issue:", ""),
+        selectedEvidenceId: null,
         selectedState: null,
       });
     } else {
@@ -239,6 +243,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         selectedState: null,
         selectedIssueId: null,
         selectedFindingId: null,
+        selectedEvidenceId: null,
         hoveredIssueId: null,
         issueDrawerOpen: false,
   drawerPageUrl: null,
@@ -249,6 +254,7 @@ export const useStudio = create<StudioState>((set, get) => ({
     set({
       selectedIssueId,
       selectedFindingId: null,
+      selectedEvidenceId: null,
       issueDrawerOpen: false,
       drawerPageUrl: pageUrl === undefined ? null : pageUrl,
       selectedNodeId: selectedIssueId ? `issue:${selectedIssueId}` : null,
@@ -260,7 +266,17 @@ export const useStudio = create<StudioState>((set, get) => ({
     set({
       selectedFindingId,
       selectedIssueId: null,
+      selectedEvidenceId: null,
       issueDrawerOpen: false,
+      selectedState: null,
+    }),
+  selectEvidence: (selectedEvidenceId) =>
+    set({
+      selectedEvidenceId,
+      selectedIssueId: null,
+      selectedFindingId: null,
+      issueDrawerOpen: false,
+      selectedNodeId: null,
       selectedState: null,
     }),
   openIssueDrawer: (opts) =>
@@ -273,6 +289,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         issueDrawerOpen: true,
         selectedIssueId: issueId,
         selectedFindingId: findingId,
+        selectedEvidenceId: null,
         drawerPageUrl:
           opts && "pageUrl" in opts
             ? opts.pageUrl ?? null
@@ -359,6 +376,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         selectedIssueId: issue,
         selectedNodeId: issue ? `issue:${issue}` : null,
         selectedFindingId: null,
+        selectedEvidenceId: null,
         issueDrawerOpen: false,
   drawerPageUrl: null,
         graphFocusStack: [],

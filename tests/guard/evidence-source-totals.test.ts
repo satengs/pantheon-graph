@@ -5,8 +5,8 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { familyRules } from "./_canvas";
 import { severityTotals } from "@/lib/studio/issue-source";
-import { evidenceQueue, evidenceMatchesSource, filterEvBySource } from "@/lib/graph/evidence-filter";
-import { buildEvidenceIndex, normalizeEvidenceDoc, type EvidenceDoc, type EvidenceItem, type SourceFilter } from "@/lib/graph/evidence";
+import { evidenceQueue, evidenceMatchesQuery, evidenceMatchesSource, filterEvBySource, isNewInLatestBrief } from "@/lib/graph/evidence-filter";
+import { brandPlacementNote, brandTagCaption, buildEvidenceIndex, normalizeEvidenceDoc, type EvidenceDoc, type EvidenceItem, type SourceFilter } from "@/lib/graph/evidence";
 import { evidenceLabel } from "@/lib/graph/evidence-label";
 
 const doc = normalizeEvidenceDoc(JSON.parse(readFileSync("public/data/evidence.json", "utf8"))) as EvidenceDoc;
@@ -157,6 +157,44 @@ describe("guard: evidence source totals", () => {
     for (const [id, owner] of Object.entries(want)) {
       expect(doc.items.find((i) => i.id === id)?.owner, id).toBe(owner);
     }
+  });
+
+  test("brand tags reconcile to the parent total: 127+46+8=181 placements, 174 unique", () => {
+    const idx = buildEvidenceIndex(doc);
+    const parent = idx.forAll()!.items;
+    const fdr = idx.forBrand("fdr")!.items;
+    const achieve = idx.forBrand("achieve")!.items;
+    const bills = idx.forBrand("bills")!.items;
+    const apply = idx.forHub("fdr", "apply")!.items;
+    expect(parent).toHaveLength(174);
+    expect(fdr).toHaveLength(127);
+    expect(achieve).toHaveLength(46);
+    expect(bills).toHaveLength(8);
+    expect(fdr.length + achieve.length + bills.length).toBe(181);
+    // Extra placements (181-174=7) come from five multi-brand rows.
+    const brandOf = (b: string) => new Set((idx.forBrand(b)?.items ?? []).map((i) => i.id));
+    const sets = { fdr: brandOf("fdr"), achieve: brandOf("achieve"), bills: brandOf("bills") };
+    const multi = parent.filter((i) => ["fdr", "achieve", "bills"].filter((b) => sets[b as "fdr"].has(i.id)).length > 1);
+    expect(multi.map((i) => i.id).sort()).toEqual(["E146", "E66", "E77", "E85", "MS04"]);
+    const extra = multi.reduce((n, i) => n + (["fdr", "achieve", "bills"].filter((b) => sets[b as "fdr"].has(i.id)).length - 1), 0);
+    expect(extra).toBe(7);
+    expect(174 + extra).toBe(181);
+    // Apply hub 11 is a subset of FDR 127, not an extra 11.
+    expect(apply).toHaveLength(11);
+    expect(apply.every((i) => sets.fdr.has(i.id))).toBe(true);
+    expect(brandPlacementNote(idx)).toBe(
+      "FDR 127 + Achieve 46 + Bills 8 = 181 placements. Rows spanning brands count once in the total of 174. Apply hub 11 is inside FDR, not added on top.",
+    );
+    expect(brandTagCaption("bills", "Evidence 8 · 1 critical")).toBe("Bills · Evidence 8 · 1 critical");
+  });
+
+  test("search for E175 is case-insensitive and NEW is only the latest-brief first-seen rows", () => {
+    const hit = doc.items.filter((i) => evidenceMatchesQuery(i, "e175"));
+    expect(hit.map((i) => i.id)).toEqual(["E175"]);
+    expect(doc.items.filter((i) => evidenceMatchesQuery(i, "E175")).map((i) => i.id)).toEqual(["E175"]);
+    const newest = ["E175", "E176", "E180", "E181", "E183", "E185", "E190"];
+    expect(doc.items.filter((i) => isNewInLatestBrief(i, doc.asOf)).map((i) => i.id).sort()).toEqual(newest);
+    expect(isNewInLatestBrief(doc.items.find((i) => i.id === "E163")!, doc.asOf)).toBe(false);
   });
 
   test("UI strings contain no personal names or box paths", () => {

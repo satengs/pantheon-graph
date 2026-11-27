@@ -216,6 +216,32 @@ export function useEvidence(): EvidenceDoc | null {
   return doc;
 }
 
+export const BRAND_TAG_NAME: Record<string, string> = { fdr: "FDR", achieve: "Achieve", bills: "Bills" };
+
+/** Prefix a brand canvas tag so "Evidence 8 · 1 critical" is clearly the Bills tag. */
+export function brandTagCaption(brand: string, full: string): string {
+  const name = BRAND_TAG_NAME[brand] ?? brand;
+  return `${name} · ${full}`;
+}
+
+/**
+ * Visible arithmetic for brand tags vs the parent total. Brand tags count a multi-brand row on
+ * every brand it sits on; the parent counts each row once. Apply hub is a subset of FDR.
+ */
+export function brandPlacementNote(idx: EvidenceIndex): string | null {
+  const parent = idx.forAll()?.count ?? 0;
+  if (!parent) return null;
+  const fdr = idx.forBrand("fdr")?.count ?? 0;
+  const achieve = idx.forBrand("achieve")?.count ?? 0;
+  const bills = idx.forBrand("bills")?.count ?? 0;
+  const apply = idx.forHub("fdr", "apply")?.count ?? 0;
+  const placements = fdr + achieve + bills;
+  if (placements === parent) {
+    return `Brand counts add up to the parent total of ${parent}.`;
+  }
+  return `FDR ${fdr} + Achieve ${achieve} + Bills ${bills} = ${placements} placements. Rows spanning brands count once in the total of ${parent}. Apply hub ${apply} is inside FDR, not added on top.`;
+}
+
 /** Neutral colour for the Evidence tag: never a severity hue, so it can't read as a C/H/M/L pill. */
 export const EV_TAG_STROKE = "#c9d1d9";
 export const EV_TAG_FILL = "#0b0c0e";

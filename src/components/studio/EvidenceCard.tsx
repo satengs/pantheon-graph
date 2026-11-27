@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 
 import type { EvidenceItem, EvRollup } from "@/lib/graph/evidence";
 import { EV_COLOR, EV_LABEL, EV_TAG_FILL, EV_TAG_STROKE } from "@/lib/graph/evidence";
-import { FlagChips, SourceChips, VerificationChip } from "@/components/studio/StatusChips";
+import { FlagChips, NeutralChip, SourceChips, VerificationChip } from "@/components/studio/StatusChips";
+import { isNewInLatestBrief } from "@/lib/graph/evidence-filter";
+import { useStudio } from "@/store/studio";
 
 /**
  * Evidence tag: neutral outline + hollow diamond, square corners. Never a filled severity pill, so a row
@@ -78,16 +80,25 @@ export function EvidenceCard({
   item,
   defaultOpen = false,
   unmapped = false,
+  selectable = false,
+  asOf,
 }: {
   item: EvidenceItem;
   defaultOpen?: boolean;
   /** Unmapped panel: show the row's URL(s) and what to do with it under the headline. */
   unmapped?: boolean;
+  /** Issues list: click selects the row and fills the inspector with the same id. */
+  selectable?: boolean;
+  /** Newest brief date; rows first seen on this date get a NEW chip. */
+  asOf?: string;
 }) {
+  const selectedEvidenceId = useStudio((s) => s.selectedEvidenceId);
+  const selectEvidence = useStudio((s) => s.selectEvidence);
+  const selected = selectable && selectedEvidenceId === item.id;
   const [open, setOpen] = useState(defaultOpen);
   const [shot, setShot] = useState<EvidenceItem["screenshots"][number] | null>(null);
-  const label =
-    item.source === "brief" ? `Row ${item.row}` : item.source === "scout" ? `Scout ${item.id}` : `NDR vs FDR ${item.id}`;
+  const label = item.id;
+  const isNew = isNewInLatestBrief(item, asOf);
   const scope = evidenceScope(item);
   const verifyNote =
     item.verification === "to_verify"
@@ -99,22 +110,48 @@ export function EvidenceCard({
           : "";
   return (
     <article
-      className="min-w-0 rounded-lg bg-surface p-2.5 shadow-[var(--shadow-border)]"
+      className={`min-w-0 rounded-lg p-2.5 shadow-[var(--shadow-border)] ${selected ? "" : "bg-surface"}`}
       data-evidence-id={item.id}
       data-evidence-severity={item.severity}
       data-evidence-verification={item.verification ?? "reported"}
+      data-selected={selected ? "true" : undefined}
+      data-testid={selected ? "evidence-row-selected" : undefined}
+      // 3px cream left edge + lighter fill. Inset box-shadow (not border-left) so the
+      // rounded-card + coloured-left-stripe style guard stays clean.
+      style={
+        selected
+          ? {
+              background: "color-mix(in oklab, var(--color-surface) 72%, #c4b8a4)",
+              boxShadow: "inset 3px 0 0 0 #c4b8a4, var(--shadow-border)",
+            }
+          : undefined
+      }
     >
-      <button type="button" className="flex w-full items-start gap-2 text-left" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+      <button
+        type="button"
+        className="flex w-full items-start gap-2 text-left"
+        onClick={() => {
+          if (selectable) selectEvidence(item.id);
+          setOpen((v) => (selectable && selected ? !v : true));
+        }}
+        aria-expanded={open}
+        aria-current={selected ? "true" : undefined}
+      >
         <EvBadge item={item} />
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] uppercase tracking-wide text-subtle">
             {label} · {item.status}
             {item.daysOpen != null ? ` · ${item.daysOpen}d open` : ""}
           </span>
-          <span className="block text-sm leading-snug text-fg">{item.title}</span>
+          <span className="block text-sm leading-snug text-pretty text-fg [overflow-wrap:anywhere]">{item.title}</span>
         </span>
       </button>
       <div className="mt-1.5 flex flex-wrap items-center gap-1" data-testid="evidence-chips">
+        {isNew ? (
+          <NeutralChip title="New in the latest Evidence Brief" testId="new-chip">
+            NEW
+          </NeutralChip>
+        ) : null}
         <SourceChips item={item} />
         <VerificationChip item={item} />
         <FlagChips item={item} />
@@ -171,18 +208,6 @@ export function EvidenceCard({
             <dd className="text-muted">
               {item.statusText} <span className="text-subtle">(first {item.firstSeen}, last {item.lastSeen})</span>
             </dd>
-            {item.why ? (
-              <>
-                <dt className="text-subtle">Why</dt>
-                <dd className="text-pretty text-muted">{item.why}</dd>
-              </>
-            ) : null}
-            {item.fix ? (
-              <>
-                <dt className="text-subtle">Fix</dt>
-                <dd className="text-pretty text-fg">{item.fix}</dd>
-              </>
-            ) : null}
             {item.firstReport ? (
               <>
                 <dt className="text-subtle">First report</dt>
