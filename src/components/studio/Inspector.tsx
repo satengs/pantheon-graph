@@ -22,7 +22,7 @@ import { IssueMindMap } from "@/components/studio/IssueMindMap";
 import { VirtualList } from "@/components/studio/VirtualList";
 import { recForCode } from "@/data/recommend";
 import { PageMeta } from "@/components/studio/PageMeta";
-import { EvidenceList } from "@/components/studio/EvidenceCard";
+import { EvBadge, EvidenceList, evidenceScope } from "@/components/studio/EvidenceCard";
 import { Fold } from "@/components/studio/Fold";
 import { buildEvidenceIndex, useEvidence } from "@/lib/graph/evidence";
 import { filterEvBySource } from "@/lib/graph/evidence-filter";
@@ -38,6 +38,7 @@ export function Inspector() {
   const selectedState = useStudio((s) => s.selectedState);
   const tab = useStudio((s) => s.tab);
   const selectedFindingId = useStudio((s) => s.selectedFindingId);
+  const selectedEvidenceId = useStudio((s) => s.selectedEvidenceId);
   const drawerPageUrl = useStudio((s) => s.drawerPageUrl);
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectNode = useStudio((s) => s.selectNode);
@@ -189,6 +190,35 @@ export function Inspector() {
           </Fold>
         ) : null}
         {!seedFamily && node.kind !== "page" ? <EmptyFamilyCrawl /> : null}
+      </aside>
+    );
+  }
+  const selectedEvidence = tab === "issues" && selectedEvidenceId ? evDoc?.items.find((i) => i.id === selectedEvidenceId) ?? null : null;
+  if (tab === "issues" && selectedEvidence) {
+    const ev = selectedEvidence;
+    const scope = evidenceScope(ev);
+    return (
+      <aside className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto p-4" data-testid="inspector-evidence-detail">
+        <p className="text-[10px] uppercase tracking-wide text-subtle">Evidence</p>
+        <div className="flex items-start gap-2">
+          <EvBadge item={ev} />
+          <h2 className="font-display text-xl text-fg" data-testid="inspector-evidence-id">
+            {ev.id}
+          </h2>
+        </div>
+        <p className="text-sm leading-snug text-pretty text-fg [overflow-wrap:anywhere]">{ev.title}</p>
+        <dl className="grid grid-cols-[3.75rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5 text-[12px] leading-snug">
+          <dt className="text-subtle">{ev.flags?.gap ? "Scope" : "Page"}</dt>
+          <dd className="min-w-0 [overflow-wrap:anywhere] text-muted">{scope}</dd>
+          <dt className="text-subtle">Problem</dt>
+          <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-fg">{ev.title}</dd>
+          <dt className="text-subtle">Why</dt>
+          <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-muted">{ev.why || "No reason given in the source row"}</dd>
+          <dt className="text-subtle">Fix</dt>
+          <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-fg">{ev.fix || "No fix given in the source row"}</dd>
+          <dt className="text-subtle">Owner</dt>
+          <dd className="min-w-0 [overflow-wrap:anywhere] text-pretty text-muted">{ev.owner || "No owner named"}</dd>
+        </dl>
       </aside>
     );
   }

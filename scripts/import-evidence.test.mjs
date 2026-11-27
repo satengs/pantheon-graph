@@ -216,6 +216,21 @@ test("markNewRowsToVerify only flips unconfirmed firstSeen=asOf rows; unverified
   assert.equal(items[3].verification, "confirmed");
 });
 
+test("markNewRowsToVerify keeps prior-week unconfirmed new rows when a later brief is asOf", () => {
+  const items = [
+    { id: "E163", firstSeen: "2026-11-20", verification: "reported", severity: "unrated" },
+    { id: "E175", firstSeen: "2026-11-27", verification: "reported", severity: "unrated" },
+    { id: "E170", firstSeen: "2026-11-20", verification: "confirmed", severity: "unrated" },
+    { id: "E141", firstSeen: "2026-11-13", verification: "reported", severity: "unrated" },
+  ];
+  const marked = m.markNewRowsToVerify(items, "2026-11-27");
+  assert.deepEqual(marked, ["E163", "E175"]);
+  assert.equal(items[0].verification, "to_verify");
+  assert.equal(items[1].verification, "to_verify");
+  assert.equal(items[2].verification, "confirmed");
+  assert.equal(items[3].verification, "reported");
+});
+
 
 test("overrides can set title, why and fix after import stamps", () => {
   const items = [

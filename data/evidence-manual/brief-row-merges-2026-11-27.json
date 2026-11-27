@@ -1,0 +1,89 @@
+{
+  "asOf": "2026-11-27",
+  "note": "Evidence Brief 27 Nov 2026 (rows 174–192). Deduplicate the 19 Pantheon issue-list items against existing Nov 13, Nov 20, and MS01–MS05 rows. Context/peer spine rows are skipped. Do not hand-edit evidence.json.",
+  "skipRows": [
+    "188",
+    "189",
+    "191"
+  ],
+  "merges": [
+    {
+      "fromRow": "174",
+      "into": ["E133"],
+      "also": ["E134"],
+      "whySuffix": "Evidence Brief 2026-11-27: FFN Google creatives CR01753369967086010369 and CR09261306777150947329 (\"$438 avg\", \"Debt Free in 24-60 Months\"; last shown Nov 24) still land on a noindex APP_ENV test host. The rendered page shows none of those claims; its only \"24 to 60 months\" is the Achieve personal-loan footer disclosure. Display paths /debt/consolidation and /debt/help still 404."
+    },
+    {
+      "fromRow": "177",
+      "into": ["E59"],
+      "also": ["E70", "E98", "E151"],
+      "whySuffix": "Evidence Brief 2026-11-27: Funnel Fix's 26 Nov rendered capture shows /fb still on a test + noindex host. A leadId is created on load with a heartbeat, before any input; there is no Lead event on load (later Lead UNVERIFIED). Whether never-submitted leadIds are counted is unverified and needs a Data check."
+    },
+    {
+      "fromRow": "177",
+      "into": ["E131"],
+      "whySuffix": "Evidence Brief 2026-11-27: Funnel Fix's 26 Nov rendered capture confirms a leadId is created on load with a heartbeat and there is no Lead event on load (later Lead UNVERIFIED). Whether never-submitted leadIds are counted is still unverified and needs a Data check. Meta on-device conversion counting has been on by default since Nov 12, so Meta-reported leads can rise without new sales."
+    },
+    {
+      "fromRow": "178",
+      "into": ["E79"],
+      "also": ["E59"],
+      "whySuffix": "Evidence Brief 2026-11-27: a new Popsugar FDR co-brand Meta batch (e.g. 1394749552871383) uses the hook \"Denied for a personal loan?\"; that hook is still absent on the rendered /fb landing."
+    },
+    {
+      "fromRow": "179",
+      "into": ["E135"],
+      "whySuffix": "Evidence Brief 2026-11-27: the /heloc hero \"as low as 5.75% APR\" is still live next to disclosure 6.10%–15.17%. The 5.75% and 6.10% rates come from two separate live Meta ads, 1457628736343949 and 1475846561179857. Speed lines still conflict (5 days vs under 2 weeks vs 10-12 business days). Re-date the week of Dec 9."
+    },
+    {
+      "fromRow": "182",
+      "into": ["MS02"],
+      "also": ["E137", "MS01"],
+      "whySuffix": "Evidence Brief 2026-11-27: the /learn template still carries Organization JSON-LD alternateName \"dev.Achieve.com\" and telephone \"85288\" (Funnel Fix sample re-check; full re-sweep skipped as the template is unchanged). Google's 24 Nov AI-source documentation raises the YMYL bar and uses Knowledge Graph corroboration, so the wrong entity values on ~693 pages work against citation. This stays a site-wide Achieve /learn template issue — do not expand every /learn page."
+    },
+    {
+      "fromRow": "184",
+      "into": ["E170"],
+      "verification": "confirmed",
+      "verificationNote": "Confirmed by Funnel Fix 2026-11-26 (CNBC Select release curl)",
+      "title": "FDR CNBC Select release (Nov 18) includes a \">45% one month / >70% three months\" line and a stray LendingTree sentence",
+      "why": "Funnel Fix's 26 Nov curl of the PR Newswire release confirmed the \">45% first settlement in one month / >70% within three months\" line and a stray \"Its recognition by LendingTree…\" sentence. The FDR press list dates the release Nov 19 vs the article date Nov 18. Speed-claim wording is flagged for Compliance review, not a violation.",
+      "fix": "Compliance wording; correct the press-list date and the stray LendingTree sentence.",
+      "addUrls": [
+        "https://www.freedomdebtrelief.com/press-releases/"
+      ]
+    },
+    {
+      "fromRow": "184",
+      "into": ["E103"],
+      "addUrls": [
+        "https://www.freedomdebtrelief.com/press-releases/"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-27: the CNBC Select item is dated Nov 19 on the press list vs Nov 18 on the article; 8 of the other 9 page-1 items still say October 28, 2026 (D7, day 29)."
+    },
+    {
+      "fromRow": "186",
+      "into": ["E105"],
+      "also": ["E140"],
+      "addUrls": [
+        "https://www.freedomdebtrelief.com/",
+        "https://www.freedomdebtrelief.com/how-it-works/"
+      ],
+      "whySuffix": "Evidence Brief 2026-11-27: Trustpilot counts still disagree — 52,617 on /how-it-works/ vs the home widget 52,415 vs schema 51,861. Use one count source."
+    },
+    {
+      "fromRow": "187",
+      "into": ["E146"],
+      "also": ["E122", "E123"],
+      "verification": "unverified",
+      "verificationNote": "unverified: needs Search Console or Cloudflare access",
+      "whySuffix": "Evidence Brief 2026-11-27: the FDR robots file added meta-webindexer to its AI group (Content-Signal ai-train=no); Achieve and bills.com are unchanged. Content-Signal ai-train=no is not Google's opt-out. The Search Console AI-control state and whether Cloudflare Training=Block also blocks Googlebot stay unverified and need dashboard access. Decide on Google-Extended."
+    },
+    {
+      "fromRow": "192",
+      "into": ["E2", "E21", "E152", "E20", "E113"],
+      "also": ["E138", "MS05"],
+      "refsOnly": true
+    }
+  ]
+}

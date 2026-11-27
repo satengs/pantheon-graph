@@ -32,6 +32,32 @@ export function evidenceMatchesSource(it: EvidenceItem, s: SourceFilter): boolea
   return true;
 }
 
+/** Case-insensitive match on the evidence id (E175, MS02), row number, title, why, fix, owner, URLs. */
+export function evidenceMatchesQuery(item: EvidenceItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const hay = [
+    item.id,
+    item.row != null ? String(item.row) : "",
+    item.row != null ? `row ${item.row}` : "",
+    item.title,
+    item.why,
+    item.fix,
+    item.owner,
+    item.status,
+    item.statusText,
+    ...(item.urls ?? []),
+  ]
+    .join("\n")
+    .toLowerCase();
+  return hay.includes(q);
+}
+
+/** True when the row first appeared in the brief the data set is currently as-of. */
+export function isNewInLatestBrief(item: Pick<EvidenceItem, "firstSeen">, asOf: string | undefined): boolean {
+  return Boolean(asOf && item.firstSeen === asOf);
+}
+
 export function filterEvBySource(r: EvRollup | null, s: SourceFilter): EvRollup | null {
   if (!r) return null;
   if (s === "both" || s === "evidence") return r;

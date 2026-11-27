@@ -33,12 +33,11 @@ describe("guard: evidence labels", () => {
     for (const t of r.tags) assert.match(t, LABEL);
   });
 
-  // Data change pending sign-off: Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep.
-  // Was 'Evidence 165 · 10 critical' on 32c692f (#42), then 'Evidence 167 · 14 critical'
-  // before E133 was returned to Funnel Fix High (brief P0 kept as a note).
-  test("snapshot: parent reads 'Evidence 167 · 13 critical'", async () => {
+  // Data change pending sign-off: Evidence Brief 2026-11-27 + Funnel Fix Nov 26 pack.
+  // Was 'Evidence 167 · 13 critical' on b95524f (master after #43/#44).
+  test("snapshot: parent reads 'Evidence 174 · 13 critical'", async () => {
     const t = await page.evaluate(() => document.querySelector('g[data-node-id^="parent:"] [data-ev-label]')?.getAttribute("data-ev-label"));
-    assert.equal(t, "Evidence 167 · 13 critical");
+    assert.equal(t, "Evidence 174 · 13 critical");
   });
 
   test("collapsed Apply hub shows a critical evidence marker and an off-crawl findings label", async () => {
@@ -56,8 +55,8 @@ describe("guard: evidence labels", () => {
     assert.equal(r.sev, null, "Apply has no Pantheon issue; data-sev stays unset");
     assert.equal(r.evMarker, "critical");
     // Caption is evidenceLabel().full — not a bare Pantheon-style "C1" pill.
-    assert.equal(r.label, "Evidence 10 · 1 critical");
-    assert.equal(r.shown, "Off-crawl · 10 findings");
+    assert.equal(r.label, "Evidence 11 · 1 critical");
+    assert.equal(r.shown, "Off-crawl · 11 findings");
     assert.match(r.legend ?? "", /Outlined red = critical evidence finding, not counted in Pantheon C\/H\/M\/L/);
   });
 

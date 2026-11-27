@@ -78,6 +78,7 @@ export function Studio() {
   const query = useStudio((s) => s.query);
   const setQuery = useStudio((s) => s.setQuery);
   const selectedIssueId = useStudio((s) => s.selectedIssueId);
+  const selectedEvidenceId = useStudio((s) => s.selectedEvidenceId);
   const graphInspectorOpen = useStudio((s) => s.graphInspectorOpen);
   const selectIssue = useStudio((s) => s.selectIssue);
   const selectedNodeId = useStudio((s) => s.selectedNodeId);
@@ -102,7 +103,13 @@ export function Studio() {
   const visibleIssues = filterIssues(RULES, { brand, product, layer, impact, query, codes: attachedRuleCodes.length ? attachedRuleCodes : undefined }).filter((i) =>
     issueFitsFamily(i, graphOrg, parentSlug),
   );
-  const openCount = visibleIssues.filter((i) => i.status === "open").length;
+  // Header OPEN count is the family Pantheon open-rule total (C+H+M at default filters). It must
+  // not follow the search box — searching "E175" on Issues would otherwise drop this to 0 while
+  // Graph still shows 21. Brand / product / layer / impact stay shared so both tabs agree.
+  const familyOpenIssues = filterIssues(RULES, { brand, product, layer, impact, query: "", codes: attachedRuleCodes.length ? attachedRuleCodes : undefined }).filter((i) =>
+    issueFitsFamily(i, graphOrg, parentSlug),
+  );
+  const openCount = familyOpenIssues.filter((i) => i.status === "open").length;
   const familyPages = familyPageCount(graphOrg);
   const productOptions = productsForFamily(graphOrg?.brands ?? [], brand);
 
@@ -172,9 +179,11 @@ export function Studio() {
 
   useEffect(() => {
     if (tab !== "issues") return;
+    if (selectedEvidenceId) return;
     if (issueFitsSelection) return;
+    if (!firstIssueCode) return;
     selectIssue(firstIssueCode);
-  }, [tab, firstIssueCode, parentId, issueFitsSelection, selectIssue]);
+  }, [tab, firstIssueCode, parentId, issueFitsSelection, selectedEvidenceId, selectIssue]);
 
   useEffect(() => {
     const key = selectedIssueId ?? tab;
@@ -243,7 +252,9 @@ export function Studio() {
           <p className="font-display text-lg leading-none tracking-tight">
             {graphOrg?.parent?.name ?? "Pantheon"}
           </p>
-          <p className="vh-kicker mt-0.5">{openCount} open</p>
+          <p className="vh-kicker mt-0.5" data-testid="family-open-count" data-open-count={openCount} title="Open Pantheon rules for this family (same on Graph and Issues)">
+            {openCount} open
+          </p>
         </div>
         <div className="g-cluster" role="group" aria-label="Family context">
         <label className="flex items-center gap-2 text-xs text-muted" title="Holding company. Every tab and the inspector follow this family.">

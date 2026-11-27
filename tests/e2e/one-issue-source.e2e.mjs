@@ -81,7 +81,7 @@ describe("guard: one issue source", () => {
       if (!baseline) baseline = graph.queue;
       else assert.deepEqual(graph.queue, baseline, `queue shifted under ${f}`);
     }
-    assert.equal(baseline?.toVerify, 3);
+    assert.equal(baseline?.toVerify, 5);
     assert.equal(baseline?.unverified, 1);
   });
 

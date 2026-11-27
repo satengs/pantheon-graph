@@ -5,8 +5,8 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { familyRules } from "./_canvas";
 import { severityTotals } from "@/lib/studio/issue-source";
-import { evidenceQueue, evidenceMatchesSource, filterEvBySource } from "@/lib/graph/evidence-filter";
-import { buildEvidenceIndex, normalizeEvidenceDoc, type EvidenceDoc, type EvidenceItem, type SourceFilter } from "@/lib/graph/evidence";
+import { evidenceQueue, evidenceMatchesQuery, evidenceMatchesSource, filterEvBySource, isNewInLatestBrief } from "@/lib/graph/evidence-filter";
+import { brandPlacementNote, brandTagCaption, buildEvidenceIndex, normalizeEvidenceDoc, type EvidenceDoc, type EvidenceItem, type SourceFilter } from "@/lib/graph/evidence";
 import { evidenceLabel } from "@/lib/graph/evidence-label";
 
 const doc = normalizeEvidenceDoc(JSON.parse(readFileSync("public/data/evidence.json", "utf8"))) as EvidenceDoc;
@@ -19,13 +19,13 @@ describe("guard: evidence source totals", () => {
     expect([totals.critical, totals.high, totals.medium, totals.low]).toEqual([8, 10, 3, 0]);
   });
 
-  // Data change pending sign-off (Evidence Brief 2026-11-20 + Funnel Fix Nov 19 sweep):
-  // MS02/MS04 moved to confirmed; new to-verify rows are E163 and E170; MS03 stays to-verify;
-  // E146 stays the only unverified row. Parent/brand tags below are the new real values.
-  test("to-verify and unverified are the new Nov 20 rows plus MS03 and Googlebot", () => {
-    expect(queue.toVerify).toBe(3);
+  // Data change pending sign-off (Evidence Brief 2026-11-27 + Funnel Fix Nov 26 pack):
+  // E170 is now Funnel-confirmed (no impact, stays Unrated). New to-verify rows are
+  // E175, E183 and E190; E163 and MS03 stay to-verify. E146 stays the only unverified row.
+  test("to-verify and unverified are the Nov 27 new rows plus E163, MS03 and Googlebot", () => {
+    expect(queue.toVerify).toBe(5);
     expect(queue.unverified).toBe(1);
-    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["E163", "E170", "MS03"]);
+    expect(doc.items.filter((i) => i.verification === "to_verify").map((i) => i.id).sort()).toEqual(["E163", "E175", "E183", "E190", "MS03"]);
     expect(doc.items.find((i) => i.verification === "unverified")?.id).toBe("E146");
   });
 
@@ -64,13 +64,13 @@ describe("guard: evidence source totals", () => {
     expect(roll?.items.map((i) => i.id).sort()).toEqual(["MS01", "MS02", "MS03", "MS04", "MS05"]);
   });
 
-  test("parent and brand evidence labels after the Nov 20 brief (data change pending sign-off)", () => {
+  test("parent and brand evidence labels after the Nov 27 brief (data change pending sign-off)", () => {
     const idx = buildEvidenceIndex(doc);
-    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 167 · 13 critical");
-    expect(evidenceLabel(idx.forBrand("fdr")?.items)?.full).toBe("Evidence 122 · 8 critical");
-    expect(evidenceLabel(idx.forBrand("achieve")?.items)?.full).toBe("Evidence 44 · 4 critical");
+    expect(evidenceLabel(idx.forAll()?.items)?.full).toBe("Evidence 174 · 13 critical");
+    expect(evidenceLabel(idx.forBrand("fdr")?.items)?.full).toBe("Evidence 127 · 8 critical");
+    expect(evidenceLabel(idx.forBrand("achieve")?.items)?.full).toBe("Evidence 46 · 4 critical");
     expect(evidenceLabel(idx.forBrand("bills")?.items)?.full).toBe("Evidence 8 · 1 critical");
-    expect(evidenceLabel(idx.forHub("fdr", "apply")?.items)?.full).toBe("Evidence 10 · 1 critical");
+    expect(evidenceLabel(idx.forHub("fdr", "apply")?.items)?.full).toBe("Evidence 11 · 1 critical");
   });
 
   test("every unmapped row has a visible reason (none expected after Apply remap)", () => {
@@ -81,9 +81,9 @@ describe("guard: evidence source totals", () => {
     }
   });
 
-  test("FDR Apply hub carries the ten apply.freedomdebtrelief.com rows, including E70", () => {
+  test("FDR Apply hub carries the eleven apply.freedomdebtrelief.com rows, including E70 and E190", () => {
     const idx = buildEvidenceIndex(doc);
-    const ids = ["E59", "E70", "E74", "E79", "E88", "E98", "E99", "E111", "E115", "E131"];
+    const ids = ["E59", "E70", "E74", "E79", "E88", "E98", "E99", "E111", "E115", "E131", "E190"];
     for (const id of ids) {
       const row = doc.items.find((i) => i.id === id)!;
       expect(row.brand).toBe("fdr");
@@ -112,16 +112,23 @@ describe("guard: evidence source totals", () => {
 
   test("Funnel-confirmed rows take Funnel impact; to-verify and unverified stay Unrated", () => {
     const confirmed = doc.items.filter((i) => (i.confirmations ?? []).includes("funnel-fix"));
-    expect(confirmed.length).toBe(22);
+    expect(confirmed.length).toBe(27);
+    const nov26Unrated = new Set(["E170", "E176", "E180", "E181", "E185"]);
     for (const i of confirmed) {
       expect(i.verification).toBe("confirmed");
-      expect(i.severity).not.toBe("unrated");
       // E133 keeps Funnel High; the brief P0 is a note on severityBasis, not a severity upgrade.
       if (i.id === "E133") {
         expect(i.severity).toBe("high");
         expect(i.severityBasis).toMatch(/Evidence Brief Nov 20 rated P0; Funnel Fix confirmed High/);
         continue;
       }
+      // Funnel Fix 26 Nov confirmed these rows but gave no impact, so they stay Unrated.
+      if (nov26Unrated.has(i.id)) {
+        expect(i.severity).toBe("unrated");
+        expect(i.verificationNote).toMatch(/Funnel Fix 2026-11-26/);
+        continue;
+      }
+      expect(i.severity).not.toBe("unrated");
       expect(i.severityBasis).toMatch(/Funnel Fix 2026-11-1[29]/);
     }
     expect(doc.items.filter((i) => i.verification === "to_verify").every((i) => i.severity === "unrated")).toBe(true);
@@ -130,6 +137,64 @@ describe("guard: evidence source totals", () => {
     expect(bot.severity).toBe("unrated");
     expect(bot.match.nodes).toEqual(["brand:fdr", "brand:achieve", "brand:bills"]);
     expect(bot.scope).toMatch(/Shared across FDR, Achieve and Bills; counted once at the parent/);
+  });
+
+  test("E135 names two separate live Meta ads, not one creative, and stays Funnel High", () => {
+    const row = doc.items.find((i) => i.id === "E135")!;
+    expect(row.severity).toBe("high");
+    expect(row.why).toMatch(/two separate live Meta ads, 1457628736343949 and 1475846561179857/);
+    expect(row.why).not.toMatch(/same creative/i);
+  });
+
+  test("PR-touched generic owners were remapped to service teams", () => {
+    const want: Record<string, string> = {
+      E21: "Apply",
+      E123: "Public",
+      E140: "Public",
+      MS01: "Public",
+      MS05: "Public",
+    };
+    for (const [id, owner] of Object.entries(want)) {
+      expect(doc.items.find((i) => i.id === id)?.owner, id).toBe(owner);
+    }
+  });
+
+  test("brand tags reconcile to the parent total: 127+46+8=181 placements, 174 unique", () => {
+    const idx = buildEvidenceIndex(doc);
+    const parent = idx.forAll()!.items;
+    const fdr = idx.forBrand("fdr")!.items;
+    const achieve = idx.forBrand("achieve")!.items;
+    const bills = idx.forBrand("bills")!.items;
+    const apply = idx.forHub("fdr", "apply")!.items;
+    expect(parent).toHaveLength(174);
+    expect(fdr).toHaveLength(127);
+    expect(achieve).toHaveLength(46);
+    expect(bills).toHaveLength(8);
+    expect(fdr.length + achieve.length + bills.length).toBe(181);
+    // Extra placements (181-174=7) come from five multi-brand rows.
+    const brandOf = (b: string) => new Set((idx.forBrand(b)?.items ?? []).map((i) => i.id));
+    const sets = { fdr: brandOf("fdr"), achieve: brandOf("achieve"), bills: brandOf("bills") };
+    const multi = parent.filter((i) => ["fdr", "achieve", "bills"].filter((b) => sets[b as "fdr"].has(i.id)).length > 1);
+    expect(multi.map((i) => i.id).sort()).toEqual(["E146", "E66", "E77", "E85", "MS04"]);
+    const extra = multi.reduce((n, i) => n + (["fdr", "achieve", "bills"].filter((b) => sets[b as "fdr"].has(i.id)).length - 1), 0);
+    expect(extra).toBe(7);
+    expect(174 + extra).toBe(181);
+    // Apply hub 11 is a subset of FDR 127, not an extra 11.
+    expect(apply).toHaveLength(11);
+    expect(apply.every((i) => sets.fdr.has(i.id))).toBe(true);
+    expect(brandPlacementNote(idx)).toBe(
+      "FDR 127 + Achieve 46 + Bills 8 = 181 placements. Rows spanning brands count once in the total of 174. Apply hub 11 is inside FDR, not added on top.",
+    );
+    expect(brandTagCaption("bills", "Evidence 8 · 1 critical")).toBe("Bills · Evidence 8 · 1 critical");
+  });
+
+  test("search for E175 is case-insensitive and NEW is only the latest-brief first-seen rows", () => {
+    const hit = doc.items.filter((i) => evidenceMatchesQuery(i, "e175"));
+    expect(hit.map((i) => i.id)).toEqual(["E175"]);
+    expect(doc.items.filter((i) => evidenceMatchesQuery(i, "E175")).map((i) => i.id)).toEqual(["E175"]);
+    const newest = ["E175", "E176", "E180", "E181", "E183", "E185", "E190"];
+    expect(doc.items.filter((i) => isNewInLatestBrief(i, doc.asOf)).map((i) => i.id).sort()).toEqual(newest);
+    expect(isNewInLatestBrief(doc.items.find((i) => i.id === "E163")!, doc.asOf)).toBe(false);
   });
 
   test("UI strings contain no personal names or box paths", () => {

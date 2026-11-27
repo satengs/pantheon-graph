@@ -693,11 +693,15 @@ export function applyBriefMerges(items, packs = loadBriefMerges()) {
   return { merged, skipped, removed: [...removed] };
 }
 
-/** New brief rows that were not merged and are not yet confirmed stay "to verify". */
-export function markNewRowsToVerify(items, asOf) {
+/** New brief rows that were not merged and are not yet confirmed stay "to verify".
+ *  The policy started with the 20 Nov 2026 import. Replays must keep prior-week
+ *  unconfirmed new rows (e.g. E163) as to-verify when a later brief becomes asOf. */
+export const TO_VERIFY_SINCE = "2026-11-20";
+export function markNewRowsToVerify(items, asOf, since = TO_VERIFY_SINCE) {
   const marked = [];
   for (const it of items) {
-    if (it.firstSeen !== asOf) continue;
+    const born = it.firstSeen;
+    if (!born || (born !== asOf && born < since)) continue;
     if (it.verification === "confirmed" || it.verification === "unverified") continue;
     it.verification = "to_verify";
     it.verificationNote = it.verificationNote ?? `To verify — first reported in Evidence Brief ${asOf}`;
@@ -813,6 +817,7 @@ export function applyOverrides(items, ov = loadOverrides()) {
     if (typeof spec.why === "string") it.why = spec.why;
     if (typeof spec.fix === "string") it.fix = spec.fix;
     if (typeof spec.owner === "string") it.owner = spec.owner;
+    if (typeof spec.statusText === "string") it.statusText = spec.statusText;
     if (spec.whySuffix && !(it.why ?? "").includes(spec.whySuffix)) {
       const base = (it.why ?? "").replace(/\s*$/, "");
       const sep = !base ? "" : /[.!?]$/.test(base) ? " " : ". ";
